@@ -1,0 +1,65 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+const dom=new JSDOM('<!doctype html><body><main id="app"></main><div id="toast" hidden></div></body>',{url:'http://localhost/la-academia/#admin/examen/42'});
+for(const key of ['window','document','FormData','Event','CustomEvent'])globalThis[key]=dom.window[key];
+dom.window.HTMLElement.prototype.scrollIntoView=function(){};
+window.HTMLDialogElement.prototype.showModal=function(){this.open=true;};window.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new Event('close'));};
+const exam={id:7,version:1,enabled:1,creator_name:'Autora <prueba>',created_at:'2026-10-26 10:00:00',opens_at:'2026-10-01 08:00:00',closes_at:null,duration_minutes:30,max_attempts:3,passing_score:14,questions:Array.from({length:10},(_,i)=>({prompt:`Pregunta de prevención ${i+1}`,choices:['Proteger','Ignorar','Omitir'],correct:0,explanation:''}))};
+const course={id:42,title:'Prevención <prueba>',description:'Material de prevención para colaboradores.',category:'SSOMA',status:'published',material_count:1,exam_version:1,exam_enabled:1,exam_duration_minutes:30,materials:[],exam:{...exam,state:'open'}};
+const calls=[];let reloads=0,failToggle=false;
+globalThis.fetch=async(url,options={})=>{
+  const path=new URL(url).pathname,body=options.body?JSON.parse(options.body):null;
+  calls.push({path,body,method:options.method});
+  let data;
+  if(path.endsWith('/session'))data={user:{id:1,role:'capacitador'},csrf:'test'};
+  else if(path.endsWith('/exam/status')){
+    if(failToggle){failToggle=false;return {ok:false,status:503,json:async()=>({error:{message:'No se pudo actualizar'}})};}
+    exam.enabled=body.enabled;data={...exam};
+  }else if(path.endsWith('/exam'))data=options.method==='PUT'?{...exam,...body}:structuredClone(exam);
+  else if(path.endsWith('/courses/42'))data=structuredClone(course);
+  else if(path.endsWith('/admin/courses'))data=[structuredClone(course),{...structuredClone(course),id:43,title:'Borrador de prueba',status:'draft',exam_version:null}];
+  else throw new Error(`Unexpected ${path}`);
+  return {ok:true,json:async()=>({data})};
+};
+const {examEditor}=await import('../public/frontend/pages/admin-exam.js');
+const {coursesPage}=await import('../public/frontend/pages/admin-courses.js');
+const {coursePage}=await import('../public/frontend/pages/course.js');
+const root=document.querySelector('#app');
+const flush=async()=>{for(let i=0;i<50;i++)await Promise.resolve();};
+const page=await examEditor(42,async()=>{reloads++;});root.innerHTML=page.html;const cleanup=page.mount(root);
+const form=root.querySelector('#exam-form'),toggle=root.querySelector('#toggle-exam');
+assert.equal(root.querySelector('[data-question-total]').textContent,'10 preguntas');
+assert.equal(root.querySelectorAll('.question-state.is-complete').length,10,'Every complete question exposes its visual state');
+assert.equal(form.elements.opens_at.required,true);
+assert.equal(form.elements.duration_minutes.required,true);
+assert.equal(form.elements.max_attempts.required,true);assert.equal(form.elements.passing_score.required,true);assert.equal(form.elements.max_attempts.value,'3');assert.equal(form.elements.passing_score.value,'14');
+assert.equal(form.elements.closes_at.required,false);
+assert.equal(form.elements.closes_at.value,'');
+assert.equal(form.checkValidity(),true);
+const prompt=form.querySelector('[data-key="prompt"]');prompt.value='Pregunta editada sin guardar todavía';prompt.dispatchEvent(new Event('input',{bubbles:true}));
+toggle.click();toggle.click();await flush();
+assert.equal(calls.filter(c=>c.path.endsWith('/exam/status')).length,1,'single toggle despite repeated click');
+assert.equal(exam.enabled,0);assert.equal(toggle.textContent,'Activar examen');
+assert.equal(toggle.getAttribute('aria-pressed'),'false');assert.equal(prompt.value,'Pregunta editada sin guardar todavía');assert.equal(reloads,0);
+failToggle=true;toggle.click();await flush();assert.equal(exam.enabled,0);assert.equal(toggle.textContent,'Activar examen');assert.equal(toggle.disabled,false);
+form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await flush();
+const save=calls.find(c=>c.method==='PUT');assert.ok(save);assert.equal(save.body.closes_at,'');assert.equal(save.body.duration_minutes,'30');assert.equal(save.body.max_attempts,'3');assert.equal(save.body.passing_score,'14');assert.equal(save.body.questions[0].prompt,prompt.value);assert.equal(reloads,0);assert.equal(window.location.hash,'#admin/capacitaciones/42/publicar');
+const sends=calls.filter(c=>c.method==='PUT').length;
+for(const [field,value] of [['max_attempts','0'],['max_attempts','11'],['passing_score',''],['passing_score','21']]){const control=form.elements[field],before=control.value;control.value=value;form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await flush();assert.equal(calls.filter(c=>c.method==='PUT').length,sends);control.value=before;}
+form.elements.duration_minutes.value='';form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await flush();assert.equal(calls.filter(c=>c.method==='PUT').length,sends);
+form.elements.duration_minutes.value='30';form.elements.closes_at.value='2026-09-01T08:00';form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await flush();assert.equal(calls.filter(c=>c.method==='PUT').length,sends);
+assert(root.querySelector('.exam-author').textContent.includes('Autora <prueba>'));assert.equal(root.querySelector('.exam-author prueba'),null);
+form.elements.closes_at.value='';root.querySelector('#add-question').click();assert.equal(form.querySelectorAll('.question-editor').length,11);assert.equal(root.querySelector('[data-question-total]').textContent,'11 preguntas');assert.equal(root.querySelectorAll('.question-state:not(.is-complete)').length,1);assert.equal(form.querySelector('[data-key="prompt"]').value,prompt.value,'Add preserves edits');
+form.querySelector('[data-remove-question="10"]').click();await flush();assert.equal(form.querySelectorAll('.question-editor').length,10);
+for(let i=9;i>=1;i--){form.querySelector(`[data-remove-question="${i}"]`).click();document.querySelector('[data-confirm]').click();await flush();}
+assert.equal(form.querySelectorAll('.question-editor').length,1);assert(form.querySelector('[data-remove-question]').disabled);assert.match(root.querySelector('#exam-progress').textContent,/1 de 1/);
+form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await flush();assert.equal(calls.filter(c=>c.method==='PUT').at(-1).body.questions.length,1);
+cleanup();
+const library=await coursesPage();root.innerHTML=library.html;const cleanLibrary=library.mount(root);
+assert.equal(root.querySelectorAll('.training-card').length,2);assert.equal(root.querySelector('.training-description'),null);assert.equal(root.querySelector('.training-card h2').textContent,'Prevención <prueba>');assert.equal(root.querySelector('.training-card h2 prueba'),null);
+const before=calls.length;root.querySelector('#status-filter').value='draft';root.querySelector('#status-filter').dispatchEvent(new Event('change'));assert.equal(root.querySelectorAll('.training-card').length,1);assert.equal(calls.length,before);
+cleanLibrary();
+const publicCourse=await coursePage(42);assert.ok(publicCourse.html.includes('Activo'));assert.ok(!publicCourse.html.includes('Desde '));assert.ok(!publicCourse.html.includes(exam.opens_at.slice(0,16)));assert.ok(!publicCourse.html.includes('Sin fecha de cierre'));assert.ok(!publicCourse.html.includes('id="evaluation-area"'));
+course.exam.closes_at='2026-12-20 18:00:00';const closing=await coursePage(42);assert.match(closing.html,/Activo hasta/);assert.match(closing.html,/20 dic/);assert.ok(!closing.html.includes('Desde '));
+console.log('OK administración DOM: apertura/duración requeridas, cierre opcional, activación sin perder edición, fallo recuperable, validación, tarjetas y filtros locales.');
+dom.window.close();

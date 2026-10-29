@@ -1,0 +1,11 @@
+IMÁGENES DEL SLIDER DE INICIO
+
+Administra imágenes, orden, visibilidad y encuadre en Panel > Eventos > Slider de Inicio.
+Las imágenes cargadas se guardan en el almacenamiento privado y se sirven por la API.
+La rotación del slider es de cinco segundos.
+
+Esta carpeta se conserva para la importación inicial de instalaciones antiguas.
+La migración puede incorporar sus imágenes una sola vez; después se usa el panel.
+Los banners operativos de esta carpeta están excluidos de Git. Un clon del código
+comienza sin contenido real del slider; carga únicamente imágenes autorizadas.
+Consulta docs/SLIDER-INICIO.md y docs/PUBLICACION-GITHUB.md.

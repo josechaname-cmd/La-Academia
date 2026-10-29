@@ -1,0 +1,31 @@
+# One project directory. Only the public application is reachable over HTTP.
+Options -Indexes
+DirectoryIndex disabled
+Require local
+RewriteEngine On
+RewriteOptions InheritDownBefore
+# The resolved path also protects encoded names and nested historical .htaccess files.
+RewriteCond %{REQUEST_FILENAME} /la-academia/(?:backend|storage|tools|tests|docs|archive|public)(?:/|$) [NC]
+RewriteRule ^ - [F,END]
+RewriteRule ^(?:backend|storage|tools|tests|docs|archive|public|agents|services|http|database|scripts)(?:/|$) - [F,END,NC]
+RewriteRule (^|/)\. - [F,END]
+RewriteRule ^(?:config|bootstrap|api)\.php$ - [F,END,NC]
+RewriteRule ^(?:assets|frontend)/.*\.(?:php[0-9]?|phtml|phar|md|sql|env|log|bak|ps1|py)$ - [F,END,NC]
+RewriteRule ^(?:index\.php)?$ public/index.php [END]
+RewriteRule ^api/v1(?:/.*)?$ public/index.php [END]
+RewriteRule ^(assets|frontend)/(.*)$ public/$1/$2 [B,BNP,BNE=/,END]
+RewriteRule ^.*\.php$ - [F,END,NC]
+RewriteRule ^ - [R=404,END]
+<FilesMatch "^(?:\.|.*\.(?:md|sql|log|env|bak|ps1|py)$)">
+  Require all denied
+</FilesMatch>
+<IfModule php_module>
+  php_value upload_max_filesize 50M
+  php_value post_max_size 56M
+  php_value memory_limit 256M
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(?:js|css)$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>

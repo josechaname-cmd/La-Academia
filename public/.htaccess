@@ -1,0 +1,2 @@
+# Routing and access are defined at the unified project root. Do not override them here.
+Options -Indexes

@@ -1,0 +1,65 @@
+import {query,command,upload,fileUrl} from '../api.js?v=20261029-10';
+import {heading,field,escape,busy,toast,breadcrumbs,confirmAction,empty,icon} from '../components/common.js?v=20261029-10';
+import {attachValidation} from '../components/form-validation.js?v=20261029-10';
+import {showHomePopup,popupContent,isExternalPopupLink} from '../components/home-popup.js?v=20261029-10';
+export async function homePopupPage(id=''){
+  if(!id)return popupListPage();
+  if(id!=='nuevo'&&!/^[1-9][0-9]*$/.test(String(id)))throw new Error('Popup no disponible.');
+  const [saved,courses,events]=await Promise.all([id==='nuevo'?Promise.resolve(null):query('popup','get',{id}),query('content','admin.list'),query('admin','events.list')]);
+  let current=saved||{title:'',link_url:'',link_label:'',active:0};
+  const destinations={course:courses.filter(c=>c.status==='published').map(c=>({url:`#curso/${c.id}`,title:c.title})),event:events.filter(e=>Number(e.active)===1).map(e=>({url:`#eventos/${e.id}`,title:e.title}))};
+  const initialKind=current.link_url.startsWith('#curso/')?'course':current.link_url.startsWith('#eventos/')?'event':isExternalPopupLink(current.link_url)?'external':'info';
+  return {html:`${breadcrumbs([{label:'Eventos',href:'#admin/eventos'},{label:'Popups de Inicio',href:'#admin/eventos/popup'},{label:id==='nuevo'?'Nuevo popup':'Editar popup'}])}${heading('COMUNICACIÓN DEL PORTAL',id==='nuevo'?'Nuevo popup':'Editar popup','Elige una imagen y, si lo deseas, su destino al pulsarla.')}<section class="panel padded popup-editor"><form id="popup-form"><div class="form-grid">${field('Título (opcional)','title',current.title,'maxlength="160" placeholder="Puedes dejar solo la imagen"')}<label class="field">Estado al guardar<select name="active"><option value="0" ${!Number(current.active)?'selected':''}>Desactivado</option><option value="1" ${Number(current.active)?'selected':''}>Activo en Inicio</option></select></label><label class="field">Tamaño del anuncio<select name="display_size"><option value="standard" ${current.display_size!=='compact'?'selected':''}>Estándar</option><option value="compact" ${current.display_size==='compact'?'selected':''}>Compacto</option></select></label><label class="field full">Imagen del popup<input name="image" type="file" accept=".jpg,.jpeg,.png,.webp" data-max-mb="8"><small>JPG, PNG o WEBP, hasta 8 MB. Puedes verla antes de guardar.</small></label><label class="field">Encuadre<select name="image_format">${[['original','Imagen completa'],['landscape','Recorte horizontal (4:3)'],['square','Recorte cuadrado (1:1)']].map(([value,label])=>`<option value="${value}" ${(current.image_format||'original')===value?'selected':''}>${label}</option>`).join('')}</select></label><label class="field">Enfoque<select name="image_focus">${[['center','Centro'],['top','Parte superior'],['bottom','Parte inferior'],['left','Izquierda'],['right','Derecha']].map(([value,label])=>`<option value="${value}" ${(current.image_focus||'center')===value?'selected':''}>${label}</option>`).join('')}</select></label><label class="field full">Al pulsar la imagen<select name="target_kind"><option value="info" ${initialKind==='info'?'selected':''}>No abrir ningún enlace</option><optgroup label="Enlace de esta página"><option value="event" ${initialKind==='event'?'selected':''}>Abrir un evento</option><option value="course" ${initialKind==='course'?'selected':''}>Abrir una capacitación</option></optgroup><option value="external" ${initialKind==='external'?'selected':''}>Enlace externo</option></select></label><label class="field full" id="popup-destination">Destino publicado<select name="link_url"></select><small id="popup-target-hint"></small></label><label class="field full" id="popup-external">Enlace externo<input name="external_url" type="url" maxlength="1000" placeholder="https://ejemplo.com" value="${escape(initialKind==='external'?current.link_url:'')}"><small>Se abrirá en una nueva pestaña.</small></label></div><p class="hint">La imagen será el enlace; no se mostrará un botón. La X de la esquina permite cerrar el anuncio. La vista previa no publica nada. Al activar este popup se desactivará el anterior. El anuncio aparece cada vez que se ingresa a Inicio.</p><div id="popup-error" class="error" role="alert" hidden></div><div class="actions"><button class="button white" type="button" id="preview-popup" ${current.image_id?'':'disabled'}>${icon('eye')} Ampliar vista previa</button><button class="button primary" type="submit">${icon('check')} Guardar cambios</button><a class="button white" href="#admin/eventos/popup">Volver a la lista</a></div></form><aside><div class="media-preview-heading"><h2>Vista previa</h2><label class="field">Pantalla<select id="popup-device"><option value="desktop">Escritorio</option><option value="mobile">Móvil</option></select></label></div><div class="media-preview-stage" id="popup-stage" data-device="desktop"><div id="popup-image" class="popup-preview-card"></div></div><p class="hint">Se actualiza mientras editas. El enlace se aplica a la imagen completa; en la vista previa no se navega.</p></aside></section>`,mount(root){
+    const form=root.querySelector('form'),preview=root.querySelector('#preview-popup'),error=root.querySelector('#popup-error'),target=form.elements.link_url,kind=form.elements.target_kind;
+    let disposed=false,saving=false,localImage='',closePreview=()=>{};
+    const hasImage=()=>!!(localImage||current.image_id);
+    const data=()=>({title:form.elements.title.value.trim(),active:Number(form.elements.active.value),display_size:form.elements.display_size.value,image_format:form.elements.image_format.value,image_focus:form.elements.image_focus.value,link_url:kind.value==='info'?'':kind.value==='external'?form.elements.external_url.value.trim():target.value,link_label:kind.value==='info'?'':kind.value==='external'?'Abrir página':kind.value==='course'?'Ver capacitación':'Ver evento'});
+    function syncDestination(selected=''){
+      const linked=kind.value!=='info',external=kind.value==='external',internal=linked&&!external,items=destinations[kind.value]||[];
+      target.innerHTML='<option value="">Selecciona una publicación</option>'+items.map(item=>`<option value="${item.url}" ${item.url===selected?'selected':''}>${escape(item.title)}</option>`).join('');
+      root.querySelector('#popup-destination').hidden=!internal;root.querySelector('#popup-external').hidden=!external;form.elements.external_url.disabled=!external||saving;form.elements.external_url.required=external;
+      target.disabled=!internal||saving;target.required=internal;
+      root.querySelector('#popup-target-hint').textContent=items.length?'Solo se muestran publicaciones activas.':linked?'No hay publicaciones disponibles de este tipo. Puedes elegir otro o dejarlo informativo.':'';
+    }
+    function renderImage(){
+      const src=localImage||(current.image_id?fileUrl(current.image_id):''),card=root.querySelector('#popup-image');
+      card.dataset.size=form.elements.display_size.value;form.elements.image_focus.disabled=saving||form.elements.image_format.value==='original';
+      card.innerHTML=src?popupContent(data(),src,{interactive:false}):'<p class="hint">Selecciona una imagen para previsualizarla.</p>';
+      preview.disabled=saving||!hasImage();
+    }
+    function releaseImage(){if(localImage){URL.revokeObjectURL(localImage);localImage='';}}
+    const validate=attachValidation(form,()=>[...(!hasImage()?[{control:form.elements.image,message:'Selecciona una imagen para guardar el popup.'}]:[]),...(kind.value==='external'&&!isExternalPopupLink(form.elements.external_url.value.trim())?[{control:form.elements.external_url,message:'Escribe un enlace completo con http:// o https://, sin usuario ni contraseña.'}]:[])]);
+    kind.addEventListener('change',()=>{target.setCustomValidity('');form.elements.external_url.setCustomValidity('');syncDestination();renderImage();});
+    form.addEventListener('input',renderImage);form.addEventListener('change',renderImage);
+    root.querySelector('#popup-device').addEventListener('change',event=>root.querySelector('#popup-stage').dataset.device=event.target.value);
+    form.elements.image.addEventListener('change',()=>{closePreview();releaseImage();const file=form.elements.image.files[0];if(file&&/\.(png|jpe?g|webp)$/i.test(file.name)&&file.size<=8*1024*1024)localImage=URL.createObjectURL(file);renderImage();});
+    preview.addEventListener('click',()=>{if(!hasImage()||!validate())return;closePreview();closePreview=showHomePopup({...current,...data()},{preview:true,imageSrc:localImage});});
+    form.addEventListener('submit',event=>{event.preventDefault();if(saving||!validate())return;
+      busy(form.querySelector('[type=submit]'),async()=>{
+        const payload={...data(),...(current.id?{id:current.id}:{})},action=current.id?'save':'create',file=form.elements.image.files[0],controls=[...form.querySelectorAll('input,select')];saving=true;controls.forEach(c=>c.disabled=true);preview.disabled=true;error.hidden=true;
+        try{current=file?await upload('popup',action,file,payload):await command('popup',action,payload);if(disposed)return;closePreview();form.elements.image.value='';releaseImage();renderImage();toast(Number(current.active)?'Popup activo en Inicio.':'Popup guardado y desactivado.');window.location.hash='admin/eventos/popup';}
+        catch(failure){if(!disposed){error.hidden=false;error.textContent=failure.message;}throw failure;}
+        finally{saving=false;controls.forEach(c=>c.disabled=false);target.disabled=!['course','event'].includes(kind.value);form.elements.external_url.disabled=kind.value!=='external';preview.disabled=!hasImage();if(!disposed)renderImage();}
+      });
+    });syncDestination(current.link_url);renderImage();return ()=>{disposed=true;closePreview();releaseImage();};
+  }};
+}
+
+async function popupListPage(){
+  let items=await query('popup','list');
+  return {html:`${breadcrumbs([{label:'Eventos',href:'#admin/eventos'},{label:'Popups de Inicio'}])}${heading('COMUNICACIÓN DEL PORTAL','Popups de Inicio','Guarda varios anuncios y elige cuál mostrar. Solo uno puede estar activo.','<a class="button primary" href="#admin/eventos/popup/nuevo">+ Crear popup</a>')}<section class="panel" id="popup-list"></section>`,mount(root){
+    const list=root.querySelector('#popup-list');let disposed=false,working=false,closePreview=()=>{};
+    function render(){list.innerHTML=items.length?`<div class="table-scroll"><table><thead><tr><th>Popup</th><th>Estado</th><th>Destino</th><th>Acciones</th></tr></thead><tbody>${items.map(item=>`<tr><td><div class="popup-list-name">${item.image_id?`<img src="${escape(fileUrl(item.image_id))}" alt="" loading="lazy">`:''}<strong>${escape(item.title||`Popup #${item.id}`)}</strong></div></td><td><span class="badge" data-tone="${Number(item.active)?'success':'neutral'}">${Number(item.active)?'Activo':'Desactivado'}</span></td><td>${item.link_url.startsWith('#curso/')?'Capacitación':item.link_url.startsWith('#eventos/')?'Evento':isExternalPopupLink(item.link_url)?'Externo':'Informativo'}</td><td><div class="media-row-actions"><button class="button white media-icon-action" type="button" title="Vista previa" aria-label="Vista previa del popup ${item.id}" data-preview="${item.id}" ${item.image_id?'':'disabled'}>${icon('eye')}</button><a class="button white media-icon-action" title="Editar" aria-label="Editar popup ${item.id}" href="#admin/eventos/popup/${item.id}">${icon('edit')}</a><button class="button ${Number(item.active)?'white':'primary'}" type="button" data-toggle="${item.id}">${icon(Number(item.active)?'pause':'check')}${Number(item.active)?'Desactivar':'Activar'}</button><button class="button white media-icon-action media-delete" title="Eliminar" aria-label="Eliminar popup ${item.id}" type="button" data-delete="${item.id}">${icon('trash')}</button></div></td></tr>`).join('')}</tbody></table></div>`:empty('Todavía no hay popups guardados.','<a class="button primary" href="#admin/eventos/popup/nuevo">Crear popup</a>');}
+    list.addEventListener('click',async event=>{
+      const button=event.target.closest('button');if(!button||working)return;
+      const id=Number(button.dataset.preview||button.dataset.toggle||button.dataset.delete),item=items.find(item=>Number(item.id)===id);if(!item)return;
+      if(button.dataset.preview){closePreview();closePreview=showHomePopup(item,{preview:true});return;}
+      if(button.dataset.delete&&!await confirmAction(`¿Eliminar ${item.title||'este popup'}?${Number(item.active)?' Dejará de mostrarse en Inicio.':''}`,{label:'Eliminar',title:'Eliminar popup'}))return;
+      if(disposed||working)return;working=true;
+      await busy(button,async()=>{
+        await command('popup',button.dataset.delete?'delete':'status',{id,...(button.dataset.delete?{}:{active:Number(item.active)?0:1})});
+        const latest=await query('popup','list');if(disposed)return;items=latest;render();toast(button.dataset.delete?'Popup eliminado.':'Estado del popup actualizado.');
+      });working=false;
+    });render();return ()=>{disposed=true;closePreview();};
+  }};
+}

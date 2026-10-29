@@ -1,0 +1,44 @@
+# Include inside the site's VirtualHost after defining ACADEMIA_PROJECT.
+# Example: Define ACADEMIA_PROJECT "/var/www/la-academia"
+# PHP must already be configured by the server or hosting provider.
+DocumentRoot "${ACADEMIA_PROJECT}/public"
+
+# Ignore the local XAMPP .htaccess, including its inherited rewrite rules.
+# The entire project is private; only its public directory is granted access.
+<Directory "${ACADEMIA_PROJECT}">
+    AllowOverride None
+    Options -Indexes
+    Require all denied
+</Directory>
+
+<Directory "${ACADEMIA_PROJECT}/public">
+    AllowOverride None
+    Options +FollowSymLinks -Indexes -MultiViews
+    DirectoryIndex index.php
+    Require all granted
+
+    RewriteEngine On
+    RewriteRule (^|/)\. - [F,END]
+    RewriteRule ^(?:backend|storage|tools|tests|docs|archive|public)(?:/|$) - [F,END,NC]
+    RewriteRule ^$ index.php [END]
+    RewriteRule ^index\.php$ - [END]
+    RewriteRule ^api/v1(?:/.*)?$ index.php [END]
+
+    # Only existing browser resources may bypass the PHP entry point.
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^(?:assets|frontend)/.*\.(?:js|css|png|jpe?g|gif|webp|avif|svg|ico|woff2?|ttf|otf)$ - [END,NC]
+    RewriteRule ^.*\.(?:php[0-9]?|phtml|phar|phps|sql|env|log|bak|ps1|py)$ - [F,END,NC]
+    RewriteRule ^ - [R=404,END]
+
+    <IfModule php_module>
+        php_value upload_max_filesize 50M
+        php_value post_max_size 56M
+        php_value memory_limit 256M
+    </IfModule>
+    <IfModule headers_module>
+        Header always set X-Content-Type-Options "nosniff"
+        <FilesMatch "\.(?:js|css)$">
+            Header set Cache-Control "public, max-age=0, must-revalidate"
+        </FilesMatch>
+    </IfModule>
+</Directory>

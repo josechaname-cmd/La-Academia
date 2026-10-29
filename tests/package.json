@@ -1,0 +1,12 @@
+{
+  "name": "academia-flow-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:exam": "node evaluation-dialog.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0",
+    "postcss": "8.5.32"
+  }
+}

@@ -1,0 +1,20 @@
+/* Foundation is limited to the academy-ui root and its own shell. */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 105px; }
+body { min-height:100dvh; display:flex; flex-direction:column; margin: 0; background: var(--ds-color-surface); color: var(--ds-color-ink); font: var(--ds-text-md)/var(--ds-line-body) var(--ds-font-family); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: var(--ds-text-3xl); line-height: var(--ds-line-tight); font-weight: var(--ds-font-medium); letter-spacing: -.03em; }
+h2 { font-size: var(--ds-text-2xl); line-height: var(--ds-line-heading); font-weight: var(--ds-font-medium); letter-spacing: -.02em; }
+h3 { font-size: var(--ds-text-xl); line-height: var(--ds-line-heading); font-weight: var(--ds-font-medium); }
+p, small { color: var(--ds-color-muted); }
+small { font-size: var(--ds-text-xs); }
+[hidden] { display: none !important; }
+:focus-visible { outline: var(--ds-state-focus-width) solid var(--ds-color-focus); outline-offset: var(--ds-state-focus-offset); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+@media (--screen-mobile) { .heading h1, .workspace h1 { font-size: var(--ds-text-2xl); } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

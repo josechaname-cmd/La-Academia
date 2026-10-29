@@ -1,0 +1,55 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+import {homeCarousel,slideMedia,applySlideStyles} from '../public/frontend/components/home-carousel.js';
+const linked={image:'assets/slider/test.png',alt:'Descripción accesible',title:'Título <seguro>',subtitle:'Texto <breve>',link_url:'https://example.org/formacion'};
+const linkedDom=new JSDOM(homeCarousel([linked]).html);
+assert.equal(linkedDom.window.document.querySelector('.carousel-copy h2').textContent,linked.title);
+assert.equal(linkedDom.window.document.querySelector('.carousel-copy p').textContent,linked.subtitle);
+const imageLink=linkedDom.window.document.querySelector('.carousel-image-link');
+assert(imageLink.querySelector('img'));assert.equal(imageLink.target,'_blank');assert.equal(imageLink.rel,'noopener noreferrer');
+assert.equal(linkedDom.window.document.querySelector('seguro,breve'),null);
+assert(!homeCarousel([linked],{interactive:false}).html.includes('href='),'Sequence previews never navigate');
+assert(!slideMedia({...linked,link_url:'javascript:alert(1)'},{interactive:true}).includes('href='));
+const credentialUrl=new URL('https://example.org');credentialUrl.username='test';credentialUrl.password='test';
+assert(!slideMedia({...linked,link_url:credentialUrl.href},{interactive:true}).includes('href='));
+assert(slideMedia({...linked,link_url:'#curso/7'},{interactive:true}).includes('href="#curso/7"'));
+const styledDom=new JSDOM(slideMedia({...linked,font_family:'georgia',text_align:'right',title_color:'#FFD43B',text_color:'#112233',title_size:64,text_size:24}));applySlideStyles(styledDom.window.document);
+const copy=styledDom.window.document.querySelector('.carousel-copy');assert.equal(copy.dataset.font,'georgia');assert.equal(copy.dataset.align,'right');assert.equal(copy.style.getPropertyValue('--slide-title-color'),'#ffd43b');assert.equal(copy.style.getPropertyValue('--slide-text-color'),'#112233');assert.equal(copy.style.getPropertyValue('--slide-title-size'),'64px');assert.equal(copy.style.getPropertyValue('--slide-text-size'),'24px');
+const untrusted=new JSDOM(slideMedia({...linked,font_family:'evil',text_align:'evil',title_color:'url(https://example.org)',text_color:[],title_size:500,text_size:1}));applySlideStyles(untrusted.window.document);const safe=untrusted.window.document.querySelector('.carousel-copy');assert.equal(safe.dataset.font,'default');assert.equal(safe.dataset.align,'left');assert.equal(safe.style.getPropertyValue('--slide-title-color'),'#ffffff');assert.equal(safe.style.getPropertyValue('--slide-title-size'),'36px');assert.equal(safe.style.getPropertyValue('--slide-text-size'),'17px');styledDom.window.close();untrusted.window.close();
+linkedDom.window.close();
+const slides=[{image:'assets/slider/01.jpg',alt:'Primera <imagen>'},{image:'assets/slider/02.jpg',alt:'Segunda'}];
+assert.equal(homeCarousel().html,'');
+const dom=new JSDOM(`<main>${homeCarousel(slides).html}</main>`,{pretendToBeVisual:true});
+const {window}=dom;Object.assign(globalThis,{window,document:window.document,AbortController:window.AbortController});
+let reduce=false;const media=new window.EventTarget();Object.defineProperty(media,'matches',{get:()=>reduce});window.matchMedia=()=>media;
+const root=document.querySelector('main'),dots=[...root.querySelectorAll('[data-slide]')];
+assert.equal(root.querySelectorAll('img').length,2);assert.equal(dots.length,2);
+assert(!root.querySelector('[data-prev],[data-next]'));assert(!root.textContent.includes('Reproducir'));
+assert.equal(root.querySelector('article').getAttribute('aria-label'),slides[0].alt);
+assert(homeCarousel(slides.slice(0,1)).html.includes('cada 5 segundos" hidden'));
+const timers=new Map();let serial=0;
+const realSetTimeout=globalThis.setTimeout,realClearTimeout=globalThis.clearTimeout;
+globalThis.setTimeout=(fn,ms)=>{if(ms<1000)return realSetTimeout(fn,ms);const id=++serial;timers.set(id,{fn,ms});return id;};globalThis.clearTimeout=id=>{if(!timers.delete(id))realClearTimeout(id);};
+const effects=[];window.HTMLElement.prototype.animate=function(frames,options){const effect={target:this,frames,options,state:'running',play(){this.state='running';},pause(){this.state='paused';},cancel(){this.state='cancelled';}};effects.push(effect);return effect;};
+let cleanup;const active=()=>root.querySelector('[aria-current=true]')?.dataset.slide;
+try{
+ cleanup=homeCarousel(slides).mount(root);assert.equal(root.querySelectorAll('img')[1].loading,'eager');
+ assert.equal(effects.length,1);assert(effects.every(e=>e.options.duration===5000&&e.state==='running'));assert.equal(effects[0].target,dots[0].querySelector('.carousel-dot-progress'));assert.equal(effects[0].options.easing,'linear');assert.equal(effects[0].currentTime,0);assert.equal(effects[0].frames[1].transform,'scaleX(1)');
+ function advance(){const [id,job]=timers.entries().next().value;assert(job.ms>4900&&job.ms<=5000);timers.delete(id);job.fn();}
+ advance();assert.equal(active(),'1');advance();assert.equal(active(),'0');
+ dots[1].click();assert.equal(active(),'1');assert.equal(root.querySelector('.carousel-status').textContent,'Segunda');
+ dots[1].focus();assert.equal(timers.size,0);assert(effects.slice(-1).every(e=>e.state==='paused'));
+ dots[1].dispatchEvent(new window.KeyboardEvent('keydown',{key:'Home',bubbles:true}));assert.equal(active(),'0');assert.equal(document.activeElement,dots[0]);
+ dots[0].blur();assert.equal(timers.size,1);
+ const hover=new window.Event('pointerenter');Object.defineProperty(hover,'pointerType',{value:'mouse'});root.querySelector('.hero-carousel').dispatchEvent(hover);assert.equal(timers.size,1,'Hover does not stop autoplay');
+ dots[1].dispatchEvent(new window.Event('pointerdown',{bubbles:true}));dots[1].focus();dots[1].click();assert.equal(timers.size,1,'Pointer selection continues autoplay even with focus');assert.equal(effects.at(-1).state,'running');
+ document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Tab',bubbles:true}));dots[0].focus();assert.equal(timers.size,0,'Keyboard focus still pauses autoplay');dots[0].blur();dots[0].click();
+ Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new window.Event('visibilitychange'));assert.equal(timers.size,0);
+ Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new window.Event('visibilitychange'));assert.equal(timers.size,1);
+ reduce=true;media.dispatchEvent(new window.Event('change'));assert.equal(timers.size,0);
+ reduce=false;media.dispatchEvent(new window.Event('change'));assert.equal(timers.size,1);
+ window.dispatchEvent(new window.Event('pageshow'));assert.equal(timers.size,1,'Restored page has exactly one timer');assert.equal(effects.at(-1).state,'running');
+ cleanup();assert.equal(timers.size,0);assert(effects.every(e=>e.state==='cancelled'));dots[1].click();assert.equal(active(),'0','Unmount removes listeners');
+ for(let pass=0;pass<2;pass++){root.innerHTML=homeCarousel(slides).html;cleanup=homeCarousel(slides).mount(root);assert.equal(active(),'0');assert.equal(timers.size,1,'Mount starts without reloading');assert.equal(effects.at(-1).state,'running');assert.equal(effects.at(-1).currentTime,0);cleanup();assert.equal(timers.size,0);}
+}finally{cleanup?.();globalThis.setTimeout=realSetTimeout;globalThis.clearTimeout=realClearTimeout;dom.window.close();}
+console.log('OK slider: puntos expandibles, navegación directa/teclado, precarga, rotación 5s, pausa, movimiento reducido y limpieza.');

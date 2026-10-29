@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+const dom=new JSDOM('<body><main></main><div id="toast" hidden></div></body>',{url:'http://localhost/la-academia/#admin/capacitaciones/42'});
+for(const key of ['window','document','location','FormData','Event','CustomEvent','AbortController'])globalThis[key]=dom.window[key];
+window.HTMLElement.prototype.scrollIntoView=function(){};
+const course={id:42,title:'Curso con portada propia',category:'SSOMA',description:'Descripción que solo debe aparecer en el detalle.',status:'draft',exam_required:0,materials:[{id:10,original_name:'Material.pdf',extension:'pdf',size:100}],cover_file_id:10,cover_status:'ready',exam:null};
+let writes=0,reloads=0,fail=true;
+globalThis.fetch=async(url,options={})=>{const path=new URL(url).pathname.split('/api/v1/')[1];let data;
+ if(path==='session')data={user:{id:1,role:'capacitador',name:'Autor real'},csrf:'test'};
+ else if(path.startsWith('categories'))data=['SSOMA'];
+ else if(path==='admin/courses/42')data=structuredClone(course);
+ else if(path==='admin/courses/42/exam')data=null;
+ else if(path==='admin/courses/42/cover-image'){writes++;assert(options.body instanceof FormData);assert.equal(options.body.get('file').name,'portada.png');if(fail){fail=false;return {ok:false,status:422,json:async()=>({error:{message:'No se pudo subir la imagen'}})};}course.custom_cover_id=88;data=structuredClone(course);}
+ else if(path==='admin/courses/42/cover'){writes++;course.custom_cover_id=null;data=structuredClone(course);}
+ else throw Error(path);
+ return {ok:true,json:async()=>({data})};};
+const {courseEditor}=await import('../public/frontend/pages/admin-courses.js');const {examEditor}=await import('../public/frontend/pages/admin-exam.js');const {courseCover}=await import('../public/frontend/components/course-cover.js');const {courseCards}=await import('../public/frontend/components/course-cards.js');
+const root=document.querySelector('main'),flush=async()=>{for(let i=0;i<60;i++)await Promise.resolve();};
+let page=await courseEditor(42,async()=>reloads++,true);root.innerHTML=page.html;let cleanup=page.mount(root);
+assert.equal(root.querySelector('h1').textContent,'Revisar y publicar');assert.equal(document.activeElement.id,'publish');
+const form=root.querySelector('#custom-cover-form'),file=new window.File(['png'],'portada.png',{type:'image/png'});const originalCreate=URL.createObjectURL,originalRevoke=URL.revokeObjectURL;const revoked=[];URL.createObjectURL=()=> 'blob:custom-cover';URL.revokeObjectURL=value=>revoked.push(value);
+Object.defineProperty(form.elements.cover_image,'files',{value:[file]});Object.defineProperty(form.elements.cover_image,'value',{get:()=> 'C:/fakepath/portada.png'});form.elements.cover_image.required=false;form.elements.cover_image.dispatchEvent(new Event('change',{bubbles:true}));
+assert.equal(root.querySelector('#custom-cover-preview img').getAttribute('src'),'blob:custom-cover');assert.equal(writes,0);
+form.dispatchEvent(new Event('submit',{cancelable:true}));await flush();assert.equal(writes,1);assert.equal(reloads,0);assert.equal(form.querySelector('button').disabled,false);assert.equal(form.elements.cover_image.disabled,false);
+form.dispatchEvent(new Event('submit',{cancelable:true}));await flush();assert.equal(writes,2);assert.equal(reloads,1);cleanup();assert(revoked.includes('blob:custom-cover'));
+assert.match(courseCover(course),/files\/88/);assert(!courseCards([course]).includes(course.description));
+page=await courseEditor(42,async()=>reloads++);root.innerHTML=page.html;cleanup=page.mount(root);assert.equal(root.querySelector('#save-cover').disabled,false,'Can return to same PDF after custom cover');root.querySelector('#save-cover').click();await flush();assert.equal(course.custom_cover_id,null);cleanup();
+page=await examEditor(42,async()=>{});root.innerHTML=page.html;cleanup=page.mount(root);assert.equal(root.querySelectorAll('.question-editor').length,1);assert(root.querySelector('[data-remove-question]').disabled);root.querySelector('#add-question').click();assert.equal(root.querySelectorAll('.question-editor').length,2);root.querySelector('[data-remove-question="1"]').click();await flush();assert.equal(root.querySelectorAll('.question-editor').length,1);cleanup();
+URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;const {toast}=await import('../public/frontend/components/ui.js?v=20261029-10');clearTimeout(toast.timer);dom.window.close();
+console.log('OK mejoras capacitación: paso Publicar, preview/carga de portada y reintento, regreso a PDF, cards sin descripción y examen nuevo dinámico.');
