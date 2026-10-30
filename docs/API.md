@@ -71,6 +71,7 @@ La tabla siguiente se genera a partir del archivo de rutas en esta entrega. La f
 | GET | `/events` | public | 200 |
 | GET | `/courses` | public | 200 |
 | GET | `/courses/{id}` | public | 200 |
+| DELETE | `/admin/courses/{id}/permanent` | admin de la sede o superadmin | 200 |
 | POST | `/courses/{id}/view` | public | 200 |
 | POST | `/events/{id}/view` | public | 200 |
 | GET | `/categories` | public | 200 |
@@ -139,7 +140,7 @@ Propósito, parámetros, respuestas, errores y consumidores de cada ruta: invent
 ### Cursos y archivos
 
 - Crear curso: multipart con `title`, `category`, `description`, `file`. PDF/PPT/PPTX hasta 50 MB.
-- Crear/editar curso: `title`, `category`, `description` y `exam_required` (0 o 1). En creación viaja como campo multipart junto al archivo; en edición como JSON. Si se omite, conserva el modo existente o usa 1 para cursos nuevos. No existe duración obligatoria para el material.
+- Crear/editar curso: `title`, `category`, `description` y `exam_required` (0 o 1). La modalidad se elige en la creación multipart y puede cambiarse en el borrador hasta la primera publicación. Después se puede omitir o repetir su valor; intentar cambiarla devuelve 409 sin guardar cambios. Por defecto los cursos nuevos usan 1. No existe duración obligatoria para el material.
 - Agregar material: multipart `file` a `/admin/courses/{course_id}/files`.
 - Publicar: POST con `{}` a `/admin/courses/{id}/publish`.
 - `GET /files/{id}`: respuesta binaria, no envelope JSON. `?download=1` solicita descarga. Comprueba publicación o sesión administrativa.
@@ -181,7 +182,7 @@ El arreglo debe tener al menos una pregunta; la cantidad es flexible. `correct` 
 ## Idempotencia, paginación y compatibilidad
 
 - El envío de evaluación es idempotente por token. Las demás creaciones no tienen claves de idempotencia: el cliente deshabilita el botón mientras espera y **no reintenta escrituras automáticamente**.
-- Las páginas públicas muestran seis registros por página; por ahora el filtro y paginación se realizan en el navegador. No se afirma que la API esté paginada en servidor. Reportes están limitados a los 1 000 resultados recientes.
+- El catálogo muestra seis registros por página. Inicio incluye todas las capacitaciones en grupos laterales de hasta tres filas: nueve tarjetas en escritorio, seis hasta 1000 px y tres hasta 680 px. El filtro y la paginación se realizan en el navegador; la API no está paginada. Reportes están limitados a los 1 000 resultados recientes.
 - Los métodos de agentes conservan una interfaz interna GET/POST; el router HTTP valida los verbos REST y adapta el contexto. Esa adaptación no permite cambiar el permiso requerido.
 - No se conserva la antigua API de `?agent=...&action=...` en la instalación nueva. El cliente incluido ya usa v1. El proyecto anterior queda como copia histórica y redirección del portal.
 
@@ -233,7 +234,9 @@ Los derivados no disponibles devuelven 409 mientras no están listos, o 404 si f
 
 `exam_required=0` permite publicar con material aunque no haya examen. El detalle público devuelve `exam:null`; el detalle administrativo conserva el examen histórico si existe. Inicio y envío de intentos pendientes rechazan el modo sin examen con 409. Las notas ya guardadas y las exportaciones permanecen disponibles. Los reportes identifican estos exámenes como `not_required` («No requerido»).
 
-`exam_required=1` vuelve a exigir evaluación. Si el curso estaba publicado y no tiene examen, el guardado lo deja en borrador para no publicar una capacitación incompleta. Si existe, respeta su horario y activación. Valores distintos de los enteros 0/1 se rechazan con 422. Guardar el mismo estado no actualiza fechas ni genera actividad.
+`exam_required=1` exige evaluación. La modalidad puede cambiarse mientras `status=draft` y `first_published_at=null`; después de la primera publicación cambiar 0/1 devuelve 409, incluso si vuelve a borrador. Valores distintos de los enteros 0/1 se rechazan con 422. Las preguntas siguen siendo editables mediante versiones que conservan los resultados anteriores. Guardar el mismo estado no actualiza fechas ni genera actividad.
+
+`DELETE /admin/courses/{id}/permanent` exige JSON `{"confirm_delete":true}`, sesión, CSRF y permiso sobre la sede. Elimina el curso, sus materiales, portada exclusiva, exámenes, inscripciones, intentos, resultados, vistas y actividad asociada. Conserva trabajadores e imágenes/derivados compartidos. Devuelve `{"deleted":true,"permanent":true}`; sin confirmación devuelve 422, durante una conversión 409 y para otra sede 403. La ruta `DELETE /admin/courses/{id}` conserva el archivado existente. Consulta [gestión de capacitaciones](GESTION-CAPACITACIONES.md).
 
 ### Avisos por grupos de visitas
 
@@ -302,3 +305,7 @@ sin un botón adicional. El esquema SQL de `home_popup` no cambia.
 ## Videos · 30 de octubre de 2026
 
 Crear capacitación y agregar materiales aceptan MP4/WebM mediante el multipart existente. `GET /admin/materials/options` comunica formatos y límites efectivos. `GET/HEAD /files/{id}` permite streaming progresivo por rangos sin registrar vistas; `POST /courses/{id}/view` acepta `file_id` y comprueba su pertenencia. Detalles, metadatos y errores: [Videos](VIDEOS.md).
+
+## Políticas en PDF
+
+Las rutas públicas y administrativas de políticas, permisos y formatos están en [Políticas](POLITICAS.md). Su contenido no incrementa las vistas de capacitación.

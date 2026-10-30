@@ -16,7 +16,7 @@ final class CourseAccess
     {
         $course = null;
         if ($agent === 'content') {
-            if (in_array($action, ['admin.get','save','publish','delete','cover','cover.upload'], true)) $course = $context->id();
+            if (in_array($action, ['admin.get','save','publish','delete','purge','cover','cover.upload'], true)) $course = $context->id();
             elseif ($action === 'upload') $course = $context->id('course_id');
             elseif (in_array($action, ['file.delete','preview.retry'], true)) {
                 $this->auth->requireAdmin();
@@ -43,6 +43,7 @@ final class CourseAccess
         $actor = $this->auth->user();
         if (!$actor) Http::fail(404, 'Archivo no disponible.');
         if (CoursePolicy::siteId($actor) === null) return;
+        if($policy=$this->records->filePolicy((int)$file['id'])){CoursePolicy::requireCourse($actor,$policy);return;}
         if ($file['course_id']) {
             CoursePolicy::requireCourse($actor, $this->records->course((int)$file['course_id']));
             return;

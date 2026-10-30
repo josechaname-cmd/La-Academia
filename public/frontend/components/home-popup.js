@@ -1,6 +1,6 @@
-import {fileUrl} from '../api.js?v=20261030-1';
-import {escape,icon} from './ui.js?v=20261030-1';
-import {isExternalLink} from './public-link.js?v=20261030-1';
+import {fileUrl} from '../api.js?v=20261030-4';
+import {escape,icon} from './ui.js?v=20261030-4';
+import {isExternalLink} from './public-link.js?v=20261030-4';
 const isHome=()=>['','#inicio'].includes(window.location.hash);
 export const isExternalPopupLink=isExternalLink;
 export function popupContent(item,source,{interactive=true}={}){

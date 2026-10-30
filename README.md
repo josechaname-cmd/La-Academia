@@ -148,3 +148,5 @@ La gestión individual y la carga actualizan el mismo padrón, los datos de eval
 ## Videos en las capacitaciones
 
 El editor permite cargar MP4/WebM de hasta 500 MB como materiales, con vista previa y progreso. El portal reproduce sin autoplay y cuenta una vista por capacitación/sesión al comenzar la reproducción. Consulta [videos: configuración, API, BD y pruebas](docs/VIDEOS.md).
+
+La gestión distingue creación y edición después de publicar: [capacitaciones](docs/GESTION-CAPACITACIONES.md). La biblioteca de [Políticas en PDF](docs/POLITICAS.md) incluye carga, consulta y descarga.

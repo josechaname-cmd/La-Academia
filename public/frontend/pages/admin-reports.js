@@ -1,7 +1,7 @@
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-1';
-import {motion} from '../design/runtime.js?v=20261030-1';
-import {query,examResultsUrl} from '../api.js?v=20261030-1';
-import {heading,escape,empty,date,optionList,busy,errorBox} from '../components/common.js?v=20261030-1';
+import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-4';
+import {motion} from '../design/runtime.js?v=20261030-4';
+import {query,examResultsUrl} from '../api.js?v=20261030-4';
+import {heading,escape,empty,date,optionList,busy,errorBox} from '../components/common.js?v=20261030-4';
 const examState=exam=>exam.course_status==='archived'?'Archivado':({scheduled:'Programado',open:'En curso',closed:'Finalizado',disabled:'Desactivado',not_required:'No requerido'}[exam.state]);
 export async function reportsPage(examId='') {
   if(examId&&!/^[1-9][0-9]*$/.test(examId))throw new Error('Examen no válido.');

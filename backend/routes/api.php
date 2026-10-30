@@ -2,6 +2,13 @@
 declare(strict_types=1);
 // [HTTP method, route, agent, action, access, success status]
 return [
+ ['GET','/policies','policy','list','public',200],
+ ['GET','/policies/{id}','policy','get','public',200],
+ ['GET','/admin/policies','policy','admin.list','admin',200],
+ ['GET','/admin/policies/{id}','policy','admin.get','admin',200],
+ ['POST','/admin/policies','policy','create','admin',201],
+ ['POST','/admin/policies/{id}','policy','save','admin',200],
+ ['DELETE','/admin/policies/{id}','policy','delete','admin',200],
  ['GET','/home-popup','popup','public','public',200],
  ['GET','/admin/home-popup','popup','list','superadmin',200],
  ['POST','/admin/home-popup','popup','save','superadmin',201],
@@ -33,6 +40,7 @@ return [
  ['GET','/files/{id}','content','file','public',200],
  ['HEAD','/files/{id}','content','file','public',200],
  ['GET','/admin/materials/options','content','upload.options','admin',200],
+ ['DELETE','/admin/courses/{id}/permanent','content','purge','admin',200],
  ['GET','/files/{id}/thumbnail','content','thumbnail','public',200],
  ['GET','/files/{id}/preview','content','preview','public',200],
  ['GET','/files/{id}/preview-status','content','preview.status','public',200],

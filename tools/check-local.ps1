@@ -50,13 +50,17 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la configuración del examen.' }
     node tests/catalog.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló la validación del catálogo.' }
+    node tests/policies.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la interfaz de Políticas.' }
+    node tests/home-course-shelf.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la navegación lateral de Inicio.' }
     node tests/navigation-cache.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló la validación de navegación.' }
     node tests/activity-ui.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló la validación de actividad.' }
     & 'C:\xampp\php\php.exe' tests/cache.php
     if ($LASTEXITCODE -ne 0) { throw 'Falló la validación de caché.' }
-    & 'C:\xampp\php\php.exe' tests/isolated.php run.php backend-regression.php personnel-import.php concurrency.php http-isolated.php exam-policy.php
+    & 'C:\xampp\php\php.exe' tests/isolated.php run.php backend-regression.php personnel-import.php concurrency.php http-isolated.php exam-policy.php course-management.php
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron las pruebas aisladas del backend.' }
     python tests/report_xlsx.py
     if ($LASTEXITCODE -ne 0) { throw 'Falló la exportación XLSX sintética.' }

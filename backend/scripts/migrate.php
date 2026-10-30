@@ -20,6 +20,8 @@ foreach (explode(';',$sql) as $statement) if (trim($statement)!=='') $db->pdo->e
 (new Academia\Migrations\PersonnelMigration($db))->run();
 (new Academia\Migrations\OrganizationMigration($db))->run();
 (new Academia\Migrations\PreviewMigration($db))->run();
+(new Academia\Migrations\CoursePublicationMigration($db))->run();
+(new Academia\Migrations\PolicyMigration($db))->run();
 $db->pdo->exec('INSERT IGNORE INTO event_images(event_id,file_id,position) SELECT id,image_id,0 FROM events WHERE image_id IS NOT NULL');
 if (!is_dir($config['storage'])&&!mkdir($config['storage'],0700,true)) throw new RuntimeException('No se pudo crear el almacenamiento privado.');
 $db->run("INSERT INTO activity_log(event_key,event_type,entity_type,entity_id,course_id,exam_id,title,body,created_at)

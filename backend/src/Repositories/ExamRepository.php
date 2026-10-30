@@ -21,7 +21,9 @@ final class ExamRepository {
         $schedule=ExamSchedule::validate($input);
         $policy=ExamPolicy::validate($input);
         return $this->db->transaction(function()use($courseId,$questions,$schedule,$policy,$actor){
-            if(!$this->db->run("SELECT id FROM courses WHERE id=? AND status<>'archived' FOR UPDATE",[$courseId])->fetchColumn())Http::fail(404,'Capacitación no encontrada.');
+            $course=$this->db->run("SELECT id,exam_required FROM courses WHERE id=? AND status<>'archived' FOR UPDATE",[$courseId])->fetch();
+            if(!$course)Http::fail(404,'Capacitación no encontrada.');
+            if(!(int)$course['exam_required'])Http::fail(409,'Esta capacitación está configurada sin examen. Revisa su modalidad antes de agregar preguntas.');
             $current=$this->latest($courseId);
             if($current&&$current['questions']===$questions&&ExamPolicy::settings($current)===$policy){
                 if($current['opens_at']===$schedule['opens_at']&&$current['closes_at']===$schedule['closes_at']&&($current['duration_minutes']===null?null:(int)$current['duration_minutes'])===$schedule['duration_minutes'])return $current;

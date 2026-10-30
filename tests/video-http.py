@@ -1,5 +1,5 @@
 """Actual video uploads, site permissions, seeking and views in an isolated DB."""
-import hashlib, http.cookiejar, json, os, re, shutil, struct, subprocess, sys, tempfile
+import base64, hashlib, http.cookiejar, json, os, re, shutil, struct, subprocess, sys, tempfile
 from pathlib import Path
 import urllib.error, urllib.request
 
@@ -65,6 +65,14 @@ with tempfile.TemporaryDirectory(prefix='academia-video-fixtures-') as temporary
     admin.upload(f'admin/courses/{cid}/files',video,token=False,expected=403)
     for content,name in [(video,'clip.exe'),(b'%PDF-1.4 not video','clip.mp4'),(video[:40],'clip.mp4'),((directory/'unsupported.mp4').read_bytes(),'clip.mp4')]:admin.upload(f'admin/courses/{cid}/files',content,name,expected=422)
     second=admin.upload(f'admin/courses/{cid}/files',(directory/'clip.webm').read_bytes(),'clip.webm');assert second['video_codec']=='vp9' and second['audio_codec']=='opus'
+    chosen_image=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=')
+    other.upload(f'admin/courses/{cid}/cover-image',chosen_image,'portada.png',expected=403)
+    admin.upload(f'admin/courses/{cid}/cover-image',chosen_image,'portada.png',token=False,expected=403)
+    covered=admin.upload(f'admin/courses/{cid}/cover-image',chosen_image,'portada.png',expected=200)
+    cover_id=covered['custom_cover_id']
+    assert cover_id and len(covered['materials'])==2 and all(m['preview_status'] is None for m in covered['materials']),'Manual cover does not extract frames or add video preview jobs'
+    body,headers=admin.call(f'files/{cover_id}',binary=True);assert body==chosen_image and headers['Content-Type']=='image/png'
+    for client,code in [(guest,404),(other,403)]:client.call(f'files/{cover_id}',expected=code)
     if os.environ.get('ACADEMIA_TEST_LARGE_VIDEO')=='1':
         assert shutil.disk_usage(directory).free>2*1024**3,'Large-file test requires 2 GB free'
         for size,expected in [(500*1024*1024,201),(500*1024*1024+1,422)]:
@@ -84,6 +92,10 @@ with tempfile.TemporaryDirectory(prefix='academia-video-fixtures-') as temporary
             path.unlink()
         print('OK actual 500 MB upload accepted; 500 MB + 1 byte rejected; no full-file RAM allocation.')
     admin.call(f'admin/courses/{cid}/publish','POST',{})
+    listing,_=guest.call('courses');published=next(course for course in listing if course['id']==cid)
+    detail,_=guest.call(f'courses/{cid}')
+    assert published['custom_cover_id']==detail['custom_cover_id']==cover_id
+    body,_=guest.call(f'files/{cover_id}',binary=True);assert body==chosen_image
     body,headers=guest.call(f'files/{fid}',binary=True)
     assert hashlib.sha256(body).digest()==hashlib.sha256(video).digest()
     assert headers['Content-Type']=='video/mp4' and headers['Accept-Ranges']=='bytes' and headers['Content-Disposition'].startswith('inline')
@@ -112,4 +124,14 @@ with tempfile.TemporaryDirectory(prefix='academia-video-fixtures-') as temporary
     admin.call(f'admin/files/{second["id"]}','DELETE',{});admin.call(f'admin/files/{fid}','DELETE',{})
     draft,_=admin.call(f'admin/courses/{cid}');assert draft['status']=='draft' and draft['materials']==[] and int(draft['view_count'])==2
     guest.call(f'files/{fid}',expected=404)
-print(f'OK {checks} video HTTP checks: codecs, metadata, transactional upload, sites, CSRF, ranges/HEAD, views, deletion and draft fallback.')
+    guest.call(f'files/{cover_id}',expected=404)
+    guest.call(f'admin/courses/{cid}/permanent','DELETE',{'confirm_delete':True},expected=401)
+    other.call(f'admin/courses/{cid}/permanent','DELETE',{'confirm_delete':True},expected=403)
+    admin.call(f'admin/courses/{cid}/permanent','DELETE',{'confirm_delete':True},token=False,expected=403)
+    admin.call(f'admin/courses/{cid}/permanent','DELETE',{},expected=422)
+    admin.call(f'admin/courses/{cid}/permanent','DELETE',{'confirm_delete':'true'},expected=422)
+    removed,_=admin.call(f'admin/courses/{cid}/permanent','DELETE',{'confirm_delete':True});assert removed['permanent'] and removed['deleted']
+    admin.call(f'admin/courses/{cid}',expected=404)
+    admin.call(f'files/{cover_id}',expected=404)
+    admin.call(f'admin/courses/{cid}/permanent','DELETE',{'confirm_delete':True},expected=404)
+print(f'OK {checks} video HTTP checks: codecs, manually chosen cover, list/detail consistency, sites, CSRF, ranges/HEAD, views, deletion and draft fallback.')

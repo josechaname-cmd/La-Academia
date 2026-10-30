@@ -13,7 +13,7 @@ final class ApiKernel {
             $route=(new Router(require dirname(__DIR__,2).'/routes/api.php'))->resolve($method,rtrim($path,'/')?:'/');
             $db=new Database($config);
             if($route['action']==='health'){
-                foreach(['admins','auth_attempts','sites','employees','categories','courses','files','announcements','events','event_images','exams','enrollments','attempts','activity_log','file_previews','home_popup','home_slides'] as $table)$db->run("SELECT 1 FROM $table LIMIT 1");
+                foreach(['admins','auth_attempts','sites','employees','categories','courses','files','announcements','events','event_images','exams','enrollments','attempts','activity_log','file_previews','home_popup','home_slides','policies'] as $table)$db->run("SELECT 1 FROM $table LIMIT 1");
                 Http::json(['data'=>['app'=>'La Academia','status'=>'ok','database'=>'connected','environment'=>$config['environment']],'meta'=>['request_id'=>$requestId,'api_version'=>'v1']]);
             }
             $background=$route['action']==='notifications.list'&&($_GET['background']??null)==='1';

@@ -1,7 +1,7 @@
-import {paginationControls,mountTableSearch} from '../components/list-controls.js?v=20261030-1';
-import {query,command,upload} from '../api.js?v=20261030-1';
-import {heading,escape,field,formData,busy,toast,modal,empty,icon} from '../components/common.js?v=20261030-1';
-import {attachValidation} from '../components/form-validation.js?v=20261030-1';
+import {paginationControls,mountTableSearch} from '../components/list-controls.js?v=20261030-4';
+import {query,command,upload} from '../api.js?v=20261030-4';
+import {heading,escape,field,formData,busy,toast,modal,empty,icon} from '../components/common.js?v=20261030-4';
+import {attachValidation} from '../components/form-validation.js?v=20261030-4';
 const visibility=active=>`<span class="badge ${Number(active)?'green':''}">${Number(active)?'Activo':'Inactivo'}</span>`;
 const stateField=active=>`<label class="field">Estado<select name="active"><option value="1" ${Number(active)?'selected':''}>Activo</option><option value="0" ${!Number(active)?'selected':''}>Inactivo</option></select></label>`;
 export async function usersPage(reload,current){
@@ -24,7 +24,7 @@ export async function usersPage(reload,current){
   }};
 }
 
-export {personnelPage} from './admin-personnel.js?v=20261030-1';
+export {personnelPage} from './admin-personnel.js?v=20261030-4';
 
 export async function sitesPage(reload){
   const sites=await query('admin','sites.list');

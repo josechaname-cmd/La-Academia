@@ -84,6 +84,10 @@ a.call(f'admin/courses/{own}', 'PATCH', {'id': foreign, 'title': 'Título sinté
 unchanged, _ = b.call(f'admin/courses/{foreign}')
 assert unchanged['title'] == 'Curso HTTP sintético'
 a.call(f'admin/courses/{own}/publish', 'POST', {})
+a.call(f'admin/courses/{own}', 'PATCH', {'title': 'Cambio rechazado', 'category': 'Pruebas', 'description': 'No debe modificar la modalidad.', 'exam_required': 1}, 409)
+same_mode, _ = a.call(f'admin/courses/{own}')
+assert same_mode['exam_required'] == 0 and same_mode['title'] == 'Título sintético editado'
+
 detail, _ = guest.call(f'courses/{own}')
 assert detail['exam'] is None and int(detail['view_count']) == 0
 guest.call('courses')
@@ -125,9 +129,10 @@ assert identified['exam_policy']['retry_block_reason'] == 'target_reached'
 policy_input = {'questions': [{'prompt': 'Pregunta de política HTTP', 'choices': ['Sí', 'No', 'Otro'], 'correct': 0}], 'opens_at': '2026-01-01T00:00', 'duration_minutes': 20, 'max_attempts': 3, 'passing_score': 15}
 a.call(f'admin/courses/{own}/exam', 'PUT', {**policy_input, 'max_attempts': 0}, 422)
 a.call(f'admin/courses/{own}/exam', 'PUT', {**policy_input, 'passing_score': None}, 422)
-saved_exam, _ = a.call(f'admin/courses/{own}/exam', 'PUT', policy_input)
+a.call(f'admin/courses/{own}/exam', 'PUT', policy_input, 409)
+saved_exam, _ = a.call(f'admin/courses/{identified_course}/exam', 'PUT', policy_input)
 assert int(saved_exam['max_attempts']) == 3 and int(saved_exam['passing_score']) == 15
-read_exam, _ = a.call(f'admin/courses/{own}/exam')
+read_exam, _ = a.call(f'admin/courses/{identified_course}/exam')
 assert read_exam['id'] == saved_exam['id']
 
 guest.call('session', 'POST', {}, 403, token=False)

@@ -1,0 +1,75 @@
+<?php
+declare(strict_types=1);
+require dirname(__DIR__).'/backend/bootstrap.php';
+$config=require dirname(__DIR__).'/backend/config/application.php';
+if(!preg_match('/^academia_test_[a-f0-9]{16}$/D',$config['db_name']))throw new RuntimeException('Use tests/isolated.php');
+set_exception_handler(static function(Throwable $error): never {fwrite(STDERR,$error->getMessage().PHP_EOL);exit(1);});
+$db=new Academia\Support\Database($config);
+$courses=new Academia\Repositories\CourseRepository($db,new Academia\Repositories\CategoryRepository($db));
+$files=new Academia\Services\FileTool($db,$config,new Academia\Support\PresentationTool());
+$deletion=new Academia\Services\CourseDeletionTool($db,$files,$config);
+$exams=new Academia\Repositories\ExamRepository($db,new Academia\Services\ExamRules());
+$checks=0;
+function verify(bool $value,string $label): void {global $checks;if(!$value)throw new RuntimeException($label);$checks++;}
+function rejects(callable $action,int $status): void {try{$action();}catch(Academia\Http\ApiException $e){verify($e->getCode()===$status,'Expected rejection '.$status);return;}throw new RuntimeException('Expected rejection');}
+function material(?int $course,string $extension,?string $hash=null): array {
+ global $db,$config;
+ $key=bin2hex(random_bytes(24)).'.'.$extension;$path=$config['storage'].'/'.$key;file_put_contents($path,'Synthetic content');
+ $db->run('INSERT INTO files(course_id,original_name,storage_key,mime,extension,size) VALUES(?,?,?,?,?,?)',[$course,'Synthetic.'.$extension,$key,$extension==='png'?'image/png':($extension==='mp4'?'video/mp4':'application/pdf'),$extension,17]);$id=(int)$db->pdo->lastInsertId();
+ if($hash){$db->run("INSERT INTO file_previews(file_id,status,source_hash) VALUES(?,'ready',?)",[$id,$hash]);foreach(['.jpg','.pdf'] as $suffix)file_put_contents($config['preview_directory'].'/'.$hash.$suffix,'Synthetic preview');}
+ return ['id'=>$id,'path'=>$path];
+}
+$a=$courses->save(['title'=>'Curso para eliminar','category'=>'Pruebas','description'=>'Contenido sintético de pruebas.','exam_required'=>1],null);$aId=(int)$a['id'];
+$b=$courses->save([...$a,'title'=>'Curso que comparte derivado','exam_required'=>0],null);$bId=(int)$b['id'];
+$unique=hash('sha256','unique');$shared=hash('sha256','shared');
+$owned=[material($aId,'pdf',$unique),material($aId,'pdf',$shared),material($aId,'mp4')];$remaining=material($bId,'pdf',$shared);
+$failed=material($aId,'pptx');$owned[]=$failed;$failedHash=hash_file('sha256',$failed['path']);
+$db->run("INSERT INTO file_previews(file_id,status) VALUES(?,'failed')",[$failed['id']]);
+file_put_contents($config['preview_directory'].'/'.$failedHash.'.pdf','Partial conversion');
+$temporary=$config['preview_directory'].'/'.pathinfo($failed['path'],PATHINFO_FILENAME).'.pdf';file_put_contents($temporary,'Office temporary');
+$cover=material(null,'png');$sharedImage=material(null,'png');$courses->customCover($aId,$cover['id']);$courses->customCover($bId,$sharedImage['id']);
+$db->run("INSERT INTO events(title,description,category,location,starts_at,image_id) VALUES('Evento compartido','Prueba','Pruebas','Lugar',NOW(),?)",[$sharedImage['id']]);$event=(int)$db->pdo->lastInsertId();
+$db->run("INSERT INTO announcements(kind,title,body,image_id,course_id) VALUES('banner','Aviso histórico','Prueba',?,?)",[$sharedImage['id'],$aId]);
+$schedule=['opens_at'=>date('Y-m-d H:i:s',time()-120),'duration_minutes'=>20,'closes_at'=>null,'max_attempts'=>2,'passing_score'=>14];
+$exam=$exams->save($aId,[...$schedule,'questions'=>[['prompt'=>'Pregunta de prueba inicial','choices'=>['A','B','C'],'correct'=>0]]]);$examId=(int)$exam['id'];
+$db->run("INSERT INTO employees(dni,full_name,job_title) VALUES('70000001','Empleado sintético','Prueba')");
+$db->run("INSERT INTO enrollments(exam_id,dni,name,phone,area) VALUES(?,'70000001','Empleado sintético','','')",[$examId]);$enrollment=(int)$db->pdo->lastInsertId();
+$db->run("INSERT INTO attempts(enrollment_id,token_hash,status,score,answers_json) VALUES(?,?,'completed',15,'[0]')",[$enrollment,hash('sha256','attempt')]);$attempt=(int)$db->pdo->lastInsertId();
+$courses->save([...$a,'exam_required'=>0],$aId);
+verify((int)$courses->get($aId,true)['exam_required']===0,'Unpublished draft can change mode');
+$courses->save([...$a,'exam_required'=>1],$aId);
+$courses->publish($aId);$courses->publish($bId);
+rejects(fn()=>$courses->save([...$a,'exam_required'=>0],$aId),409);
+rejects(fn()=>$courses->save([...$b,'exam_required'=>1],$bId),409);
+$db->run("UPDATE courses SET status='draft' WHERE id=?",[$aId]);
+rejects(fn()=>$courses->save([...$a,'exam_required'=>0],$aId),409);
+$courses->publish($aId);
+$edited=$courses->save([...$a,'description'=>'Descripción editada y modalidad conservada.'],$aId);
+verify($edited['description']!=$a['description']&&(int)$edited['exam_required']===1,'Text remains editable');
+$newExam=$exams->save($aId,[...$schedule,'questions'=>[['prompt'=>'Pregunta corregida','choices'=>['A','B','C'],'correct'=>1]]]);
+verify((int)$newExam['version']===2&&(float)$db->run('SELECT score FROM attempts WHERE id=?',[$attempt])->fetchColumn()===15.0,'Question edits preserve historical results');
+$courses->publish($aId);$courses->publish($bId);
+rejects(fn()=>$deletion->remove($aId,[]),422);
+rejects(fn()=>$deletion->remove($aId,['confirm_delete'=>'true']),422);
+$worker=fopen($config['preview_directory'].'/worker.lock','c');flock($worker,LOCK_EX);
+rejects(fn()=>$deletion->remove($aId,['confirm_delete'=>true]),409);flock($worker,LOCK_UN);fclose($worker);
+try{$db->transaction(function()use($deletion,$aId){$deletion->remove($aId,['confirm_delete'=>true]);throw new RuntimeException('rollback fixture');});}catch(RuntimeException $e){verify($e->getMessage()==='rollback fixture','Unexpected transaction failure');}
+verify((bool)$db->run('SELECT id FROM courses WHERE id=?',[$aId])->fetchColumn(),'Rollback restores the course');
+foreach([...$owned,$cover] as $file)verify(is_file($file['path']),'Rollback keeps originals');
+verify(is_file($config['preview_directory'].'/'.$unique.'.jpg'),'Rollback keeps derivatives');
+$result=$db->transaction(fn()=>$deletion->remove($aId,['confirm_delete'=>true]));verify($result['permanent']&&$result['deleted'],'Permanent delete result');
+foreach(['courses'=>'id','exams'=>'course_id','files'=>'course_id','announcements'=>'course_id','activity_log'=>'course_id'] as $table=>$field)verify(!(int)$db->run("SELECT COUNT(*) FROM $table WHERE $field=?",[$aId])->fetchColumn(),'No owned rows in '.$table);
+verify(!$db->run('SELECT id FROM enrollments WHERE id=?',[$enrollment])->fetchColumn(),'Enrollment removed');
+verify(!$db->run('SELECT id FROM attempts WHERE id=?',[$attempt])->fetchColumn(),'Result removed');
+foreach([...$owned,$cover] as $file)verify(!is_file($file['path'])&&!$db->run('SELECT id FROM files WHERE id=?',[$file['id']])->fetchColumn(),'Owned original removed after commit');
+verify(!is_file($config['preview_directory'].'/'.$unique.'.jpg')&&!is_file($config['preview_directory'].'/'.$unique.'.pdf'),'Exclusive derivatives removed');
+verify(!is_file($config['preview_directory'].'/'.$failedHash.'.pdf')&&!is_file($temporary),'Failed conversion artifacts removed');
+verify(is_file($config['preview_directory'].'/'.$shared.'.jpg')&&is_file($remaining['path']),'Shared derivative and unrelated material preserved');
+verify((bool)$db->run("SELECT dni FROM employees WHERE dni='70000001'")->fetchColumn(),'Employee directory preserved');
+verify((int)$db->run('SELECT image_id FROM events WHERE id=?',[$event])->fetchColumn()===$sharedImage['id'],'Shared image reference preserved');
+rejects(fn()=>$deletion->remove($aId,['confirm_delete'=>true]),404);
+$courses->archive($bId);$deletion->remove($bId,['confirm_delete'=>true]);
+verify(!is_file($config['preview_directory'].'/'.$shared.'.jpg'),'Last reference removes the shared derivative');
+verify(is_file($sharedImage['path'])&&(bool)$db->run('SELECT id FROM files WHERE id=?',[$sharedImage['id']])->fetchColumn(),'Shared cover survives deletion of its course');
+$lock=fopen($config['preview_directory'].'/worker.lock','c');verify(flock($lock,LOCK_EX|LOCK_NB),'Worker lock released after success/failure');flock($lock,LOCK_UN);fclose($lock);
+echo "OK $checks course management checks: immutable modality, question history, permanent deletion, filesystem, rollback, worker exclusion and shared assets.\n";

@@ -1,22 +1,23 @@
-import {mountPublicHeader} from './components/public-header.js?v=20261030-1';
-import {sliderPage} from './pages/admin-slider.js?v=20261030-1';
-import {homePopupPage} from './pages/admin-home-popup.js?v=20261030-1';
-import {observeUI} from './components/ui.js?v=20261030-1';
-import {overviewPage} from './pages/admin-home.js?v=20261030-1';
-import {adminLayout} from './components/admin-layout.js?v=20261030-1';
-import {session,command,query} from './api.js?v=20261030-1';
-import {escape,errorBox,busy} from './components/common.js?v=20261030-1';
-import {adminShell,setCourseMenuExpanded,setEventMenuExpanded,setUserMenuExpanded} from './components/admin-shell.js?v=20261030-1';
-import {authPage} from './pages/auth.js?v=20261030-1';
-import {portalPage} from './pages/portal.js?v=20261030-1';
-import {catalogPage} from './pages/catalog.js?v=20261030-1';
-import {usersPage,sitesPage,personnelPage} from './pages/admin-access.js?v=20261030-1';
-import {coursePage} from './pages/course.js?v=20261030-1';
-import {coursesPage,courseEditor} from './pages/admin-courses.js?v=20261030-1';
-import {examEditor} from './pages/admin-exam.js?v=20261030-1';
-import {reportsPage} from './pages/admin-reports.js?v=20261030-1';
-import {notificationCenter} from './components/notification-center.js?v=20261030-1';
-import {eventsPage} from './pages/admin-events.js?v=20261030-1';
+import {mountPublicHeader} from './components/public-header.js?v=20261030-4';
+import {sliderPage} from './pages/admin-slider.js?v=20261030-4';
+import {homePopupPage} from './pages/admin-home-popup.js?v=20261030-4';
+import {observeUI} from './components/ui.js?v=20261030-4';
+import {overviewPage} from './pages/admin-home.js?v=20261030-4';
+import {adminLayout} from './components/admin-layout.js?v=20261030-4';
+import {session,command,query} from './api.js?v=20261030-4';
+import {escape,errorBox,busy} from './components/common.js?v=20261030-4';
+import {adminShell,setCourseMenuExpanded,setEventMenuExpanded,setUserMenuExpanded} from './components/admin-shell.js?v=20261030-4';
+import {authPage} from './pages/auth.js?v=20261030-4';
+import {portalPage} from './pages/portal.js?v=20261030-4';
+import {catalogPage} from './pages/catalog.js?v=20261030-4';
+import {usersPage,sitesPage,personnelPage} from './pages/admin-access.js?v=20261030-4';
+import {coursePage} from './pages/course.js?v=20261030-4';
+import {coursesPage,courseEditor} from './pages/admin-courses.js?v=20261030-4';
+import {examEditor} from './pages/admin-exam.js?v=20261030-4';
+import {reportsPage} from './pages/admin-reports.js?v=20261030-4';
+import {notificationCenter} from './components/notification-center.js?v=20261030-4';
+import {eventsPage} from './pages/admin-events.js?v=20261030-4';
+import {policiesPage,policyPage,policyEditor} from './pages/policies.js?v=20261030-4';
 observeUI(document.body);
 mountPublicHeader();
 const layout=adminLayout();
@@ -34,7 +35,7 @@ function updateNavigation(admin,identity,parts,announcements){
   const key=JSON.stringify([admin,userKey(identity.user)]);
   if(navigationKey!==key){
     cleanupNotifications?.();cleanupNotifications=null;
-    navigation.innerHTML=admin?(identity.user?'<a href="#inicio">Volver al portal</a><button id="logout" class="link-button">Cerrar sesión</button>':''):'<a href="#inicio">Inicio</a><a href="#capacitaciones">Capacitaciones</a><a href="#eventos">Eventos</a><a class="admin-link" href="#admin">'+(identity.user?'Mi panel':'Iniciar sesión')+'</a>';
+    navigation.innerHTML=admin?(identity.user?'<a href="#inicio">Volver al portal</a><button id="logout" class="link-button">Cerrar sesión</button>':''):'<a href="#inicio">Inicio</a><a href="#capacitaciones">Capacitaciones</a><a href="#politicas">Políticas</a><a href="#eventos">Eventos</a><a class="admin-link" href="#admin">'+(identity.user?'Mi panel':'Iniciar sesión')+'</a>';
     if(identity.user){const notices=notificationCenter(announcements,identity.user.id);navigation.insertAdjacentHTML('beforeend',notices.html);cleanupNotifications=notices.mount(navigation);}
     navigation.querySelector('#logout')?.addEventListener('click',event=>busy(event.target,async()=>{
       await command('admin','logout');++generation;resetPrivateView();history.replaceState(null,'','#inicio');await route();
@@ -42,7 +43,7 @@ function updateNavigation(admin,identity,parts,announcements){
     navigationKey=key;
   }
   navigation.querySelectorAll('a').forEach(link=>{
-    if(link.hash===(location.hash||'#inicio')||(parts[0]==='curso'&&link.hash==='#capacitaciones')||(parts[0]==='eventos'&&link.hash==='#eventos'))link.setAttribute('aria-current','page');
+    if(link.hash===(location.hash||'#inicio')||(parts[0]==='curso'&&link.hash==='#capacitaciones')||(parts[0]==='eventos'&&link.hash==='#eventos')||(parts[0]==='politicas'&&link.hash==='#politicas'))link.setAttribute('aria-current','page');
     else link.removeAttribute('aria-current');
   });
 }
@@ -84,6 +85,7 @@ async function pageFor(parts,identity){
     if(section==='eventos'&&parts[2]==='slider')return sliderPage(parts[3]||'');
     if(section==='eventos'&&parts[2]==='popup')return homePopupPage(parts[3]||'');
     if(section==='eventos')return eventsPage(route,parts[2]||'');
+    if(section==='politicas')return parts[2]?policyEditor(parts[2],identity.user):policiesPage(true);
     if(['usuarios','sedes','colaboradores'].includes(section)){
       if(identity.user.role!=='superadmin')throw new Error('Solo superadministración puede gestionar colaboradores, accesos y sedes.');
       return section==='usuarios'?usersPage(route,identity.user):section==='sedes'?sitesPage(route):personnelPage(route);
@@ -91,6 +93,7 @@ async function pageFor(parts,identity){
     return overviewPage(identity.user);
   }
   if(parts[0]==='curso'&&/^\d+$/.test(parts[1]||''))return coursePage(parts[1]);
+  if(parts[0]==='politicas')return /^\d+$/.test(parts[1]||'')?policyPage(parts[1]):policiesPage();
   if(parts[0]==='capacitaciones'||parts[0]==='eventos')return catalogPage(parts[0]==='eventos',parts[0]==='eventos'?parts[1]||'':'');
   return portalPage();
 }

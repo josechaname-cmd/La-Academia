@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {field} from '../public/frontend/components/common.js';
 import {attachValidation} from '../public/frontend/components/form-validation.js';
-import {busy,toast} from '../public/frontend/components/ui.js?v=20261030-1';
+import {busy,toast} from '../public/frontend/components/ui.js?v=20261030-4';
 import {materialViewer} from '../public/frontend/components/material-viewer.js';
 import {authPage} from '../public/frontend/pages/auth.js';
 

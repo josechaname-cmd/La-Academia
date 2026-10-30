@@ -48,6 +48,11 @@ No existe generación automática de preguntas ni proveedor de IA instalado por 
 
 En el editor de una capacitación guardada, **Portada de la capacitación → Imagen de portada personalizada** permite cargar JPG, PNG o WEBP (hasta 8 MB). Se muestra una vista previa local antes de guardar. El material original permanece intacto. Para publicar se requiere al menos un documento o video, además del examen cuando corresponda.
 
+La sección se presenta como **Elige la portada** y avisa si un video aún no tiene
+una imagen elegida. Esa imagen se comparte entre Inicio, el detalle y el atributo
+`poster` de los reproductores públicos y administrativos. No se captura ningún
+fotograma del video ni se registra una vista al mostrar la portada.
+
 `courses.custom_cover_id` referencia un archivo de imagen independiente, sin `course_id` en `files`, para no mezclarlo con los materiales ni contarlo como PDF/PPT. La carga por `POST /api/v1/admin/courses/{id}/cover-image` usa `multipart/form-data`, campo `file`, sesión administrativa y CSRF. `CourseCreationTool::uploadCover` coordina la transacción y elimina el archivo nuevo si falla el guardado.
 
 Al seleccionar un material y pulsar **Usar como portada**, se retira la referencia personalizada y vuelve la portada automática. Las imágenes propias solo son públicas mientras estén vinculadas a una capacitación publicada. No se eliminan por la ruta genérica mientras estén vinculadas; las reemplazadas se conservan para revisión de archivos sin vínculo.

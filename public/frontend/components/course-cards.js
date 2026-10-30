@@ -1,6 +1,6 @@
-import {courseCover} from './course-cover.js?v=20261030-1';
-import {viewCountLabel} from './content-views.js?v=20261030-1';
-import {escape,empty,date,icon,categoryBadge} from './common.js?v=20261030-1';
+import {courseCover} from './course-cover.js?v=20261030-4';
+import {viewCountLabel} from './content-views.js?v=20261030-4';
+import {escape,empty,date,icon,categoryBadge} from './common.js?v=20261030-4';
 const publicationDay=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'});
 const publicationDate=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',dateStyle:'long'});
 const dayNumber=value=>{

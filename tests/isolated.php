@@ -54,6 +54,8 @@ try {
     (new Academia\Migrations\ExamPolicyMigration($test))->run();
     (new Academia\Migrations\SliderContentMigration($test))->run();
     (new Academia\Migrations\VideoMaterialsMigration($test))->run();
+    (new Academia\Migrations\CoursePublicationMigration($test))->run();
+    (new Academia\Migrations\PolicyMigration($test))->run();
     $test->run("INSERT INTO sites(name,address) VALUES('Sede de pruebas','')");
     $test->run("INSERT INTO categories(scope,name) VALUES('course','Pruebas'),('event','Pruebas')");
     $test->run('INSERT INTO home_popup_guard(id) VALUES(1)');
@@ -64,7 +66,7 @@ try {
     file_put_contents($configFile, '<?php return array_replace(is_file('.var_export($private, true).') ? require '.var_export($private, true).' : [], '.var_export($overrides, true).');');
     putenv('ACADEMIA_CONFIG='.$configFile);
     foreach ($targets as $target) {
-        if (!in_array($target, ['run.php', 'backend-regression.php', 'concurrency.php', 'personnel-import.php', 'http-isolated.php', 'exam-policy.php'], true)) throw new RuntimeException('Suite no permitida.');
+        if (!in_array($target, ['run.php', 'backend-regression.php', 'concurrency.php', 'personnel-import.php', 'http-isolated.php', 'exam-policy.php', 'course-management.php'], true)) throw new RuntimeException('Suite no permitida.');
         $process = proc_open([PHP_BINARY, $root.'/tests/'.$target], [0=>['pipe','r'],1=>STDOUT,2=>STDERR], $pipes, $root, null, ['bypass_shell'=>true,'create_no_window'=>true]);
         if (!is_resource($process)) throw new RuntimeException('No se pudo iniciar la suite.');
         fclose($pipes[0]);

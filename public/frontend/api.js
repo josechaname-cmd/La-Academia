@@ -1,4 +1,4 @@
-import {createReadCache} from './read-cache.js?v=20261030-1';
+import {createReadCache} from './read-cache.js?v=20261030-4';
 const endpoint = new URL('../api/v1/', import.meta.url);
 let sessionData=null,sessionPromise=null,sessionFetchedAt=0;
 const reads=createReadCache();let activityRevision=null;
@@ -18,6 +18,9 @@ function acceptSession(data){
  sessionFetchedAt=Date.now();return sessionData=data;
 }
 const routes={
+ 'policy:list':['GET','policies'], 'policy:get':['GET','policies/{id}'],
+ 'policy:admin.list':['GET','admin/policies'], 'policy:admin.get':['GET','admin/policies/{id}'],
+ 'policy:create':['POST','admin/policies'], 'policy:save':['POST','admin/policies/{id}'], 'policy:delete':['DELETE','admin/policies/{id}'],
  'slider:list':['GET','admin/slider'], 'slider:get':['GET','admin/slider/{id}'], 'slider:create':['POST','admin/slider'], 'slider:save':['POST','admin/slider/{id}'], 'slider:status':['POST','admin/slider/{id}/status'], 'slider:delete':['DELETE','admin/slider/{id}'],
  'popup:public':['GET','home-popup'], 'popup:list':['GET','admin/home-popup'], 'popup:get':['GET','admin/home-popup/{id}'], 'popup:create':['POST','admin/home-popup'], 'popup:save':['POST','admin/home-popup/{id}'], 'popup:status':['POST','admin/home-popup/{id}/status'], 'popup:delete':['DELETE','admin/home-popup/{id}'],
  'view:course':['POST','courses/{id}/view'], 'view:event':['POST','events/{id}/view'],
@@ -34,6 +37,7 @@ const routes={
  'content:upload':['POST','admin/courses/{course_id}/files'], 'content:file.delete':['DELETE','admin/files/{id}'], 'content:slides':['GET','files/{id}/slides'],
  'admin:image.upload':['POST','admin/images'], 'admin:categories.create':['POST','admin/categories'],
  'content:cover.upload':['POST','admin/courses/{id}/cover-image'],
+ 'content:purge':['DELETE','admin/courses/{id}/permanent'],
  'content:preview.status':['GET','files/{id}/preview-status'], 'content:preview.retry':['POST','admin/files/{id}/preview'], 'content:cover':['POST','admin/courses/{id}/cover'],
  'exam:status':['POST','admin/courses/{course_id}/exam/status'], 'exam:get':['GET','admin/courses/{course_id}/exam'], 'exam:save':['PUT','admin/courses/{course_id}/exam'], 'exam:participant':['POST','attempts/participant'], 'exam:start':['POST','attempts'], 'exam:submit':['POST','attempts/submit'],
  'report:exams':['GET','admin/reports/exams'], 'report:summary':['GET','admin/reports/summary'], 'report:results':['GET','admin/reports/results'],

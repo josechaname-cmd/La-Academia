@@ -1,7 +1,7 @@
-import {brandLogo} from '../components/brand.js?v=20261030-1';
-import {attachValidation} from '../components/form-validation.js?v=20261030-1';
-import {command} from '../api.js?v=20261030-1';
-import {field,formData,busy,errorBox,icon} from '../components/common.js?v=20261030-1';
+import {brandLogo} from '../components/brand.js?v=20261030-4';
+import {attachValidation} from '../components/form-validation.js?v=20261030-4';
+import {command} from '../api.js?v=20261030-4';
+import {field,formData,busy,errorBox,icon} from '../components/common.js?v=20261030-4';
 export function authPage(current, reload) {
   const setup = current.setup_required && current.setup_allowed;
   if (current.setup_required && !setup) return {html: `<div class="auth-shell"><a class="auth-portal-back" href="#inicio">${icon('previous')} Volver al portal</a><section class="auth-card"><h1>Configuración inicial pendiente</h1><p>El primer superadministrador debe configurarse desde el equipo donde está instalado el servidor.</p></section></div>`};

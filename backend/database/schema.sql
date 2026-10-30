@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS courses (
  category VARCHAR(40) NOT NULL, description TEXT NOT NULL, duration INT UNSIGNED NULL DEFAULT NULL,
  view_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
  exam_required TINYINT(1) NOT NULL DEFAULT 1,
+ first_published_at DATETIME NULL,
  status ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
  INDEX idx_course_status (status,category)

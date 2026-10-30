@@ -1,4 +1,4 @@
-import {command} from '../api.js?v=20261030-1';
+import {command} from '../api.js?v=20261030-4';
 
 export function viewCountLabel(value,{compact=false}={}){
   const number=Number(value),count=Number.isFinite(number)?Math.max(0,Math.trunc(number)):0;

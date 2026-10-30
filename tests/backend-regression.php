@@ -55,7 +55,7 @@ try {
     $_SESSION['admin']=['id'=>$actors[1],'auth_version'=>0];$auth->user(true);
     $registry=new AgentRegistry($db,$auth,$config);
     $call=fn(string $agent,string $action,array $input=[],string $method='POST')=>$registry->dispatch($agent,$action,new RequestContext($input,$method));
-    foreach (['admin.get','save','publish','delete','cover','cover.upload'] as $action) rejects(fn()=>$call('content',$action,['id'=>$courseIds[1],'file_id'=>$fileIds[1]],$action==='admin.get'?'GET':'POST'),403,'Sede ajena content '.$action);
+    foreach (['admin.get','save','publish','delete','purge','cover','cover.upload'] as $action) rejects(fn()=>$call('content',$action,['id'=>$courseIds[1],'file_id'=>$fileIds[1]],$action==='admin.get'?'GET':'POST'),403,'Sede ajena content '.$action);
     rejects(fn()=>$call('content','upload',['course_id'=>$courseIds[1]]),403,'Carga a otra sede');
     foreach (['file.delete','preview.retry'] as $action) rejects(fn()=>$call('content',$action,['id'=>$fileIds[1]]),403,'Archivo ajeno '.$action);
     foreach (['get','save','status'] as $action) rejects(fn()=>$call('exam',$action,['course_id'=>$courseIds[1]],$action==='get'?'GET':'POST'),403,'Examen ajeno '.$action);

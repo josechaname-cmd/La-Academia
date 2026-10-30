@@ -76,10 +76,10 @@ if(!is_resource($server))throw new RuntimeException('HTTP test server failed');
     if(!$ready)throw new RuntimeException('HTTP test server timeout');
     putenv('ACADEMIA_TEST_BASE=http://'.$address.'/la-academia/');
     putenv('PYTHONIOENCODING=utf-8');
-    foreach(['http-contract.py','media-http.py','video-http.py'] as $script){
+    foreach(['http-contract.py','media-http.py','video-http.py','policies-http.py'] as $script){
         $process=proc_open(['python',$root.'/tests/'.$script],[0=>['pipe','r'],1=>STDOUT,2=>STDERR],$childPipes,$root,null,['bypass_shell'=>true,'create_no_window'=>true]);
         if(!is_resource($process))throw new RuntimeException('Python tests failed to start');
-        if(in_array($script,['http-contract.py','video-http.py'],true))fwrite($childPipes[0],json_encode($fixture));fclose($childPipes[0]);
+        if(in_array($script,['http-contract.py','video-http.py','policies-http.py'],true))fwrite($childPipes[0],json_encode($fixture));fclose($childPipes[0]);
         if(proc_close($process)!==0)throw new RuntimeException('HTTP contract failed: '.$script);
     }
     if(str_contains(file_get_contents($log),$fixture['password']))throw new RuntimeException('Sensitive data reached HTTP log');

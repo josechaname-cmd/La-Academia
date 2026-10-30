@@ -1,9 +1,10 @@
-import {breadcrumbs} from '../components/ui.js?v=20261030-1';
-import {query,command} from '../api.js?v=20261030-1';
-import {heading,escape,busy,toast,field,icon,confirmAction} from '../components/common.js?v=20261030-1';
-import {attachValidation} from '../components/form-validation.js?v=20261030-1';
+import {breadcrumbs} from '../components/ui.js?v=20261030-4';
+import {query,command} from '../api.js?v=20261030-4';
+import {heading,escape,busy,toast,field,icon,confirmAction} from '../components/common.js?v=20261030-4';
+import {attachValidation} from '../components/form-validation.js?v=20261030-4';
 export async function examEditor(id,reload) {
   const [course,exam]=await Promise.all([query('content','admin.get',{id}),query('exam','get',{course_id:id})]);
+  if(Number(course.exam_required??1)===0)return {html:`${breadcrumbs([{label:'Capacitaciones',href:'#admin/capacitaciones'},{label:course.title}])}${heading('EVALUACIÓN','Capacitación sin examen',course.status==='draft'&&!course.first_published_at?'Puedes elegir Con examen al continuar la creación del borrador.':'Esta capacitación fue publicada sin examen y conserva esa modalidad.')}<a class="button primary" href="#admin/capacitaciones/${id}">Volver a la capacitación</a>`};
   const blank=()=>({prompt:'',choices:['','',''],correct:-1,explanation:''});
   const questions=exam?.questions||[blank()];
   const completeQuestion=question=>question.prompt.trim().length>=8&&question.choices.every(choice=>choice.trim())&&question.correct>=0;

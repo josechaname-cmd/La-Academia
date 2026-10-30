@@ -22,8 +22,12 @@ significa que el servidor haya aceptado el archivo.
   audio. Se rechazan contenedores dañados, solo audio, pistas adicionales y
   códecs incompatibles. No se hace conversión automática ni se garantiza que
   la inspección de metadatos detecte todo daño en fotogramas del archivo.
-- Las portadas automáticas siguen usando documentos. Para una capacitación
-  solo con video, carga una imagen personalizada en **Portada**.
+- La portada del video la elige el autor: abre **Elige la portada**, selecciona
+  una imagen JPG/PNG/WEBP (hasta 8 MB), revisa la vista previa y pulsa
+  **Guardar imagen de portada**. La misma imagen aparece en Inicio, en el
+  detalle y antes de reproducir el video, también en la revisión administrativa.
+  No se extraen fotogramas ni se generan portadas del video. Si falta una imagen,
+  el editor lo indica; la primera página automática sigue disponible para documentos.
 
 El listado administrativo muestra nombre, tamaño, duración y resolución,
 permite revisar el video, descargarlo y quitarlo con confirmación. Quitar el
@@ -154,7 +158,8 @@ el cliente. No se mezclan estos datos con resultados del examen.
 `tests/video-materials.mjs` comprueba DOM, eventos, vistas, tamaños, progreso y
 limpieza; `tests/video-policy.php`, rangos y límite de archivo real. La suite
 HTTP aislada genera MP4/WebM sintéticos con FFmpeg y prueba carga, metadatos,
-formatos falsos, códec incompatible, sedes, CSRF, HEAD/Range, vistas y borrado.
+portada manual y su privacidad, formatos falsos, códec incompatible, sedes,
+CSRF, HEAD/Range, vistas y borrado.
 No introduce archivos ni trabajadores de prueba en la instalación real. No se
 ha realizado verificación visual o decodificación en un navegador real.
 

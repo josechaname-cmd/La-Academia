@@ -34,12 +34,13 @@ final class CourseRepository {
             $current=$this->db->run("SELECT * FROM courses WHERE id=? AND status<>'archived' FOR UPDATE",[$id])->fetch();
             if(!$current)Http::fail(404,'Capacitación no disponible.');
             $site=$actor&&$actor['role']==='superadmin'&&array_key_exists('site_id',$data)?Validation::number($data,'site_id',1,PHP_INT_MAX):(int)($current['site_id']?:$actorSite);
+            $locked=$current['status']!=='draft'||$current['first_published_at']!==null;
+            if($locked&&$requested!==null&&$requested!==(int)$current['exam_required'])Http::fail(409,'Esta capacitación ya fue publicada. Conserva su modalidad y modifica las preguntas desde Configurar examen.',['exam_required'=>'La modalidad queda fija después de la primera publicación.']);
             $required=$requested??(int)$current['exam_required'];
             if(!$site||!$this->db->run('SELECT id FROM sites WHERE id=? AND active=1',[$site])->fetchColumn())Http::fail(422,'Selecciona una sede activa para la capacitación.',['site_id'=>'Selecciona una sede activa.']);
             if($actor)\Academia\Services\CoursePolicy::requireCourse($actor,['site_id'=>$site]);
             if($current['title']===$title&&$current['category']===$category&&$current['description']===$description&&(int)$current['exam_required']===$required&&(int)$current['site_id']===$site)return $this->get($id,true);
             $status=$current['status'];
-            if($required&&$status==='published'&&!$this->db->run('SELECT id FROM exams WHERE course_id=? LIMIT 1',[$id])->fetchColumn())$status='draft';
             $this->db->run('UPDATE courses SET title=?,category=?,description=?,exam_required=?,status=?,site_id=? WHERE id=?',[$title,$category,$description,$required,$status,$site,$id]);
         }
         else{
@@ -56,7 +57,7 @@ final class CourseRepository {
             if(!$this->db->run('SELECT id FROM files WHERE course_id=? LIMIT 1',[$id])->fetchColumn())Http::fail(422,'Agrega al menos un documento o video.');
             if((int)$row['exam_required']&&!$this->db->run('SELECT id FROM exams WHERE course_id=? LIMIT 1',[$id])->fetchColumn())Http::fail(422,'Guarda un examen con al menos una pregunta o selecciona capacitación sin examen.');
             if($row['status']==='published')return $this->get($id,true);
-            $this->db->run("UPDATE courses SET status='published' WHERE id=?",[$id]);(new ActivityRepository($this->db))->course($id,'course.published','Capacitación publicada');return $this->get($id,true);
+            $this->db->run("UPDATE courses SET status='published',first_published_at=COALESCE(first_published_at,NOW()) WHERE id=?",[$id]);(new ActivityRepository($this->db))->course($id,'course.published','Capacitación publicada');return $this->get($id,true);
         });
     }
     public function cover(int $id,int $fileId): array {

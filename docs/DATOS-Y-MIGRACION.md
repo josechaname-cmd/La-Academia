@@ -97,7 +97,7 @@ La consulta recibe el DNI y devuelve solo nombre completo y cargo. Al crear el i
 
 ## Examen opcional — 23 de octubre de 2026
 
-`CourseExamMigration` agrega `courses.exam_required TINYINT(1) NOT NULL DEFAULT 1`, también incluido en el esquema base. Los cursos existentes conservan su requisito de examen; nada se cambia a «sin examen» automáticamente. La migración es idempotente y no elimina preguntas, participantes ni intentos. Las modificaciones del requisito se guardan con bloqueo del curso y actividad dentro de una transacción.
+`CourseExamMigration` agrega `courses.exam_required TINYINT(1) NOT NULL DEFAULT 1`, también incluido en el esquema base. Los cursos existentes conservan su requisito de examen; nada se cambia a «sin examen» automáticamente. La migración es idempotente y no elimina preguntas, participantes ni intentos. Desde el 30 de octubre la modalidad se puede configurar en el borrador hasta la primera publicación. `CoursePublicationMigration` agrega `first_published_at`: después de publicar, el servidor conserva la modalidad bajo bloqueo del curso, incluso si vuelve a borrador. Las preguntas pueden actualizarse sin eliminar el examen ni sus resultados históricos.
 
 
 ## Migración del editor de capacitaciones — 26 de octubre de 2026

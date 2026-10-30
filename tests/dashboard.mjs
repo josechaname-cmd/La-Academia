@@ -66,7 +66,7 @@ assert.equal(root.querySelector('[data-chart-item="1"] .dashboard-column-track>i
 root.querySelector('[data-dashboard-chart="views"]').click();courses[0].view_count=0;events[0].view_count=0;window.dispatchEvent(new Event('academia-activity-updated'));for(let i=0;i<40;i++)await Promise.resolve();assert.equal(root.querySelector('#home-chart .dashboard-column-track > span').style.width,'0%');assert(!root.innerHTML.includes('NaN'));
 courses[0].status='draft';events[0].active=0;window.dispatchEvent(new Event('academia-activity-updated'));for(let i=0;i<40;i++)await Promise.resolve();assert.equal(root.querySelector('.dashboard-metric>strong').textContent,'0');assert.equal(root.querySelectorAll('#home-chart .dashboard-column').length,0);
 cleanup();const after=calls;window.dispatchEvent(new Event('academia-activity-updated'));assert.equal(calls,after);// Trainer overview requests only site-scoped course data and keeps event management as a shortcut.
-const {invalidateNavigationCache}=await import('../public/frontend/api.js?v=20261030-1');invalidateNavigationCache();
+const {invalidateNavigationCache}=await import('../public/frontend/api.js?v=20261030-4');invalidateNavigationCache();
 // More than ten entries exercise each limit without truncating chart totals or bars.
 summary.score_averages=Array.from({length:12},(_,i)=>({course_id:100+i,title:`Ranking ${String(i+1).padStart(2,'0')}`,average_score:20-i/2,minimum_score:20-i/2,maximum_score:20-i/2,participant_count:24-i,top_scores:Array(10).fill(20-i/2)}));
 courses.splice(0,courses.length,...summary.score_averages.map(row=>({id:row.course_id,title:row.title,status:'published',view_count:row.participant_count})));

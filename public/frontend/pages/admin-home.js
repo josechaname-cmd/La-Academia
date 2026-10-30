@@ -1,5 +1,5 @@
-import {query,invalidateNavigationCache} from '../api.js?v=20261030-1';
-import {heading,escape,empty,busy,icon} from '../components/common.js?v=20261030-1';
+import {query,invalidateNavigationCache} from '../api.js?v=20261030-4';
+import {heading,escape,empty,busy,icon} from '../components/common.js?v=20261030-4';
 const count=value=>Number.isFinite(Number(value))?Math.max(0,Math.floor(Number(value))):0;
 const number=value=>count(value).toLocaleString('es-PE');
 const decimal=value=>(Number.isFinite(Number(value))?Math.max(0,Number(value)):0).toLocaleString('es-PE',{maximumFractionDigits:2});

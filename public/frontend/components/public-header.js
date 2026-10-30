@@ -1,12 +1,12 @@
-import {query,fileUrl,previewUrl} from '../api.js?v=20261030-1';
-import {escape,icon} from './common.js?v=20261030-1';
-import {motion,screens} from '../design/runtime.js?v=20261030-1';
+import {query,fileUrl,previewUrl} from '../api.js?v=20261030-4';
+import {escape,icon} from './common.js?v=20261030-4';
+import {motion,screens} from '../design/runtime.js?v=20261030-4';
 const normalize=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 const searchIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>';
 export function mountPublicHeader(){
  const header=document.querySelector('.header'),root=document.querySelector('#public-search');
  if(!header||!root)return ()=>{};
- root.innerHTML=`<button type="button" class="search-toggle" aria-label="Buscar capacitaciones y eventos" aria-expanded="false" aria-controls="public-search-panel">${searchIcon}</button><div class="public-search-panel" id="public-search-panel"><form role="search" aria-label="Capacitaciones y eventos"><label class="public-search-field">${searchIcon}<span class="sr-only">Buscar capacitaciones y eventos</span><input type="search" id="public-search-input" placeholder="Buscar capacitaciones y eventos" autocomplete="off" aria-controls="public-search-results" aria-expanded="false"></label></form><div class="public-search-results" id="public-search-results" hidden><p class="search-status" role="status" aria-live="polite"></p><div class="search-matches"></div></div></div>`;
+ root.innerHTML=`<button type="button" class="search-toggle" aria-label="Buscar capacitaciones, políticas y eventos" aria-expanded="false" aria-controls="public-search-panel">${searchIcon}</button><div class="public-search-panel" id="public-search-panel"><form role="search" aria-label="Capacitaciones y eventos"><label class="public-search-field">${searchIcon}<span class="sr-only">Buscar capacitaciones, políticas y eventos</span><input type="search" id="public-search-input" placeholder="Buscar capacitaciones, políticas y eventos" autocomplete="off" aria-controls="public-search-results" aria-expanded="false"></label></form><div class="public-search-results" id="public-search-results" hidden><p class="search-status" role="status" aria-live="polite"></p><div class="search-matches"></div></div></div>`;
  const input=root.querySelector('input'),toggle=root.querySelector('.search-toggle'),results=root.querySelector('.public-search-results'),status=root.querySelector('.search-status'),matches=root.querySelector('.search-matches');
  const listeners=new AbortController(),on=(node,type,handler,options={})=>node.addEventListener(type,handler,{...options,signal:listeners.signal});
  let timer,sequence=0,cache=null,pending=null,loadedAt=0,disposed=false,logoAnimation=null,restoringFocus=false;
@@ -15,8 +15,8 @@ export function mountPublicHeader(){
  function announce(text){status.classList.remove('sr-only');results.hidden=false;input.setAttribute('aria-expanded','true');status.textContent=text;matches.replaceChildren();}
  async function load(){
   if(cache&&Date.now()-loadedAt<30000)return cache;
-  if(!pending)pending=Promise.all([query('content','list'),query('admin','events.public')]).then(([courses,events])=>{
-   cache=[{label:'Capacitaciones',route:'curso',items:courses},{label:'Eventos',route:'eventos',items:events}];loadedAt=Date.now();return cache;
+  if(!pending)pending=Promise.all([query('content','list'),query('admin','events.public'),query('policy','list')]).then(([courses,events,policies])=>{
+   cache=[{label:'Capacitaciones',route:'curso',items:courses},{label:'Eventos',route:'eventos',items:events},{label:'Políticas',route:'politicas',items:policies}];loadedAt=Date.now();return cache;
   }).finally(()=>{pending=null;});
   return pending;
  }
@@ -32,7 +32,7 @@ export function mountPublicHeader(){
    status.textContent=count?`${count} ${count===1?'resultado':'resultados'}`:'No encontramos coincidencias. Prueba otro título o categoría.';
    matches.innerHTML=filtered.filter(group=>group.items.length).map(group=>`<section class="search-group" data-kind="${group.route}" aria-label="${group.label}"><div class="search-group-heading"><h2>${group.label}</h2><span>${group.items.length}</span></div>${group.items.map(item=>{
     const source=group.route==='curso'?(item.custom_cover_id?fileUrl(item.custom_cover_id):item.cover_status==='ready'&&item.cover_file_id?previewUrl(item.cover_file_id,item.cover_version):''):item.images?.[0]?.id?fileUrl(item.images[0].id):'';
-    return `<a href="#${group.route}/${Number(item.id)}"><span class="search-result-media" aria-hidden="true">${icon(group.route==='curso'?'book':'calendar')}${source?`<img class="search-thumbnail" src="${escape(source)}" alt="" loading="lazy">`:''}</span><span class="search-result-copy"><strong>${escape(item.title)}</strong><small>${escape(item.category??'')}</small></span><span class="search-result-next" aria-hidden="true">${icon('next')}</span></a>`;
+    return `<a href="#${group.route}/${Number(item.id)}"><span class="search-result-media" aria-hidden="true">${icon(group.route==='eventos'?'calendar':'book')}${source?`<img class="search-thumbnail" src="${escape(source)}" alt="" loading="lazy">`:''}</span><span class="search-result-copy"><strong>${escape(item.title)}</strong><small>${escape(item.category??'')}</small></span><span class="search-result-next" aria-hidden="true">${icon('next')}</span></a>`;
    }).join('')}</section>`).join('');
   }catch{if(ticket===sequence&&!disposed){announce('No se pudo cargar la búsqueda.');matches.innerHTML='<button class="button white small" type="button" data-search-retry>Reintentar</button>';}}
  }

@@ -174,17 +174,16 @@ try{
  $db->run('INSERT INTO files(course_id,original_name,storage_key,mime,extension,size) VALUES(?,?,?,?,?,?)',[$id,'Prueba.pdf',bin2hex(random_bytes(24)).'.pdf','application/pdf','pdf',1]);
  fails(fn()=>$courses->publish($id),422,'Publicar sin examen');
  fails(fn()=>$courses->save([...$course,'exam_required'=>true],$id),422,'Modo de examen exige entero');
- $noExam=$courses->save([...$course,'exam_required'=>0],$id);
- check((int)$noExam['exam_required']===0,'Permite capacitación sin examen');
- check($courses->publish($id)['status']==='published','Publica material sin examen cuando se permite');
- check($courses->get($id)['exam']===null,'Curso sin examen no ofrece evaluación');
+ $courses->save([...$course,'exam_required'=>0],$id);
+ check((int)$courses->get($id,true)['exam_required']===0,'Borrador inicial permite configurar modalidad');
+ $courses->save([...$course,'exam_required'=>1],$id);
+ fails(fn()=>$courses->save([...$materialOnly,'exam_required'=>1],(int)$materialOnly['id']),409,'No permite cambiar a con examen después de crear');
+ check((int)$courses->get($id,true)['exam_required']===1,'Rechazo conserva la modalidad original');
  $countActivity=(int)$db->run('SELECT COUNT(*) FROM activity_log WHERE course_id=?',[$id])->fetchColumn();
- $courses->save($noExam,$id);
+ $courses->save($course,$id);
  check((int)$db->run('SELECT COUNT(*) FROM activity_log WHERE course_id=?',[$id])->fetchColumn()===$countActivity,'Guardar curso idéntico no crea actividad');
  $legacyInput=$course;unset($legacyInput['exam_required']);$courses->save($legacyInput,$id);
- check((int)$courses->get($id,true)['exam_required']===0,'Omitir modo conserva elección previa');
- $required=$courses->save([...$course,'exam_required'=>1],$id);
- check($required['status']==='draft','Exigir examen inexistente vuelve a borrador');
+ check((int)$courses->get($id,true)['exam_required']===1,'Omitir modo conserva elección previa');
  fails(fn()=>$courses->publish($id),422,'No publica modo con examen incompleto');
  $schedule=['max_attempts'=>2,'passing_score'=>14,'opens_at'=>date('Y-m-d H:i:s',time()-3600),'closes_at'=>date('Y-m-d H:i:s',time()+86400),'duration_minutes'=>30];
  fails(fn()=>$exams->save($id,['questions'=>$questions]),422,'Fechas obligatorias para guardar');
@@ -241,7 +240,8 @@ try{
  $scoreAverage=array_values(array_filter($reports->summary()['score_averages'],fn($row)=>(int)$row['course_id']===$id))[0];
  check((float)$scoreAverage['average_score']===0.0&&(float)$scoreAverage['minimum_score']===0.0&&(float)$scoreAverage['maximum_score']===0.0&&(int)$scoreAverage['participant_count']===1&&$scoreAverage['top_scores']===[0.0],'Dashboard resume promedio, rango, muestra y mejores resultados de la última entrega por participante');
  check(str_starts_with((new Academia\Services\ReportExport($reports))->workbook((int)$exam['id']),'PK'),'Exporta XLSX durante el examen');
- $courses->save([...$course,'exam_required'=>0],$id);
+ // Simulate a historical record predating the immutable modality rule.
+ $db->run('UPDATE courses SET exam_required=0 WHERE id=?',[$id]);
  fails(fn()=>$attempts->start($id,[...$learner,'dni'=>'98765430']),409,'Sin examen bloquea nuevos intentos');
  fails(fn()=>$attempts->submit(['token'=>$pending['token'],'answers'=>array_fill(0,10,0)]),409,'Sin examen bloquea pendientes');
  check($courses->get($id)['exam']===null&&$courses->get($id,true)['exam']!==null,'Oculta evaluación pública y conserva configuración privada');
@@ -250,7 +250,7 @@ try{
  check(str_starts_with((new Academia\Services\ReportExport($reports))->workbook((int)$exam['id']),'PK'),'Permite exportar historial sin examen requerido');
  $notRequired=array_values(array_filter($reports->exams(),fn($row)=>(int)$row['id']===(int)$exam['id']))[0];
  check($notRequired['state']==='not_required','Reportes identifican examen ya no requerido');
- $courses->save([...$course,'exam_required'=>1],$id);
+ $db->run('UPDATE courses SET exam_required=1 WHERE id=?',[$id]);
  check($courses->get($id)['exam']['state']==='open','Restablece examen existente sin perder versión');
 
  for($n=0;$n<1001;$n++)$db->run('INSERT INTO enrollments(exam_id,dni,name,job_title,phone,area) VALUES(?,?,?,?,?,?)',[$exam['id'],sprintf('%08d',$n),'Participante temporal '.$n,'Cargo temporal','','']);
@@ -384,7 +384,10 @@ try{
  $courses->publish($coverCourseId);check($files->visible($files->get($coverImage)),'Portada publicada visible');
  $automatic=$courses->cover($coverCourseId,$coverDoc);check($automatic['custom_cover_id']===null,'Volver a portada automática retira imagen propia');
  check(!$files->visible($files->get($coverImage)),'Portada reemplazada deja de ser pública');
- $courses->customCover($coverCourseId,$coverImage);$courses->save([...$coverCourse,'exam_required'=>1],$coverCourseId);
+ $courses->archive($coverCourseId);
+ $coverCourse=$courses->save([...$coverCourse,'exam_required'=>1],null);$coverCourseId=(int)$coverCourse['id'];
+ $db->run('INSERT INTO files(course_id,original_name,storage_key,mime,extension,size) VALUES(?,?,?,?,?,?)',[$coverCourseId,'Material de examen.pdf',bin2hex(random_bytes(24)).'.pdf','application/pdf','pdf',100]);
+ $courses->customCover($coverCourseId,$coverImage);
  foreach([1,2,3,11] as $size){
    $dynamic=[];for($n=0;$n<$size;$n++)$dynamic[]=['prompt'=>'Pregunta flexible número '.$n,'choices'=>['Primera','Segunda','Tercera'],'correct'=>0];
    $created=$registry->dispatch('exam','save',new RequestContext(['course_id'=>$coverCourseId,'questions'=>$dynamic,...$schedule,'creator_name'=>'Autor falso'],'POST'));

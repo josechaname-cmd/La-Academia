@@ -9,7 +9,7 @@ use Academia\Repositories\CategoryRepository;
 use Academia\Services\FileTool;
 use Academia\Support\Http;
 final class ContentAgent implements AgentInterface {
-    public function __construct(private AuthTool $auth,private CourseRepository $courses,private FileTool $files,private CourseCreationTool $creation,private CategoryRepository $categories,private \Academia\Services\DocumentPreviewTool $previews,private \Academia\Middleware\CourseAccess $access) {}
+    public function __construct(private AuthTool $auth,private CourseRepository $courses,private FileTool $files,private CourseCreationTool $creation,private CategoryRepository $categories,private \Academia\Services\DocumentPreviewTool $previews,private \Academia\Middleware\CourseAccess $access,private \Academia\Services\CourseDeletionTool $deletion) {}
     public function execute(string $action,RequestContext $context): mixed {
         if($action==='categories.list'){$context->requireMethod('GET');$scope=$_GET['scope']??'course';if(!is_string($scope))Http::fail(422,'Ámbito de categoría no válido.');return $this->categories->list($scope);}
         if($action==='list'){$context->requireMethod('GET');return $this->courses->list();}
@@ -36,6 +36,7 @@ final class ContentAgent implements AgentInterface {
             'cover'=>$this->courses->cover($context->id(),$context->id('file_id')),
             'publish'=>$this->courses->publish($context->id()),
             'delete'=>$this->courses->archive($context->id()),
+            'purge'=>$this->deletion->remove($context->id(),$context->input),
             'file.delete'=>$this->files->remove($context->id()),
             default=>Http::fail(404,'Acción no encontrada.'),
         };

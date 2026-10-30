@@ -34,11 +34,13 @@ final class FileTool {
     }
     public function get(int $id): array { $file=$this->db->run('SELECT * FROM files WHERE id=?',[$id])->fetch();return $file?:Http::fail(404,'Archivo no encontrado.'); }
     public function visible(array $file): bool {
+        if($this->db->run('SELECT id FROM policies WHERE file_id=? AND active=1',[$file['id']])->fetchColumn())return true;
         if($file['course_id'])return (bool)$this->db->run("SELECT id FROM courses WHERE id=? AND status='published'",[$file['course_id']])->fetchColumn();
         return (bool)$this->db->run("SELECT a.id FROM announcements a WHERE kind='banner' AND image_id=? AND active=1 AND (course_id IS NULL OR EXISTS(SELECT 1 FROM courses c WHERE c.id=a.course_id AND c.status='published')) UNION ALL SELECT e.id FROM event_images ei JOIN events e ON e.id=ei.event_id WHERE ei.file_id=? AND e.active=1 UNION ALL SELECT p.id FROM home_popup p WHERE p.image_id=? AND p.active=1 UNION ALL SELECT c.id FROM courses c WHERE c.custom_cover_id=? AND c.status='published' UNION ALL SELECT s.id FROM home_slides s WHERE s.image_id=? AND s.active=1 LIMIT 1",[$file['id'],$file['id'],$file['id'],$file['id'],$file['id']])->fetchColumn();
     }
     public function remove(int $id): array {
         $file=$this->get($id);
+        if($this->db->run('SELECT id FROM policies WHERE file_id=?',[$id])->fetchColumn())Http::fail(409,'Reemplaza o elimina el PDF desde Políticas.');
         if($this->db->run('SELECT id FROM courses WHERE custom_cover_id=?',[$id])->fetchColumn())Http::fail(409,'Reemplaza primero la portada personalizada.');
         if($this->db->run('SELECT id FROM home_slides WHERE image_id=?',[$id])->fetchColumn())Http::fail(409,'Quita primero la imagen del slider.');
         if($this->db->run('SELECT id FROM home_popup WHERE image_id=?',[$id])->fetchColumn())Http::fail(409,'Reemplaza primero la imagen del popup de Inicio.');

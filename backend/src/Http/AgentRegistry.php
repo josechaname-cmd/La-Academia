@@ -44,6 +44,7 @@ final class AgentRegistry
         $this->access = new \Academia\Middleware\CourseAccess($auth, new \Academia\Repositories\AccessRepository($db));
 
         $this->agents = [
+            'policy' => new \Academia\Agents\PolicyAgent($auth,new \Academia\Services\PolicyTool($db,$files)),
             'slider' => new \Academia\Agents\HomeSliderAgent($auth,$mediaUploads,new \Academia\Repositories\HomeSliderRepository($db)),
             'popup' => new \Academia\Agents\HomePopupAgent($auth,$mediaUploads,new \Academia\Repositories\HomePopupRepository($db)),
             'view' => new \Academia\Agents\ViewAgent(new \Academia\Services\ContentViews($db, $auth)),
@@ -65,7 +66,8 @@ final class AgentRegistry
                 new CourseCreationTool($db, $courses, $files),
                 $categories,
                 new DocumentPreviewTool($db, $config),
-                $this->access
+                $this->access,
+                new \Academia\Services\CourseDeletionTool($db,$files,$config)
             ),
             'exam' => new ExamAgent(
                 $auth,

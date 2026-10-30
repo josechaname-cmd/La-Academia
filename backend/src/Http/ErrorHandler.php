@@ -32,7 +32,7 @@ final class ErrorHandler
         $requestId = bin2hex(random_bytes(8));
         if (PHP_SAPI === 'cli') {
             Logger::failure($error, 'cli', $requestId);
-            fwrite(STDERR, 'La operación falló. Referencia: '.$requestId.PHP_EOL);
+            file_put_contents('php://stderr', 'La operación falló. Referencia: '.$requestId.PHP_EOL);
             exit(1);
         }
         header('X-Request-Id: '.$requestId);

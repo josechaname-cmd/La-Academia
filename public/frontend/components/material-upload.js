@@ -1,4 +1,4 @@
-import {escape} from './common.js?v=20261030-1';
+import {escape} from './common.js?v=20261030-4';
 export const isVideo=file=>['mp4','webm'].includes(String(file.extension||file.name?.split('.').at(-1)||'').toLowerCase());
 export const materialDuration=value=>{const seconds=Math.max(0,Math.round(Number(value)||0));return seconds>=3600?`${Math.floor(seconds/3600)}:${String(Math.floor(seconds%3600/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`:`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;};
 export function materialUploadFields(limits){
