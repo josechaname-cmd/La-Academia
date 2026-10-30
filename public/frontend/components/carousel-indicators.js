@@ -1,5 +1,5 @@
-import {escape} from './ui.js?v=20261030-5';
-import {motion} from '../design/runtime.js?v=20261030-5';
+import {escape} from './ui.js?v=20261030-8';
+import {motion} from '../design/runtime.js?v=20261030-8';
 
 // Time belongs to the indicator; the carousel supplies selection and pause context.
 export function carouselIndicators(labels,{interval=motion.carousel}={}) {

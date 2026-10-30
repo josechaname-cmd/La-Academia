@@ -1,7 +1,7 @@
-import {paginationControls,mountPagination} from '../components/list-controls.js?v=20261030-5';
-import {query,command,upload} from '../api.js?v=20261030-5';
-import {heading,escape,field,formData,busy,toast,modal,empty,icon,confirmAction} from '../components/common.js?v=20261030-5';
-import {attachValidation} from '../components/form-validation.js?v=20261030-5';
+import {paginationControls,mountPagination} from '../components/list-controls.js?v=20261030-8';
+import {query,command,upload} from '../api.js?v=20261030-8';
+import {heading,escape,field,formData,busy,toast,modal,empty,icon,confirmAction} from '../components/common.js?v=20261030-8';
+import {attachValidation} from '../components/form-validation.js?v=20261030-8';
 
 const normalize=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase().trim();
 const visibility=active=>`<span class="badge ${Number(active)?'green':''}">${Number(active)?'Activo':'Inactivo'}</span>`;

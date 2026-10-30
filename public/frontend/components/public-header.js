@@ -1,6 +1,6 @@
-import {query,fileUrl,previewUrl} from '../api.js?v=20261030-5';
-import {escape,icon} from './common.js?v=20261030-5';
-import {motion,screens} from '../design/runtime.js?v=20261030-5';
+import {query,fileUrl,previewUrl} from '../api.js?v=20261030-8';
+import {escape,icon} from './common.js?v=20261030-8';
+import {motion,screens} from '../design/runtime.js?v=20261030-8';
 const normalize=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 const searchIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>';
 export function mountPublicHeader(){

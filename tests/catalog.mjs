@@ -26,7 +26,7 @@ reduce=true;nodes['#catalog-search'].value='';nodes['#catalog-search'].handlers.
 assert.equal(calls.length,2,'Filtering never refetches or navigates');
 dispose();
 const {JSDOM}=await import('jsdom');
-const {courseCards,publishedTime}=await import('../public/frontend/components/course-cards.js?v=20261030-5');
+const {courseCards,publishedTime}=await import('../public/frontend/components/course-cards.js?v=20261030-8');
 const now=new Date('2026-10-29T05:15:00Z'); // Just after midnight in Peru, regardless of the machine's zone.
 const label=value=>new JSDOM(publishedTime(value,now)).window.document.querySelector('time')?.textContent;
 assert.equal(label('2026-10-29 00:01:00'),'Hoy');

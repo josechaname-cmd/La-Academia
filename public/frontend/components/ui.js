@@ -1,4 +1,4 @@
-import {motion} from '../design/runtime.js?v=20261030-5';
+import {motion} from '../design/runtime.js?v=20261030-8';
 export const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const paths={
   tag:'M3 3h8l10 10-8 8L3 11Z M7 7h.01',
@@ -14,7 +14,7 @@ const paths={
 };
 export function icon(name){return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="${paths[name]||paths.empty}"/></svg>`;}
 export function breadcrumbs(items){return `<nav class="ui-breadcrumbs" aria-label="Ruta de navegación"><ol>${items.map((item,index)=>`<li>${index?icon('next'):''}${item.href?`<a href="${escape(item.href)}">${escape(item.label)}</a>`:`<span aria-current="page">${escape(item.label)}</span>`}</li>`).join('')}</ol></nav>`;}
-export function pagination(){return `<nav class="catalog-pagination" aria-label="Paginación"><button type="button" class="button white" id="catalog-prev">${icon('previous')} Anterior</button><span id="catalog-page" aria-live="polite"></span><button type="button" class="button white" id="catalog-next">Siguiente ${icon('next')}</button></nav>`;}
+export function pagination(){return `<nav class="catalog-pagination" aria-label="Paginación"><button type="button" class="button white" id="catalog-prev" aria-label="Página anterior" title="Página anterior">${icon('previous')}</button><span id="catalog-page" aria-live="polite"></span><button type="button" class="button white" id="catalog-next" aria-label="Página siguiente" title="Página siguiente">${icon('next')}</button></nav>`;}
 export function alert(message,tone='info'){const type=['info','success','warning','error'].includes(tone)?tone:'info';return `<div class="ui-alert" data-tone="${type}" role="${type==='error'?'alert':'status'}">${escape(message)}</div>`;}
 export function toast(message,tone='success',{title='',prominent=false}={}){
   const target=document.querySelector('#toast');if(!target)return;

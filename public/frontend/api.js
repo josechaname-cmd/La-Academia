@@ -1,4 +1,4 @@
-import {createReadCache} from './read-cache.js?v=20261030-5';
+import {createReadCache} from './read-cache.js?v=20261030-8';
 const endpoint = new URL('../api/v1/', import.meta.url);
 let sessionData=null,sessionPromise=null,sessionFetchedAt=0;
 const reads=createReadCache();let activityRevision=null;

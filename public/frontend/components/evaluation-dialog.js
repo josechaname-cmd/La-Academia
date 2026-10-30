@@ -1,8 +1,8 @@
-import {command} from '../api.js?v=20261030-5';
-import {escape,field,errorBox,icon} from './common.js?v=20261030-5';
-import {attachValidation} from './form-validation.js?v=20261030-5';
-import {closeIcon,previousIcon,nextIcon} from './gallery-icons.js?v=20261030-5';
-import {evaluationState,remainingLabel} from './evaluation-state.js?v=20261030-5';
+import {command} from '../api.js?v=20261030-8';
+import {escape,field,errorBox,icon} from './common.js?v=20261030-8';
+import {attachValidation} from './form-validation.js?v=20261030-8';
+import {closeIcon,previousIcon,nextIcon} from './gallery-icons.js?v=20261030-8';
+import {evaluationState,remainingLabel} from './evaluation-state.js?v=20261030-8';
 
 export function mountEvaluation(root,course) {
   const launch=root.querySelector('#start-evaluation');

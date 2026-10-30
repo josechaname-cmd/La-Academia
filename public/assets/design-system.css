@@ -311,9 +311,12 @@
 :where(.academy-ui) .list-pagination { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:var(--ds-space-3); padding:var(--ds-space-4) var(--ds-space-5); border-top:var(--ds-border-width) solid var(--ds-color-line); background:var(--ds-color-surface); }
 :where(.academy-ui) .list-pagination p,:where(.academy-ui) .list-pagination [data-page-label] { font-size:var(--ds-text-sm); font-variant-numeric:tabular-nums; color:var(--ds-color-muted); }
 :where(.academy-ui) .list-pagination p { margin:0; }
-:where(.academy-ui) .list-pagination nav { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:var(--ds-space-3); }
-:where(.academy-ui) .list-pagination .button { padding-inline:var(--ds-space-3); }
-:where(.academy-ui) .list-pagination [data-page-label] { border-radius:var(--ds-radius-sm); }
+:where(.academy-ui) .list-pagination nav { display:flex; align-items:center; justify-content:center; gap:var(--ds-space-3); }
+:where(.academy-ui) .list-pagination [data-page-label] { border-radius:var(--ds-radius-sm); white-space:nowrap; }
+:where(.academy-ui) :is(.catalog-pagination,.list-pagination nav,.home-course-controls,.dashboard-chart-pagination)>.button { width:var(--ds-size-control); height:var(--ds-size-control); min-height:var(--ds-size-control); flex:0 0 var(--ds-size-control); padding:0; border:0; border-radius:var(--ds-radius-round); background:transparent; color:var(--ds-color-brand); box-shadow:none; }
+:where(.academy-ui) :is(.catalog-pagination,.list-pagination nav,.home-course-controls,.dashboard-chart-pagination)>.button:hover:not(:disabled) { background:var(--ds-color-surface-selected); color:var(--ds-color-brand-hover); }
+:where(.academy-ui) :is(.catalog-pagination,.list-pagination nav,.home-course-controls,.dashboard-chart-pagination)>.button:active:not(:disabled) { background:var(--ds-color-surface-selected); color:var(--ds-color-brand-active); box-shadow:none; }
+:where(.academy-ui) :is(.catalog-pagination,.list-pagination nav,.home-course-controls,.dashboard-chart-pagination)>.button>svg { width:var(--ds-space-6); height:var(--ds-space-6); stroke-width:2.25; }
 :where(.academy-ui) .sidebar nav .ui-icon, :where(.academy-ui) .header .ui-icon { width: var(--ds-size-icon); height: var(--ds-size-icon); }
 @keyframes ds-spin { to { transform: rotate(360deg); } }
 @media (max-width: 680px) { :where(.academy-ui) .form-grid { grid-template-columns: minmax(0,1fr); } :where(.academy-ui) .padded { padding: var(--ds-space-5); } :where(.academy-ui) #dialog,:where(.academy-ui) .ui-confirm { padding-inline: var(--ds-space-5); } :where(.academy-ui) .table-scroll th,:where(.academy-ui) .table-scroll td { padding-inline: var(--ds-space-3); } }
@@ -322,8 +325,6 @@
   :where(.academy-ui) .field :is(input:not([type=radio]):not([type=checkbox]),select,textarea),:where(.academy-ui) .toolbar :is(input,select),:where(.academy-ui) .search input { font-size:16px; }
   :where(.academy-ui) .list-pagination { justify-content:center; padding:var(--ds-space-3); }
   :where(.academy-ui) .list-pagination nav { width:100%; gap:var(--ds-space-2); }
-  :where(.academy-ui) .list-pagination [data-page-label] { order:-1; width:100%; text-align:center; }
-  :where(.academy-ui) .list-pagination .button { flex:1; }
 }
 @media (prefers-reduced-motion: reduce) { :where(.academy-ui) .loading::before,:where(.academy-ui) .button[aria-busy=true]::before { animation: none; } }
 

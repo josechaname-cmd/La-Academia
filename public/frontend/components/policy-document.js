@@ -1,5 +1,5 @@
-import {fileUrl} from '../api.js?v=20261030-5';
-import {escape,icon} from './common.js?v=20261030-5';
+import {fileUrl} from '../api.js?v=20261030-8';
+import {escape,icon} from './common.js?v=20261030-8';
 
 export function policyDocument(policy,{title='Documento',externalControls=false}={}){
  const controls=`<div class="policy-document-toolbar"><div><span class="badge">PDF</span><h2>${escape(title)}</h2></div><div class="policy-document-tools"><button type="button" class="button white" data-policy-expand aria-pressed="false" aria-label="Ampliar visor" title="Ampliar visor">${icon('expand')}</button><a class="button primary" href="${fileUrl(policy.file_id,true)}" title="Descargar PDF">${icon('download')} <span>Descargar</span></a></div></div>`;

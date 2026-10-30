@@ -1,7 +1,7 @@
-import {query,command,upload,fileUrl} from '../api.js?v=20261030-5';
-import {heading,field,escape,busy,toast,breadcrumbs,confirmAction,empty,icon} from '../components/common.js?v=20261030-5';
-import {attachValidation} from '../components/form-validation.js?v=20261030-5';
-import {showHomePopup,popupContent,isExternalPopupLink} from '../components/home-popup.js?v=20261030-5';
+import {query,command,upload,fileUrl} from '../api.js?v=20261030-8';
+import {heading,field,escape,busy,toast,breadcrumbs,confirmAction,empty,icon} from '../components/common.js?v=20261030-8';
+import {attachValidation} from '../components/form-validation.js?v=20261030-8';
+import {showHomePopup,popupContent,isExternalPopupLink} from '../components/home-popup.js?v=20261030-8';
 export async function homePopupPage(id=''){
   if(!id)return popupListPage();
   if(id!=='nuevo'&&!/^[1-9][0-9]*$/.test(String(id)))throw new Error('Popup no disponible.');

@@ -1,9 +1,9 @@
-import {escape,icon} from './ui.js?v=20261030-5';
+import {escape,icon} from './ui.js?v=20261030-8';
 
 export const searchText=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
 
 export function paginationControls(label='registros'){
-  return `<div class="list-pagination" data-list-pagination><p data-page-count role="status"></p><nav aria-label="Páginas de ${escape(label)}"><button type="button" class="button white" data-page-prev>${icon('previous')} Anterior</button><span data-page-label tabindex="-1"></span><button type="button" class="button white" data-page-next>Siguiente ${icon('next')}</button></nav></div>`;
+  return `<div class="list-pagination" data-list-pagination><p data-page-count role="status"></p><nav aria-label="Páginas de ${escape(label)}"><button type="button" class="button white" data-page-prev aria-label="Página anterior" title="Página anterior">${icon('previous')}</button><span data-page-label tabindex="-1"></span><button type="button" class="button white" data-page-next aria-label="Página siguiente" title="Página siguiente">${icon('next')}</button></nav></div>`;
 }
 
 export function mountPagination(host,{size=20,onChange=()=>{}}={}){

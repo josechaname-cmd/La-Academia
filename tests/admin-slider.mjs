@@ -55,5 +55,5 @@ root.querySelector('#slider-remove').click();assert.equal(items.length,2,'Remova
 root.querySelector('#slider-remove').click();assert(form.hidden);await submit();assert.equal(items.length,0,'Saving can remove the final image');assert(root.querySelector('#slider-save').disabled);
 addFiles(['pendiente.png']);cleanup();assert(revoked.includes('blob:slider-3'));
 page=await sliderPage('nuevo');root.innerHTML=page.html;cleanup=page.mount(root);assert.equal(document.activeElement.id,'slider-files','Legacy new-image link opens the same workspace');cleanup();
-URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;const {toast}=await import('../public/frontend/components/ui.js?v=20261030-5');clearTimeout(toast.timer);dom.window.close();
+URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;const {toast}=await import('../public/frontend/components/ui.js?v=20261030-8');clearTimeout(toast.timer);dom.window.close();
 console.log('OK slider unificado: carga múltiple, tipografía/colores/tamaños, arrastre mouse/táctil/teclado, títulos/enlaces, confirmación, guardado parcial, reintento, eliminación y limpieza.');

@@ -1,8 +1,8 @@
-import {query,command,uploadBundle,fileUrl} from '../api.js?v=20261030-5';
-import {heading,breadcrumbs,escape,empty,field,busy,toast,confirmAction,icon} from '../components/common.js?v=20261030-5';
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-5';
-import {attachValidation} from '../components/form-validation.js?v=20261030-5';
-import {policyDocument} from '../components/policy-document.js?v=20261030-6';
+import {query,command,uploadBundle,fileUrl} from '../api.js?v=20261030-8';
+import {heading,breadcrumbs,escape,empty,field,busy,toast,confirmAction,icon} from '../components/common.js?v=20261030-8';
+import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-8';
+import {attachValidation} from '../components/form-validation.js?v=20261030-8';
+import {policyDocument} from '../components/policy-document.js?v=20261030-8';
 const sizeLabel=bytes=>Number(bytes)<1024*1024?`${Math.max(1,Math.ceil(Number(bytes)/1024))} KB`:`${(Number(bytes)/1024/1024).toFixed(1)} MB`;
 const coverImage=(policy,{preview=false}={})=>policy.cover_image_id?`<img src="${fileUrl(policy.cover_image_id)}" alt="${preview?'Vista previa de la portada':'Portada de '+escape(policy.title)}" loading="lazy">`:`<div class="policy-cover-placeholder">${icon('image')}<span>${preview?'Tu imagen de portada':'Documento institucional'}</span></div>`;
 

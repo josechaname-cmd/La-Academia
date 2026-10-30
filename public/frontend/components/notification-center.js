@@ -1,7 +1,7 @@
-import {escape,date,icon} from './common.js?v=20261030-5';
-import {query,invalidateNavigationCache} from '../api.js?v=20261030-5';
+import {escape,date,icon} from './common.js?v=20261030-8';
+import {query,invalidateNavigationCache} from '../api.js?v=20261030-8';
 export const bellIcon=icon('bell');
-import {activityReadState} from './activity-read-state.js?v=20261030-5';
+import {activityReadState} from './activity-read-state.js?v=20261030-8';
 export function activityItemsHtml(items){
   return items.length?items.map(item=>`<a class="notification-item unread" href="${escape(item.href)}" data-open-activity="${item.id}"><span class="notice-icon">${bellIcon}</span><div><strong>${escape(item.title)}</strong><p>${escape(item.body)}</p><small>${date(item.created_at)}</small></div><span class="unread-dot" aria-hidden="true"></span></a>`).join(''):'<div class="notification-empty">Estás al día.<small>No tienes notificaciones pendientes.</small></div>';
 }
