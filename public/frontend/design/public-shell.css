@@ -39,15 +39,21 @@ body:not(.admin-panel) > .header nav > .admin-link:hover { transform:translateY(
 .support-email { color:var(--ds-color-on-brand);font-size:var(--ds-text-md);font-weight:var(--ds-font-strong);overflow-wrap:anywhere;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--ds-color-info-border) 65%,transparent);text-underline-offset:4px;transition:color var(--ds-motion-fast),text-decoration-color var(--ds-motion-fast); }
 .support-email:hover { color:var(--ds-color-info-border);text-decoration-color:currentColor; }
 .support-email:focus-visible { outline-color:var(--ds-color-on-brand); }
-.support-bottom { display:flex;justify-content:space-between;gap:var(--ds-space-4);margin-top:var(--ds-space-6);padding-top:var(--ds-space-4);border-top:var(--ds-border-width) solid color-mix(in srgb,var(--ds-color-on-brand) 18%,transparent); }
-.support-bottom small,.support-bottom > span { color:var(--ds-color-line);font-size:var(--ds-text-xs); }
+.support-bottom { display:flex;align-items:center;justify-content:space-between;gap:var(--ds-space-4);margin-top:var(--ds-space-6);padding-top:var(--ds-space-4);border-top:var(--ds-border-width) solid color-mix(in srgb,var(--ds-color-on-brand) 18%,transparent); }
+.support-bottom small,.support-brand-links > span { color:var(--ds-color-line);font-size:var(--ds-text-xs); }
+.support-brand-links { display:flex;align-items:center;flex-wrap:wrap;gap:var(--ds-space-4); }
+.support-social { display:flex;align-items:center;gap:var(--ds-space-2); }
+.support-social a { display:grid;place-items:center;width:var(--ds-size-control);height:var(--ds-size-control);color:var(--ds-color-on-brand); }
+.support-social a:hover { color:var(--ds-color-accent); }
+.support-social a:focus-visible { outline-color:var(--ds-color-on-brand); }
+.support-social svg { display:block;width:var(--ds-size-icon);height:var(--ds-size-icon); }
 @media (--screen-mobile) {
   body:not(.admin-panel) > .header nav > a { padding-inline:var(--ds-space-2); }
   body:not(.admin-panel) > .header nav > .admin-link { margin-left:0;padding-inline:var(--ds-space-3); }
   .support-footer { padding-top:var(--ds-space-6); }
   .support-main { flex-direction:column;align-items:flex-start;gap:var(--ds-space-4); }
   .support-contact { justify-items:start;text-align:left; }
-  .support-bottom { flex-direction:column;gap:var(--ds-space-2);margin-top:var(--ds-space-5); }
+  .support-bottom { flex-direction:column;align-items:flex-start;gap:var(--ds-space-2);margin-top:var(--ds-space-5); }
 }
 
 /* Search belongs to the public shell, not the authenticated workspace. */
