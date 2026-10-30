@@ -36,7 +36,7 @@ globalThis.XMLHttpRequest=class {
  }
 };
 let page=await policiesPage();root.innerHTML=page.html;page.mount(root);
-assert.equal(root.querySelectorAll('.policy-card').length,6);assert(!root.querySelector('segura'));assert.match(root.querySelector('.policy-card-cover img').src,/files\/30/);assert.equal(root.querySelector('.policy-card-cover img').alt,'Portada de Política <segura>');assert(root.querySelector('a[href*="download=1"]'));
+assert.equal(root.querySelectorAll('.policy-card').length,6);assert(!root.querySelector('segura'));assert.match(root.querySelector('.policy-card-cover img').src,/files\/30/);assert.equal(root.querySelector('.policy-card-cover img').alt,'Portada de Política <segura>');assert(!root.querySelector('a[href*="download=1"],time,.policy-card-actions'));const card=root.querySelector('.policy-card');assert.equal(card.querySelectorAll('a').length,1);assert.equal(card.querySelector('a').hash,'#politicas/1');assert(card.querySelector('a h2'));assert(card.querySelector('a .policy-description'));assert.equal(card.querySelector('.policy-cover-badge').textContent,'PDF');assert(!/KB|MB/.test(card.textContent));
 root.querySelector('[data-page-next]').click();assert.equal(root.querySelectorAll('.policy-card').length,2);assert(root.querySelector('.policy-cover-placeholder'));
 const search=root.querySelector('[data-policy-search]');search.value='prevencion';search.dispatchEvent(new Event('input'));assert.equal(root.querySelectorAll('.policy-card').length,1);assert.match(root.querySelector('.policy-card').textContent,/Política 8/);assert(!requests.some(r=>r.method==='POST'),'Browsing never registers training views');
 page=await policyPage(1);root.innerHTML=page.html;let cleanup=page.mount(root);

@@ -9,8 +9,11 @@ filtro de sede. Todos los administradores y capacitadores pueden gestionarla.
 La navegación pública y la búsqueda general muestran los documentos publicados.
 Los borradores solo son accesibles para las cuentas administrativas.
 
-La biblioteca presenta seis tarjetas por página, con portada, título,
-descripción, fecha y descarga directa. La imagen y el título abren el documento.
+La biblioteca presenta seis tarjetas por página: la portada ocupa toda la tarjeta,
+con un efecto arcoíris suave y el título y la descripción en blanco superpuestos.
+Solo aparece la etiqueta PDF, sin tamaño, fecha ni botón de descarga. Toda la
+tarjeta abre el documento; la descarga está en su detalle. La vista previa del
+editor utiliza el mismo diseño.
 El detalle coloca la portada y la información a un lado y el PDF al otro;
 en pantallas pequeñas se apilan. Debajo de la descripción se ubican los controles
 para ampliar y descargar, sin los datos de formato y actualización en el detalle.

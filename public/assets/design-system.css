@@ -29,6 +29,12 @@
   --ds-color-info-border: #7fb4cf;
   --ds-color-media: #102635;
   --ds-color-accent: #c9dd18;
+  --ds-color-spectrum-red: #f87171;
+  --ds-color-spectrum-orange: #fb923c;
+  --ds-color-spectrum-yellow: #facc15;
+  --ds-color-spectrum-green: #4ade80;
+  --ds-color-spectrum-blue: #38bdf8;
+  --ds-color-spectrum-violet: #a78bfa;
   --ds-font-family: Inter, 'Segoe UI', Arial, sans-serif;
   --ds-font-regular: 400;
   --ds-font-medium: 500;

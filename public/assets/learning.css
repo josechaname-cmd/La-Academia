@@ -147,19 +147,23 @@
 :where(.academy-ui) .document-cover-choice .field { width:100%; }
 :where(.academy-ui) .policy-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--ds-space-5); margin-top:var(--ds-space-5); }
 :where(.academy-ui) .policy-grid > .empty { grid-column:1 / -1; }
-:where(.academy-ui) .policy-card { display:flex; flex-direction:column; min-width:0; padding:0; border-radius:0; }
-:where(.academy-ui) .policy-card-cover,:where(.academy-ui) .policy-detail-cover { display:block; position:relative; aspect-ratio:16 / 10; background:var(--ds-color-canvas); overflow:hidden; }
-:where(.academy-ui) .policy-card-cover img,:where(.academy-ui) .policy-detail-cover img { display:block; width:100%; height:100%; object-fit:cover; }
+:where(.academy-ui) .policy-card { min-width:0; padding:0; border-radius:0; overflow:hidden; }
+:where(.academy-ui) .policy-card-cover { display:grid; align-items:end; position:relative; isolation:isolate; min-height:280px; aspect-ratio:4 / 3; background:var(--ds-color-media); overflow:hidden; }
+:where(.academy-ui) .policy-card-image { position:absolute; inset:0; z-index:0; }
+:where(.academy-ui) .policy-card-cover::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg,color-mix(in srgb,var(--ds-color-media) 10%,transparent),color-mix(in srgb,var(--ds-color-media) 78%,transparent) 45%,color-mix(in srgb,var(--ds-color-media) 94%,transparent)),linear-gradient(115deg,color-mix(in srgb,var(--ds-color-spectrum-red) 38%,transparent),color-mix(in srgb,var(--ds-color-spectrum-orange) 38%,transparent),color-mix(in srgb,var(--ds-color-spectrum-yellow) 38%,transparent),color-mix(in srgb,var(--ds-color-spectrum-green) 38%,transparent),color-mix(in srgb,var(--ds-color-spectrum-blue) 38%,transparent),color-mix(in srgb,var(--ds-color-spectrum-violet) 38%,transparent)); }
+:where(.academy-ui) .policy-detail-cover { display:block; position:relative; aspect-ratio:16 / 10; background:var(--ds-color-canvas); overflow:hidden; }
+:where(.academy-ui) .policy-card-image img,:where(.academy-ui) .policy-detail-cover img { display:block; width:100%; height:100%; object-fit:cover; }
 :where(.academy-ui) .policy-cover-placeholder { display:grid; place-content:center; justify-items:center; gap:var(--ds-space-3); height:100%; padding:var(--ds-space-5); text-align:center; color:var(--ds-color-info); background:linear-gradient(135deg,var(--ds-color-info-bg),var(--ds-color-surface-selected)); }
 :where(.academy-ui) .policy-cover-placeholder .ui-icon { width:48px; height:48px; }
-:where(.academy-ui) .policy-cover-badge { position:absolute; bottom:var(--ds-space-3); left:var(--ds-space-3); padding:var(--ds-space-1) var(--ds-space-3); color:var(--ds-color-on-brand); background:var(--ds-color-media); font-size:var(--ds-text-xs); font-weight:var(--ds-font-strong); }
-:where(.academy-ui) .policy-card-body { display:flex; flex-direction:column; align-items:flex-start; flex:1; gap:var(--ds-space-3); padding:var(--ds-space-5); min-width:0; }
-:where(.academy-ui) .policy-card h2,:where(.academy-ui) .policy-card h3 { margin:0; font-size:var(--ds-text-xl); line-height:var(--ds-line-heading); overflow-wrap:anywhere; }
-:where(.academy-ui) .policy-card h2 a { color:var(--ds-color-ink); text-decoration:none; }
-:where(.academy-ui) .policy-card h2 a:hover { color:var(--ds-color-brand); text-decoration:underline; }
-:where(.academy-ui) .policy-card-cover:focus-visible { outline-offset:-4px; }
-:where(.academy-ui) .policy-description { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin:0; color:var(--ds-color-muted); overflow-wrap:anywhere; }
-:where(.academy-ui) .policy-card-actions { display:flex; align-items:center; justify-content:space-between; gap:var(--ds-space-3); flex-wrap:wrap; width:100%; margin-top:auto; padding-top:var(--ds-space-4); border-top:var(--ds-border-width) solid var(--ds-color-line); }
+:where(.academy-ui) .policy-card-image .policy-cover-placeholder { color:var(--ds-color-on-brand); background:var(--ds-color-media); }
+:where(.academy-ui) .policy-card-image .policy-cover-placeholder>span { display:none; }
+:where(.academy-ui) .policy-card-labels { position:absolute; top:var(--ds-space-4); left:var(--ds-space-4); right:var(--ds-space-4); z-index:2; display:flex; align-items:center; justify-content:space-between; gap:var(--ds-space-2); }
+:where(.academy-ui) .policy-cover-badge { padding:var(--ds-space-1) var(--ds-space-3); color:var(--ds-color-on-brand); background:color-mix(in srgb,var(--ds-color-media) 78%,transparent); border:var(--ds-border-width) solid color-mix(in srgb,var(--ds-color-on-brand) 35%,transparent); border-radius:var(--ds-radius-pill); font-size:var(--ds-text-xs); font-weight:var(--ds-font-strong); }
+:where(.academy-ui) .policy-card-body { position:relative; z-index:2; display:flex; flex-direction:column; align-items:flex-start; gap:var(--ds-space-2); padding:var(--ds-space-16) var(--ds-space-5) var(--ds-space-5); min-width:0; color:var(--ds-color-on-brand); text-shadow:0 1px 3px color-mix(in srgb,var(--ds-color-black) 45%,transparent); }
+:where(.academy-ui) .policy-card h2,:where(.academy-ui) .policy-card h3 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin:0; color:var(--ds-color-on-brand); font-size:var(--ds-text-xl); line-height:var(--ds-line-heading); overflow-wrap:anywhere; }
+:where(.academy-ui) a.policy-card-cover:hover h2 { text-decoration:underline; text-underline-offset:4px; }
+:where(.academy-ui) .policy-card-cover:focus-visible { outline-color:var(--ds-color-on-brand); outline-offset:-4px; }
+:where(.academy-ui) .policy-description { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin:0; color:var(--ds-color-on-brand); overflow-wrap:anywhere; }
 :where(.academy-ui) .policy-detail>.ui-breadcrumbs { margin-bottom:var(--ds-space-5); }
 :where(.academy-ui) .policy-reader { display:grid; grid-template-columns:minmax(240px,1fr) minmax(0,2.5fr); align-items:start; gap:var(--ds-space-6); }
 :where(.academy-ui) .policy-reader.is-reading { grid-template-columns:minmax(0,1fr); }
