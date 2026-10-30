@@ -7,14 +7,18 @@ use Academia\Support\Validation;
 final class CourseRepository {
     public function __construct(private Database $db,private CategoryRepository $categories) {}
     public function list(bool $admin=false,?int $siteId=null): array {
-        $rows=$this->db->run("SELECT c.*,s.name site_name, COALESCE((SELECT MAX(l.created_at) FROM activity_log l WHERE l.entity_type='course' AND l.entity_id=c.id AND l.event_type='course.published'),c.created_at) published_at, cover.id cover_file_id, pv.status cover_status,pv.source_hash cover_version, (SELECT COUNT(*) FROM files f WHERE f.course_id=c.id) material_count, latest.version exam_version,latest.enabled exam_enabled,latest.opens_at exam_opens_at,latest.closes_at exam_closes_at,latest.duration_minutes exam_duration_minutes,latest.max_attempts exam_max_attempts,latest.passing_score exam_passing_score FROM courses c LEFT JOIN sites s ON s.id=c.site_id LEFT JOIN exams latest ON latest.id=(SELECT e.id FROM exams e WHERE e.course_id=c.id ORDER BY e.version DESC LIMIT 1) LEFT JOIN files cover ON cover.id=COALESCE(c.cover_file_id,(SELECT MIN(f0.id) FROM files f0 WHERE f0.course_id=c.id)) LEFT JOIN file_previews pv ON pv.file_id=cover.id WHERE ".($admin?"c.status<>'archived'":"c.status='published'").($admin&&$siteId!==null?' AND c.site_id=?':'').' ORDER BY '.($admin?'c.created_at':'published_at').' DESC,c.id DESC',$admin&&$siteId!==null?[$siteId]:[])->fetchAll();
+        $rows=$this->db->run("SELECT c.*,s.name site_name, COALESCE((SELECT MAX(l.created_at) FROM activity_log l WHERE l.entity_type='course' AND l.entity_id=c.id AND l.event_type='course.published'),c.created_at) published_at, cover.id cover_file_id, pv.status cover_status,pv.source_hash cover_version, (SELECT COUNT(*) FROM files f WHERE f.course_id=c.id) material_count, latest.version exam_version,latest.enabled exam_enabled,latest.opens_at exam_opens_at,latest.closes_at exam_closes_at,latest.duration_minutes exam_duration_minutes,latest.max_attempts exam_max_attempts,latest.passing_score exam_passing_score FROM courses c LEFT JOIN sites s ON s.id=c.site_id LEFT JOIN exams latest ON latest.id=(SELECT e.id FROM exams e WHERE e.course_id=c.id ORDER BY e.version DESC LIMIT 1) LEFT JOIN files cover ON cover.id=COALESCE(c.cover_file_id,(SELECT MIN(f0.id) FROM files f0 WHERE f0.course_id=c.id AND f0.extension IN ('pdf','ppt','pptx'))) LEFT JOIN file_previews pv ON pv.file_id=cover.id WHERE ".($admin?"c.status<>'archived'":"c.status='published'").($admin&&$siteId!==null?' AND c.site_id=?':'').' ORDER BY '.($admin?'c.created_at':'published_at').' DESC,c.id DESC',$admin&&$siteId!==null?[$siteId]:[])->fetchAll();
         return $rows;
     }
     public function get(int $id,bool $admin=false): array {
-        $course=$this->db->run('SELECT c.*,s.name site_name,cover.id cover_file_id,pv.status cover_status,pv.source_hash cover_version FROM courses c LEFT JOIN sites s ON s.id=c.site_id LEFT JOIN files cover ON cover.id=COALESCE(c.cover_file_id,(SELECT MIN(f0.id) FROM files f0 WHERE f0.course_id=c.id)) LEFT JOIN file_previews pv ON pv.file_id=cover.id WHERE c.id=? AND '.($admin?"c.status<>'archived'":"c.status='published'"),[$id])->fetch();
+        $course=$this->db->run("SELECT c.*,s.name site_name,cover.id cover_file_id,pv.status cover_status,pv.source_hash cover_version FROM courses c LEFT JOIN sites s ON s.id=c.site_id LEFT JOIN files cover ON cover.id=COALESCE(c.cover_file_id,(SELECT MIN(f0.id) FROM files f0 WHERE f0.course_id=c.id AND f0.extension IN ('pdf','ppt','pptx'))) LEFT JOIN file_previews pv ON pv.file_id=cover.id WHERE c.id=? AND ".($admin?"c.status<>'archived'":"c.status='published'"),[$id])->fetch();
         if(!$course)Http::fail(404,'Capacitación no disponible.');
-        $course['materials']=$this->db->run('SELECT f.id,f.original_name,f.extension,f.size,p.status preview_status,p.source_hash preview_version,p.error_message preview_error FROM files f LEFT JOIN file_previews p ON p.file_id=f.id WHERE f.course_id=? ORDER BY f.id',[$id])->fetchAll();
-        foreach($course['materials'] as &$material)$material['preview_error']=\Academia\Exceptions\PreviewException::publicMessage($material['preview_error']);
+        $course['materials']=$this->db->run('SELECT f.id,f.original_name,f.extension,f.size,f.mime,f.duration_seconds,f.video_width,f.video_height,f.video_codec,f.audio_codec,p.status preview_status,p.source_hash preview_version,p.error_message preview_error FROM files f LEFT JOIN file_previews p ON p.file_id=f.id WHERE f.course_id=? ORDER BY f.id',[$id])->fetchAll();
+        foreach($course['materials'] as &$material){
+            $material['media_type']=in_array($material['extension'],['mp4','webm'],true)?'video':'document';
+            $material['duration_seconds']=$material['duration_seconds']===null?null:(float)$material['duration_seconds'];
+            $material['preview_error']=\Academia\Exceptions\PreviewException::publicMessage($material['preview_error']);
+        }
         unset($material);
         $course['exam']=$this->db->run('SELECT id,version,opens_at,closes_at,duration_minutes,max_attempts,passing_score,enabled,JSON_LENGTH(questions_json) question_count,creator_name,created_at FROM exams WHERE course_id=? ORDER BY version DESC LIMIT 1',[$id])->fetch()?:null;
         if($course['exam'])$course['exam']['state']=\Academia\Services\ExamSchedule::state($course['exam']+['exam_required'=>$course['exam_required']]);
@@ -49,7 +53,7 @@ final class CourseRepository {
     }
     public function publish(int $id): array {
         return $this->db->transaction(function()use($id){$row=$this->db->run("SELECT id,status,exam_required FROM courses WHERE id=? AND status<>'archived' FOR UPDATE",[$id])->fetch();if(!$row)Http::fail(404,'Capacitación no encontrada.');
-            if(!$this->db->run('SELECT id FROM files WHERE course_id=? LIMIT 1',[$id])->fetchColumn())Http::fail(422,'Agrega al menos un material PDF o PPT.');
+            if(!$this->db->run('SELECT id FROM files WHERE course_id=? LIMIT 1',[$id])->fetchColumn())Http::fail(422,'Agrega al menos un documento o video.');
             if((int)$row['exam_required']&&!$this->db->run('SELECT id FROM exams WHERE course_id=? LIMIT 1',[$id])->fetchColumn())Http::fail(422,'Guarda un examen con al menos una pregunta o selecciona capacitación sin examen.');
             if($row['status']==='published')return $this->get($id,true);
             $this->db->run("UPDATE courses SET status='published' WHERE id=?",[$id]);(new ActivityRepository($this->db))->course($id,'course.published','Capacitación publicada');return $this->get($id,true);
@@ -58,7 +62,7 @@ final class CourseRepository {
     public function cover(int $id,int $fileId): array {
         return $this->db->transaction(function()use($id,$fileId){
             if(!$this->db->run("SELECT id FROM courses WHERE id=? AND status<>'archived' FOR UPDATE",[$id])->fetchColumn())Http::fail(404,'Capacitación no disponible.');
-            if(!$this->db->run('SELECT id FROM files WHERE id=? AND course_id=? FOR UPDATE',[$fileId,$id])->fetchColumn())Http::fail(422,'El material debe pertenecer a esta capacitación.');
+            if(!$this->db->run("SELECT id FROM files WHERE id=? AND course_id=? AND extension IN ('pdf','ppt','pptx') FOR UPDATE",[$fileId,$id])->fetchColumn())Http::fail(422,'Selecciona un documento de esta capacitación o carga una imagen de portada.');
             $this->db->run('UPDATE courses SET cover_file_id=?,custom_cover_id=NULL WHERE id=?',[$fileId,$id]);
             return $this->get($id,true);
         });

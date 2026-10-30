@@ -64,5 +64,5 @@ submit(importForm);await flush();root.querySelector('#personnel-import-confirm')
 change(search,'');change(filter,'2','change');assert.equal(root.querySelectorAll('[data-person-rows] tr').length,2);assert.equal(filter.value,'2');
 const readsBefore=calls.filter(call=>call.path==='admin/personnel'&&call.method==='GET').length;root.querySelector('#personnel-refresh').click();await flush();assert.equal(calls.filter(call=>call.path==='admin/personnel'&&call.method==='GET').length,readsBefore+1);assert.equal(filter.value,'2','Refreshing preserves site filter');
 change(filter,'','change');change(search,'00998877');root.querySelector('[data-edit-person="00998877"]').click();document.querySelector('#personnel-form [data-remove-person]').click();await flush();await decide();assert(!document.querySelector('#dialog').open,'Deleting from editor closes editor');assert.equal(people[2].active,0);
-cleanup();const {toast}=await import('../public/frontend/components/ui.js?v=20261029-10');clearTimeout(toast.timer);dom.window.close();
+cleanup();const {toast}=await import('../public/frontend/components/ui.js?v=20261030-1');clearTimeout(toast.timer);dom.window.close();
 console.log('OK colaboradores: búsqueda global y por sede, alta, edición, baja, reactivación, errores, concurrencia UI y revisión masiva separada.');

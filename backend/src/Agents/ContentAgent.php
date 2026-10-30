@@ -23,6 +23,7 @@ final class ContentAgent implements AgentInterface {
             return ['name'=>$file['original_name'],'slides'=>json_decode($file['slides_json']?:'[]',true)];
         }
         $actor=$this->auth->requireAdmin();
+        if($action==='upload.options'){$context->requireMethod('GET');return $this->files->uploadOptions();}
         if($action==='admin.list'){$context->requireMethod('GET');return $this->courses->list(true,\Academia\Services\CoursePolicy::siteId($actor));}
         if($action==='admin.get'){$context->requireMethod('GET');return $this->courses->get($context->id(),true);}
         $context->requireMethod('POST');

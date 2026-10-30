@@ -5,9 +5,10 @@ use Academia\Support\Database;
 use Academia\Support\Http;
 final class ContentViews {
     public function __construct(private Database $db,private AuthTool $auth) {}
-    public function record(string $kind,int $id): array {
+    public function record(string $kind,int $id,?int $fileId=null): array {
         $targets=['course'=>['courses',"status='published'"],'event'=>['events','active=1']];
         if(!isset($targets[$kind]))Http::fail(404,'Contenido no encontrado.');
+        if($fileId!==null&&($kind!=='course'||!$this->db->run("SELECT f.id FROM files f JOIN courses c ON c.id=f.course_id WHERE f.id=? AND f.course_id=? AND c.status='published' AND f.extension IN ('pdf','ppt','pptx','mp4','webm')",[$fileId,$id])->fetchColumn()))Http::fail(404,'Material no disponible en esta capacitación.');
         // PHP holds the session lock: simultaneous tabs cannot count the same item twice.
         // No names, IP addresses or browser fingerprints are stored for analytics.
         $seen=$_SESSION['content_views']??[];$key=$kind.':'.$id;

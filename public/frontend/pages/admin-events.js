@@ -1,11 +1,11 @@
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261029-10';
-import {query,command} from '../api.js?v=20261029-10';
-import {heading,field,escape,optionList,formData,modal,busy,toast,confirmAction,icon} from '../components/common.js?v=20261029-10';
-import {eventCards} from '../components/events.js?v=20261029-10';
-import {mountEventGallery,showEventGallery} from '../components/event-gallery.js?v=20261029-10';
-import {photoPickerHtml,mountPhotoPicker} from '../components/event-photo-picker.js?v=20261029-10';
-import {attachValidation} from '../components/form-validation.js?v=20261029-10';
-import {categoryPicker,mountCategoryPicker} from '../components/category-picker.js?v=20261029-10';
+import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-1';
+import {query,command} from '../api.js?v=20261030-1';
+import {heading,field,escape,optionList,formData,modal,busy,toast,confirmAction,icon} from '../components/common.js?v=20261030-1';
+import {eventCards} from '../components/events.js?v=20261030-1';
+import {mountEventGallery,showEventGallery} from '../components/event-gallery.js?v=20261030-1';
+import {photoPickerHtml,mountPhotoPicker} from '../components/event-photo-picker.js?v=20261030-1';
+import {attachValidation} from '../components/form-validation.js?v=20261030-1';
+import {categoryPicker,mountCategoryPicker} from '../components/category-picker.js?v=20261030-1';
 export async function eventsPage(reload,selectedId=''){
   const [events,eventCategories]=await Promise.all([query('admin','events.list'),query('content','categories.list',{scope:'event'})]);
   return {html:`${heading('COMUNICACIÓN INTERNA','Eventos de La Academia','Los eventos publicados aparecen en Eventos. Agrega una galería de al menos 3 imágenes.','<button class="button primary" id="new-event">+ Crear evento</button>')}<div class="toolbar"><label class="search"><span class="sr-only">Buscar eventos</span><input id="event-search" type="search" placeholder="Buscar por título o lugar"></label><label>Categoría<select id="event-filter"><option value="">Todos los eventos</option>${optionList(eventCategories)}</select></label></div><div class="event-grid event-feed admin-event-grid" id="admin-events"></div>${paginationControls('eventos')}`,mount(root){

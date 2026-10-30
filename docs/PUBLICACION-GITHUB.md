@@ -49,3 +49,5 @@ patrones conocidos de credenciales, y verifica los enlaces locales de la
 documentación publicada. Complementa la revisión humana; no garantiza detectar
 todos los datos sensibles posibles. Las referencias a evidencias privadas de
 auditoría se conservan como texto, sin enlazarlas como archivos distribuidos.
+
+Los videos y el runtime FFmpeg/FFprobe tampoco se publican. Cada instalación debe provisionar FFprobe y sus límites de carga según [Videos](VIDEOS.md).

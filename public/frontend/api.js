@@ -1,4 +1,4 @@
-import {createReadCache} from './read-cache.js?v=20261029-10';
+import {createReadCache} from './read-cache.js?v=20261030-1';
 const endpoint = new URL('../api/v1/', import.meta.url);
 let sessionData=null,sessionPromise=null,sessionFetchedAt=0;
 const reads=createReadCache();let activityRevision=null;
@@ -22,6 +22,7 @@ const routes={
  'popup:public':['GET','home-popup'], 'popup:list':['GET','admin/home-popup'], 'popup:get':['GET','admin/home-popup/{id}'], 'popup:create':['POST','admin/home-popup'], 'popup:save':['POST','admin/home-popup/{id}'], 'popup:status':['POST','admin/home-popup/{id}/status'], 'popup:delete':['DELETE','admin/home-popup/{id}'],
  'view:course':['POST','courses/{id}/view'], 'view:event':['POST','events/{id}/view'],
  'content:slider':['GET','slider'],
+ 'content:upload.options':['GET','admin/materials/options'],
  'admin:session':['GET','session'], 'admin:login':['POST','session'], 'admin:logout':['DELETE','session'], 'admin:setup':['POST','setup'],
  'admin:notifications.list':['GET','notifications'],
  'admin:personnel.list':['GET','admin/personnel'], 'admin:personnel.import':['POST','admin/personnel/import'],
@@ -50,7 +51,7 @@ function resolve(agent,action,values={}){
  return {method,url:new URL(path,endpoint),remaining};
 }
 export function fileUrl(id,download=false){const url=new URL(`files/${encodeURIComponent(id)}`,endpoint);if(download)url.searchParams.set('download','1');return url.href;}
-async function request(agent,action,{data,params={},file}={}){
+async function request(agent,action,{data,params={},file,onProgress}={}){
  const {method,url,remaining}=resolve(agent,action,data??params);
  const headers={Accept:'application/json'};let body;
  if(method==='GET'){Object.entries(remaining).forEach(([key,value])=>url.searchParams.set(key,value));}
@@ -60,8 +61,16 @@ async function request(agent,action,{data,params={},file}={}){
   else{headers['Content-Type']='application/json';body=JSON.stringify(remaining);}
  }
  let response;
- try{response=await fetch(url,{method,headers,body,credentials:'same-origin',cache:'no-store'});}catch{throw new Error('No se pudo conectar con La Academia. Revisa tu conexión e inténtalo nuevamente.');}
- let payload;try{payload=await response.json();}catch{throw new Error('El servidor devolvió una respuesta no válida.');}
+ try{
+  if(file&&onProgress&&typeof XMLHttpRequest!=='undefined')response=await new Promise((resolve,reject)=>{
+   const xhr=new XMLHttpRequest();xhr.open(method,url.href);xhr.withCredentials=true;Object.entries(headers).forEach(([key,value])=>xhr.setRequestHeader(key,value));
+   xhr.upload.addEventListener('progress',event=>{if(event.lengthComputable)onProgress(Math.min(100,Math.round(event.loaded/event.total*100)));});
+   xhr.addEventListener('load',()=>resolve({ok:xhr.status>=200&&xhr.status<300,status:xhr.status,json:async()=>JSON.parse(xhr.responseText)}));
+   xhr.addEventListener('error',()=>reject(new Error('network')));xhr.addEventListener('abort',()=>reject(new Error('aborted')));xhr.send(body);
+  });
+  else response=await fetch(url,{method,headers,body,credentials:'same-origin',cache:'no-store'});
+ }catch{throw new Error('No se pudo conectar con La Academia. Revisa tu conexión e inténtalo nuevamente.');}
+ let payload;try{payload=await response.json();}catch{const error=new Error(response.status===413?'El archivo supera el límite de carga del servidor.':'El servidor devolvió una respuesta no válida.');error.status=response.status;throw error;}
  if(!response.ok){const error=new Error(payload.error?.message||'No se pudo completar la operación.');error.status=response.status;error.code=payload.error?.code;error.fields=payload.error?.fields||{};error.requestId=payload.meta?.request_id;if(error.code==='csrf_expired'||error.status===401){sessionData=null;reads.clear();}else if(error.status===403)reads.clear();throw error;}
  if(agent==='admin'&&action==='notifications.list')observeActivity(payload.data);
  return payload.data;
@@ -88,7 +97,7 @@ export async function command(agent,action,data={}){
   return result;
  }finally{reads.clear();}
 }
-export async function upload(agent,action,file,params={}){reads.clear();try{return await request(agent,action,{data:params,file});}finally{reads.clear();}}
+export async function upload(agent,action,file,params={},options={}){reads.clear();try{return await request(agent,action,{data:params,file,onProgress:options.onProgress});}finally{reads.clear();}}
 
 export function examResultsUrl(id){return new URL(`admin/reports/exams/${encodeURIComponent(id)}/export`,endpoint).href;}
 

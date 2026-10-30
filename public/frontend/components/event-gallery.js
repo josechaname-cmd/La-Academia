@@ -1,7 +1,7 @@
-import {recordContentView} from './content-views.js?v=20261029-10';
-import {previousIcon,nextIcon,closeIcon} from './gallery-icons.js?v=20261029-10';
-import {escape,date} from './common.js?v=20261029-10';
-import {fileUrl} from '../api.js?v=20261029-10';
+import {recordContentView} from './content-views.js?v=20261030-1';
+import {previousIcon,nextIcon,closeIcon} from './gallery-icons.js?v=20261030-1';
+import {escape,date} from './common.js?v=20261030-1';
+import {fileUrl} from '../api.js?v=20261030-1';
 function swipe(target,move,signal){let start=null;
  target.addEventListener('pointerdown',event=>{if(event.pointerType==='touch')start={x:event.clientX,y:event.clientY};},{signal});
  target.addEventListener('pointerup',event=>{if(!start)return;const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)move(dx<0?1:-1);},{signal});

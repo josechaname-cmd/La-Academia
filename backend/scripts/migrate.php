@@ -9,6 +9,7 @@ foreach (explode(';',$sql) as $statement) if (trim($statement)!=='') $db->pdo->e
 (new Academia\Migrations\HomePopupCollectionMigration($db))->run();
 (new Academia\Migrations\PortalMediaMigration($db))->run();
 (new Academia\Migrations\SliderContentMigration($db))->run();
+(new Academia\Migrations\VideoMaterialsMigration($db))->run();
 (new Academia\Migrations\TrainingEditorMigration($db))->run();
 (new Academia\Migrations\CatalogMigration($db))->run();
 (new Academia\Migrations\AccessMigration($db))->run();

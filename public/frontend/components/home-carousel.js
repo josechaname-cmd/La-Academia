@@ -1,6 +1,6 @@
-import {escape} from './common.js?v=20261029-10';
-import {carouselIndicators} from './carousel-indicators.js?v=20261029-10';
-import {isExternalLink,isPublicLink} from './public-link.js?v=20261029-10';
+import {escape} from './common.js?v=20261030-1';
+import {carouselIndicators} from './carousel-indicators.js?v=20261030-1';
+import {isExternalLink,isPublicLink} from './public-link.js?v=20261030-1';
 
 export const slideStyleDefaults=Object.freeze({font_family:'default',title_color:'#ffffff',text_color:'#ffffff',title_size:36,text_size:17,text_align:'left'});
 const safeColor=value=>typeof value==='string'&&/^#[a-f0-9]{6}$/i.test(value)?value.toLowerCase():'#ffffff';

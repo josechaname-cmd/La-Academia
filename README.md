@@ -144,3 +144,7 @@ En **Usuarios → Colaboradores**, busca por DNI, nombre o cargo, o abre el dire
 La sección se llama **Carga masiva** y acepta trabajadores de cualquier sede: **Validar archivo → revisar sedes y cambios → Confirmar carga**. La sede escrita en cada fila tiene prioridad; las filas vacías requieren una sede seleccionada expresamente. Se rechazan sedes desconocidas, inactivas o ambiguas y DNI duplicados. La revisión muestra altas, actualizaciones, traslados, reactivaciones y accesos vinculados; si hay cambios posteriores en los trabajadores o sus accesos, se exige validar de nuevo.
 
 La gestión individual y la carga actualizan el mismo padrón, los datos de evaluaciones/reportes y los accesos de capacitador. Un traslado actualiza la sede del acceso y cierra sus sesiones, manteniendo la sede histórica de los cursos y resultados. Reactivar un trabajador no habilita automáticamente una cuenta administrativa desactivada; eso se realiza desde Usuarios. Pruebas con datos sintéticos: `node tests/personnel.mjs` y `php tests/isolated.php personnel-import.php`; contratos en [API](docs/API.md).
+
+## Videos en las capacitaciones
+
+El editor permite cargar MP4/WebM de hasta 500 MB como materiales, con vista previa y progreso. El portal reproduce sin autoplay y cuenta una vista por capacitación/sesión al comenzar la reproducción. Consulta [videos: configuración, API, BD y pruebas](docs/VIDEOS.md).

@@ -1,6 +1,6 @@
-import {closeIcon} from './gallery-icons.js?v=20261029-10';
-import {brandLogo} from './brand.js?v=20261029-10';
-import {escape,icon} from './common.js?v=20261029-10';
+import {closeIcon} from './gallery-icons.js?v=20261030-1';
+import {brandLogo} from './brand.js?v=20261030-1';
+import {escape,icon} from './common.js?v=20261030-1';
 function setMenuExpanded(root,kind,expanded,label){
   const button=root.querySelector(`[data-${kind}-menu]`),submenu=root.querySelector(`#${kind}-submenu`);
   if(!button||!submenu)return;

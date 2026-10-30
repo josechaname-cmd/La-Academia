@@ -7,6 +7,6 @@ final class ViewAgent implements AgentInterface {
     public function __construct(private ContentViews $views) {}
     public function execute(string $action,RequestContext $context): mixed {
         $context->requireMethod('POST');
-        return $this->views->record($action,$context->id());
+        return $this->views->record($action,$context->id(),array_key_exists('file_id',$context->input)?$context->id('file_id'):null);
     }
 }

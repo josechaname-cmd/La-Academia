@@ -1,4 +1,4 @@
-import {command} from '../api.js?v=20261029-10';
+import {command} from '../api.js?v=20261030-1';
 
 export function viewCountLabel(value,{compact=false}={}){
   const number=Number(value),count=Number.isFinite(number)?Math.max(0,Math.trunc(number)):0;
@@ -7,6 +7,6 @@ export function viewCountLabel(value,{compact=false}={}){
 
 // Called when opening course material or an event, never for catalog cards.
 // Deduplication and administrator exclusion are enforced by the server session.
-export function recordContentView(kind,id) {
-  return command('view',kind,{id:Number(id)}).catch(()=>null);
+export function recordContentView(kind,id,fileId=null) {
+  return command('view',kind,{id:Number(id),...(fileId?{file_id:Number(fileId)}:{})}).catch(()=>null);
 }

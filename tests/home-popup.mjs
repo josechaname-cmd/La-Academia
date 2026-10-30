@@ -58,5 +58,5 @@ root.querySelector('[data-delete="1"]').click();document.querySelector('[data-ca
 root.querySelector('[data-delete="1"]').click();document.querySelector('[data-confirm]').click();await flush();assert.equal(savedItems.length,1);assert.equal(root.querySelectorAll('tbody tr').length,1);assert.equal(mutations.at(-1).method,'DELETE');cleanup();
 history.replaceState(null,'','#inicio');cleanup=showHomePopup({...item,id:20,revision:1});assert(document.querySelector('dialog'),'Different popup ID with same revision appears');cleanup();
 URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;
-const {toast}=await import('../public/frontend/components/ui.js?v=20261029-10');clearTimeout(toast.timer);dom.window.close();
+const {toast}=await import('../public/frontend/components/ui.js?v=20261030-1');clearTimeout(toast.timer);dom.window.close();
 console.log('OK popup: Inicio exclusivo, foco/cierre, título opcional, preview sin guardar/subir/navegar, objetos locales liberados, destinos publicados, modo informativo y errores.');

@@ -7,6 +7,7 @@ use Academia\Support\Http;
 final class DocumentPreviewTool {
  public function __construct(private Database $db,private array $config) {}
  public function enqueue(int $id,bool $retry=false): array {
+  if(!$this->db->run("SELECT id FROM files WHERE id=? AND course_id IS NOT NULL AND extension IN ('pdf','ppt','pptx')",[$id])->fetchColumn())Http::fail(422,'Las vistas previas se generan únicamente para PDF y PowerPoint.');
   $this->db->run('INSERT IGNORE INTO file_previews(file_id) VALUES(?)',[$id]);
   if($retry)$this->db->run("UPDATE file_previews SET status='queued',error_message=NULL,attempts=0 WHERE file_id=? AND status='failed'",[$id]);
   return $this->status($id);

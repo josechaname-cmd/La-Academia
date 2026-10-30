@@ -32,17 +32,54 @@ foreach(require $root.'/backend/config/database-permissions.php' as $table=>$gra
 $serverConfig=$directory.'/http-config.php';
 file_put_contents($serverConfig,'<?php return array_replace(require '.var_export(getenv('ACADEMIA_CONFIG'),true).', '.var_export(['db_user'=>$testUser,'db_password'=>$testPassword],true).');');
 $serverEnvironment=getenv();$serverEnvironment['ACADEMIA_CONFIG']=$serverConfig;
-$server=proc_open([PHP_BINARY,'-d','session.save_path='.$directory.'/sessions','-d','error_log='.$log,'-S',$address,'-t',$root.'/public',$root.'/tests/http-router.php'],[0=>['file','NUL','r'],1=>['file',$log,'a'],2=>['file',$log,'a']],$pipes,$root,$serverEnvironment,['bypass_shell'=>true,'create_no_window'=>true]);
+$command=[PHP_BINARY,'-d','upload_max_filesize=500M','-d','post_max_size=512M','-d','session.save_path='.$directory.'/sessions','-d','error_log='.$log,'-S',$address,'-t',$root.'/public',$root.'/tests/http-router.php'];
+if(getenv('ACADEMIA_TEST_LARGE_VIDEO')==='1'){
+    // PHP's development server buffers large request bodies; verify 500 MB through Apache/mod_php.
+    $apache='C:/xampp/apache';$php=str_replace('\\','/',dirname(PHP_BINARY));$testRoot=str_replace('\\','/',$root);$testDir=str_replace('\\','/',$directory);
+    $apacheConfig=$directory.'/video-apache.conf';
+    $modules='';foreach(['authz_core','authz_host','dir','mime','rewrite','headers','env'] as $module)$modules.="LoadModule {$module}_module modules/mod_{$module}.so\n";
+    $settings=<<<APACHE
+ServerRoot "$apache"
+Listen $address
+ServerName 127.0.0.1
+PidFile "$testDir/apache.pid"
+ErrorLog "$testDir/http-test.log"
+$modules
+LoadFile "$php/php8ts.dll"
+LoadFile "$php/libpq.dll"
+LoadFile "$php/libsqlite3.dll"
+LoadModule php_module "$php/php8apache2_4.dll"
+PHPINIDir "$php"
+SetEnv ACADEMIA_CONFIG "$testDir/http-config.php"
+DocumentRoot "$testRoot/.."
+<FilesMatch "\\.php$">
+ SetHandler application/x-httpd-php
+</FilesMatch>
+php_admin_value session.save_path "$testDir/sessions"
+php_admin_value error_log "$testDir/http-test.log"
+<Directory />
+ AllowOverride None
+ Require all denied
+</Directory>
+<Directory "$testRoot/..">
+ AllowOverride All
+ Options +FollowSymLinks -Indexes
+ Require local
+</Directory>
+APACHE;
+    file_put_contents($apacheConfig,$settings);$command=[$apache.'/bin/httpd.exe','-X','-f',$apacheConfig];
+}
+$server=proc_open($command,[0=>['file','NUL','r'],1=>['file',$log,'a'],2=>['file',$log,'a']],$pipes,$root,$serverEnvironment,['bypass_shell'=>true,'create_no_window'=>true]);
 if(!is_resource($server))throw new RuntimeException('HTTP test server failed');
     $ready=false;
     for($i=0;$i<100;$i++){$connection=@stream_socket_client('tcp://'.$address,$errno,$message,0.05);if($connection){fclose($connection);$ready=true;break;}usleep(50000);}
     if(!$ready)throw new RuntimeException('HTTP test server timeout');
     putenv('ACADEMIA_TEST_BASE=http://'.$address.'/la-academia/');
     putenv('PYTHONIOENCODING=utf-8');
-    foreach(['http-contract.py','media-http.py'] as $script){
+    foreach(['http-contract.py','media-http.py','video-http.py'] as $script){
         $process=proc_open(['python',$root.'/tests/'.$script],[0=>['pipe','r'],1=>STDOUT,2=>STDERR],$childPipes,$root,null,['bypass_shell'=>true,'create_no_window'=>true]);
         if(!is_resource($process))throw new RuntimeException('Python tests failed to start');
-        if($script==='http-contract.py')fwrite($childPipes[0],json_encode($fixture));fclose($childPipes[0]);
+        if(in_array($script,['http-contract.py','video-http.py'],true))fwrite($childPipes[0],json_encode($fixture));fclose($childPipes[0]);
         if(proc_close($process)!==0)throw new RuntimeException('HTTP contract failed: '.$script);
     }
     if(str_contains(file_get_contents($log),$fixture['password']))throw new RuntimeException('Sensitive data reached HTTP log');

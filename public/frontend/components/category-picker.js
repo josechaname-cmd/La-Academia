@@ -1,5 +1,5 @@
-import {command} from '../api.js?v=20261029-10';
-import {optionList,busy,toast} from './common.js?v=20261029-10';
+import {command} from '../api.js?v=20261030-1';
+import {optionList,busy,toast} from './common.js?v=20261030-1';
 export function categoryPicker(categories,selected,scope,{optional=false}={}){
   return `<div class="category-picker" data-category-scope="${scope}"><label class="field">Categoría${optional?' (opcional)':''}<select name="category" ${optional?'':'required'}><option value="">${optional?'Sin categoría':'Selecciona una categoría'}</option>${optionList(categories,selected)}</select></label><button type="button" class="link-button category-toggle" aria-expanded="false" aria-controls="category-create-${scope}">+ Crear categoría</button><div class="category-create" id="category-create-${scope}" hidden><label class="field">Nombre de la nueva categoría<input data-category-name type="text" minlength="2" maxlength="${scope==='course'?40:80}" autocomplete="off" disabled></label><span class="field-error" data-category-error role="alert" hidden></span><div class="actions"><button type="button" class="button white small" data-category-save>Crear y seleccionar</button><button type="button" class="link-button" data-category-cancel>Cancelar</button></div></div></div>`;
 }

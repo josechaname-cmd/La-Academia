@@ -6,26 +6,30 @@ use Academia\Support\Http;
 use Academia\Support\PresentationTool;
 final class FileTool {
     public function __construct(private Database $db,private array $config,private PresentationTool $presentations) {}
+    public function uploadOptions(): array {return (new MaterialUploadPolicy($this->config))->options();}
     public function add(array $upload,?int $courseId,bool $image=false): array {
         if(($upload['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)Http::fail(422,'No se recibió el archivo o supera el límite de carga.');
         $name=basename(str_replace('\\','/',$upload['name']));$ext=strtolower(pathinfo($name,PATHINFO_EXTENSION));
-        $allowed=$image?['jpg','jpeg','png','webp']:['pdf','ppt','pptx'];
-        if(!in_array($ext,$allowed,true))Http::fail(422,$image?'Utiliza JPG, PNG o WEBP.':'Solo se permiten PDF, PPT y PPTX.');
-        $size=filesize($upload['tmp_name']);if(!$size||$size>($image?8*1024*1024:$this->config['max_file_size']))Http::fail(422,'Tamaño de archivo no permitido.');
-        $mime=(new \finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);$slides=null;
+        $allowed=$image?['jpg','jpeg','png','webp']:['pdf','ppt','pptx','mp4','webm'];
+        if(!in_array($ext,$allowed,true))Http::fail(422,$image?'Utiliza JPG, PNG o WEBP.':'Utiliza PDF, PPT, PPTX, MP4 o WebM.');
+        $video=!$image&&in_array($ext,['mp4','webm'],true);$limit=$image?8*1024*1024:($video?($this->config['max_video_size']??500*1024*1024):$this->config['max_file_size']);
+        $size=filesize($upload['tmp_name']);if(!$size||$size>$limit)Http::fail(422,'El archivo supera el límite de '.(int)floor($limit/1024/1024).' MB.',['file'=>'Selecciona un archivo dentro del límite permitido.']);
+        if($video&&!$courseId)Http::fail(422,'El video debe pertenecer a una capacitación.');
+        $mime=(new \finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);$slides=null;$metadata=null;
         if($image){$dimensions=@getimagesize($upload['tmp_name']);if(!$dimensions||!in_array($mime,['image/jpeg','image/png','image/webp'],true)||$dimensions[0]>8000||$dimensions[1]>8000)Http::fail(422,'Imagen no válida.');$ext=match($mime){'image/jpeg'=>'jpg','image/png'=>'png',default=>'webp'};}
+        elseif($video){$metadata=(new VideoInspector($this->config))->inspect($upload['tmp_name'],$ext,$mime);$mime=$ext==='mp4'?'video/mp4':'video/webm';}
         elseif($ext==='pdf'){if($mime!=='application/pdf'||!str_starts_with(file_get_contents($upload['tmp_name'],false,null,0,5),'%PDF-'))Http::fail(422,'PDF no válido.');}
         else{$slides=$this->presentations->read($upload['tmp_name'],$ext);$mime=$ext==='ppt'?'application/vnd.ms-powerpoint':'application/vnd.openxmlformats-officedocument.presentationml.presentation';}
         $key=bin2hex(random_bytes(24)).'.'.$ext;$path=$this->config['storage'].'/'.$key;
         if(!is_dir($this->config['storage']))Http::fail(503,'Ejecuta la migración para preparar el almacenamiento.');
         if(!move_uploaded_file($upload['tmp_name'],$path))Http::fail(500,'No se pudo guardar el archivo.');
-        try{return $this->db->transaction(function()use($courseId,$name,$key,$mime,$ext,$size,$slides){
+        try{return $this->db->transaction(function()use($courseId,$name,$key,$mime,$ext,$size,$slides,$video,$metadata){
             $this->db->afterRollback(fn()=>$this->discardStored(['storage_key'=>$key]));
-            $this->db->run('INSERT INTO files(course_id,original_name,storage_key,mime,extension,size,slides_json) VALUES(?,?,?,?,?,?,?)',[$courseId,mb_substr($name,0,220),$key,$mime,$ext,$size,$slides?json_encode($slides,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):null]);
+            $this->db->run('INSERT INTO files(course_id,original_name,storage_key,mime,extension,size,slides_json,duration_seconds,video_width,video_height,video_codec,audio_codec) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',[$courseId,mb_substr($name,0,220),$key,$mime,$ext,$size,$slides?json_encode($slides,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):null,$metadata['duration_seconds']??null,$metadata['video_width']??null,$metadata['video_height']??null,$metadata['video_codec']??null,$metadata['audio_codec']??null]);
             $id=(int)$this->db->pdo->lastInsertId();
-            if($courseId)(new DocumentPreviewTool($this->db,$this->config))->enqueue($id);
+            if($courseId&&!$video)(new DocumentPreviewTool($this->db,$this->config))->enqueue($id);
             if($courseId)(new \Academia\Repositories\ActivityRepository($this->db))->course($courseId,'material.added','Material agregado');
-            return ['id'=>$id,'name'=>$name,'extension'=>$ext,'size'=>$size];
+            return ['id'=>$id,'name'=>$name,'extension'=>$ext,'size'=>$size,'media_type'=>$video?'video':($image?'image':'document')]+($metadata??[]);
         });}catch(\Throwable $e){@unlink($path);throw $e;}
     }
     public function get(int $id): array { $file=$this->db->run('SELECT * FROM files WHERE id=?',[$id])->fetch();return $file?:Http::fail(404,'Archivo no encontrado.'); }
@@ -51,10 +55,28 @@ final class FileTool {
     }
     public function stream(array $file,bool $download=false): never {
         $path=$this->path($file);if(!is_file($path))Http::fail(404,'Archivo no disponible.');
+        if(in_array($file['extension'],['mp4','webm'],true)){@set_time_limit(0);ini_set('zlib.output_compression','0');}
         header('Content-Type: '.$file['mime']);header('X-Content-Type-Options: nosniff');header('Cache-Control: private, no-store');
         header('Content-Security-Policy: sandbox');
-        $disposition=$download||!in_array($file['extension'],['pdf','png','jpg','webp'],true)?'attachment':'inline';
+        $video=in_array($file['extension'],['mp4','webm'],true);
+        $disposition=$download||!in_array($file['extension'],['pdf','png','jpg','webp','mp4','webm'],true)?'attachment':'inline';
         header("Content-Disposition: $disposition; filename=\"archivo.".$file['extension']."\"; filename*=UTF-8''".rawurlencode($file['original_name']));
-        header('Content-Length: '.filesize($path));session_write_close();readfile($path);exit;
+        $size=filesize($path);$modified=filemtime($path);$etag='"'.hash('sha256',$file['storage_key'].':'.$size.':'.$modified).'"';
+        header('ETag: '.$etag);header('Last-Modified: '.gmdate('D, d M Y H:i:s',$modified).' GMT');header('Accept-Ranges: '.($video?'bytes':'none'));
+        $range=null;$head=($_SERVER['REQUEST_METHOD']??'GET')==='HEAD';
+        if($video&&!$head&&isset($_SERVER['HTTP_RANGE'])){
+            $condition=$_SERVER['HTTP_IF_RANGE']??'';
+            $stamp=strtotime($condition);$validDate=$stamp!==false&&gmdate('D, d M Y H:i:s',$stamp).' GMT'===$condition;
+            $matches=$condition===''||$condition===$etag||($validDate&&$stamp>=$modified);
+            if($matches)$range=\Academia\Support\ByteRange::parse($_SERVER['HTTP_RANGE'],$size);
+        }
+        if($range===false){http_response_code(416);header('Content-Range: bytes */'.$size);header('Content-Length: 0');session_write_close();exit;}
+        [$start,$end]=$range??[0,$size-1];$length=$end-$start+1;
+        if($range!==null){http_response_code(206);header("Content-Range: bytes $start-$end/$size");}
+        header('Content-Length: '.$length);session_write_close();
+        if($head)exit;
+        $stream=fopen($path,'rb');if($stream===false)exit;
+        try{fseek($stream,$start);while($length>0&&!feof($stream)&&!connection_aborted()){$chunk=fread($stream,min(1024*1024,$length));if($chunk===false||$chunk==='')break;echo $chunk;$length-=strlen($chunk);flush();}}
+        finally{fclose($stream);}exit;
     }
 }

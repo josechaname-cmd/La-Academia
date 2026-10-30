@@ -20,13 +20,13 @@ final class ApiKernel {
             $auth=new AuthTool($db,$config,!$background);
             if($route['access']==='admin')$auth->requireAdmin();
             if($route['access']==='superadmin')$auth->requireSuperAdmin();
-            if($method!=='GET')$auth->csrf();
+            if(!in_array($method,['GET','HEAD'],true))$auth->csrf();
             $request=new RequestContext();
             $input=$request->input;
             // Route identity is authoritative; body IDs cannot change the target resource.
             if(in_array($method,['POST','PUT','PATCH'],true)&&!isset($route['params']['id'])&&isset($input['id']))Http::fail(422,'No envíes id al crear un recurso.',['id'=>'Usa la ruta del recurso para editar.']);
             $input=array_replace($input,$route['params']);
-            $context=new RequestContext($input,$method==='GET'?'GET':'POST',$route['params']);
+            $context=new RequestContext($input,in_array($method,['GET','HEAD'],true)?'GET':'POST',$route['params']);
             $registry=new AgentRegistry($db,$auth,$config);
             $cache=new FileCache($config['cache_directory']);
             $load=fn()=>$registry->dispatch($route['agent'],$route['action'],$context);
@@ -46,9 +46,10 @@ final class ApiKernel {
                 header('X-App-Cache: BYPASS');
             }
             $newCourseView=$route['agent']==='view'&&$route['action']==='course'&&($data['recorded']??false);
-            if($newCourseView||($method!=='GET'&&$route['agent']!=='view'&&($route['agent']!=='exam'||in_array($route['action'],['save','status','submit'],true))&&!in_array($route['action'],['login','logout','setup'],true)))$cache->invalidate();
-            if($route['agent']==='content'&&in_array($route['action'],['create','upload','preview.retry','preview.status'],true))\Academia\Services\DocumentPreviewTool::kick($config);
-            if($method!=='GET'&&$route['agent']!=='view'&&!in_array($route['action'],['participant','start'],true))\Academia\Support\Logger::write('info',$route['agent'],'operation.succeeded',$requestId,['route'=>$route['template'],'method'=>$method,'status'=>$route['status'],'actor_id'=>(int)($_SESSION['admin']['id']??0)]);
+            if($newCourseView||(!in_array($method,['GET','HEAD'],true)&&$route['agent']!=='view'&&($route['agent']!=='exam'||in_array($route['action'],['save','status','submit'],true))&&!in_array($route['action'],['login','logout','setup'],true)))$cache->invalidate();
+            $documentWork=in_array($route['action'],['preview.retry','preview.status'],true)||($route['action']==='upload'&&($data['media_type']??'document')!=='video')||($route['action']==='create'&&array_filter($data['materials']??[],fn($file)=>in_array($file['extension'],['pdf','ppt','pptx'],true)));
+            if($route['agent']==='content'&&$documentWork)\Academia\Services\DocumentPreviewTool::kick($config);
+            if(!in_array($method,['GET','HEAD'],true)&&$route['agent']!=='view'&&!in_array($route['action'],['participant','start'],true))\Academia\Support\Logger::write('info',$route['agent'],'operation.succeeded',$requestId,['route'=>$route['template'],'method'=>$method,'status'=>$route['status'],'actor_id'=>(int)($_SESSION['admin']['id']??0)]);
             Http::json(['data'=>$data,'meta'=>['request_id'=>$requestId,'api_version'=>'v1']],$route['status']);
         }catch(\Throwable $error){
             ErrorHandler::respond($error,$requestId,$route??[],$method??'');

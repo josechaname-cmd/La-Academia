@@ -1,9 +1,9 @@
-import {showHomePopup} from '../components/home-popup.js?v=20261029-10';
-import {nextIcon} from '../components/gallery-icons.js?v=20261029-10';
-import {mountCourseCovers} from '../components/course-cover.js?v=20261029-10';
-import {query} from '../api.js?v=20261029-10';
-import {homeCarousel} from '../components/home-carousel.js?v=20261029-10';
-import {courseCards} from '../components/course-cards.js?v=20261029-10';
+import {showHomePopup} from '../components/home-popup.js?v=20261030-1';
+import {nextIcon} from '../components/gallery-icons.js?v=20261030-1';
+import {mountCourseCovers} from '../components/course-cover.js?v=20261030-1';
+import {query} from '../api.js?v=20261030-1';
+import {homeCarousel} from '../components/home-carousel.js?v=20261030-1';
+import {courseCards} from '../components/course-cards.js?v=20261030-1';
 export async function portalPage() {
   const [courses,slides]=await Promise.all([query('content','list'),query('content','slider')]);
   const carousel=homeCarousel(slides);

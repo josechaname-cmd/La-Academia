@@ -47,6 +47,11 @@
 *.ppt
 *.pptx
 *.pdf
+*.mp4
+*.webm
+*.mov
+*.avi
+*.mkv
 
 # Local evidence and original operational imagery are not source code.
 /docs/screenshots/

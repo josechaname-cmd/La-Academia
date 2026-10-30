@@ -1,7 +1,7 @@
-import {breadcrumbs} from '../components/ui.js?v=20261029-10';
-import {query,command} from '../api.js?v=20261029-10';
-import {heading,escape,busy,toast,field,icon,confirmAction} from '../components/common.js?v=20261029-10';
-import {attachValidation} from '../components/form-validation.js?v=20261029-10';
+import {breadcrumbs} from '../components/ui.js?v=20261030-1';
+import {query,command} from '../api.js?v=20261030-1';
+import {heading,escape,busy,toast,field,icon,confirmAction} from '../components/common.js?v=20261030-1';
+import {attachValidation} from '../components/form-validation.js?v=20261030-1';
 export async function examEditor(id,reload) {
   const [course,exam]=await Promise.all([query('content','admin.get',{id}),query('exam','get',{course_id:id})]);
   const blank=()=>({prompt:'',choices:['','',''],correct:-1,explanation:''});

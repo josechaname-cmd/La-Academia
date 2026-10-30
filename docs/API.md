@@ -298,3 +298,7 @@ La carga múltiple del editor usa las rutas existentes por imagen, con confirmac
 En popups, `link_label` queda opcional y se genera si falta. Se conserva por
 compatibilidad como etiqueta accesible; el enlace público envuelve la imagen,
 sin un botón adicional. El esquema SQL de `home_popup` no cambia.
+
+## Videos · 30 de octubre de 2026
+
+Crear capacitación y agregar materiales aceptan MP4/WebM mediante el multipart existente. `GET /admin/materials/options` comunica formatos y límites efectivos. `GET/HEAD /files/{id}` permite streaming progresivo por rangos sin registrar vistas; `POST /courses/{id}/view` acepta `file_id` y comprueba su pertenencia. Detalles, metadatos y errores: [Videos](VIDEOS.md).

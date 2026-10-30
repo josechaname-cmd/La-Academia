@@ -1,10 +1,10 @@
-import {motion} from '../design/runtime.js?v=20261029-10';
-import {mountCourseCovers} from '../components/course-cover.js?v=20261029-10';
-import {query} from '../api.js?v=20261029-10';
-import {heading,optionList,empty,pagination} from '../components/common.js?v=20261029-10';
-import {courseCards} from '../components/course-cards.js?v=20261029-10';
-import {eventCards} from '../components/events.js?v=20261029-10';
-import {mountEventGallery,showEventGallery} from '../components/event-gallery.js?v=20261029-10';
+import {motion} from '../design/runtime.js?v=20261030-1';
+import {mountCourseCovers} from '../components/course-cover.js?v=20261030-1';
+import {query} from '../api.js?v=20261030-1';
+import {heading,optionList,empty,pagination} from '../components/common.js?v=20261030-1';
+import {courseCards} from '../components/course-cards.js?v=20261030-1';
+import {eventCards} from '../components/events.js?v=20261030-1';
+import {mountEventGallery,showEventGallery} from '../components/event-gallery.js?v=20261030-1';
 const normalize=value=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const savedCatalog={};
 export async function catalogPage(events=false,selectedId=''){

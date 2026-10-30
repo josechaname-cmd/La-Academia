@@ -10,7 +10,8 @@ globalThis.fetch=async(url,options={})=>{
   const path=new URL(url).pathname.split('/api/v1/')[1],body=options.body instanceof FormData?Object.fromEntries(options.body):options.body?JSON.parse(options.body):null;calls.push({path,body,method:options.method});
   let data;
   if(path==='session')data={user:{id:1},csrf:'test'};
-  else if(path.startsWith('categories'))data=['SSOMA','Salud'];
+  else if(path==='admin/materials/options')data={document_max_bytes:50*1024*1024,video_max_bytes:500*1024*1024,video_enabled:true};
+ else if(path.startsWith('categories'))data=['SSOMA','Salud'];
   else if(path==='admin/courses'){assert(options.body instanceof FormData);assert.equal(body.exam_required,'0');assert.equal(body.file.name,'Material.pdf');Object.assign(course,{...body,status:'draft'});data=structuredClone({...course,file:undefined});}
   else if(path==='admin/courses/42'){
     if(options.method==='PATCH'){

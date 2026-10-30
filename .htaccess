@@ -20,8 +20,9 @@ RewriteRule ^ - [R=404,END]
   Require all denied
 </FilesMatch>
 <IfModule php_module>
-  php_value upload_max_filesize 50M
-  php_value post_max_size 56M
+  php_value upload_max_filesize 500M
+  php_value post_max_size 512M
+  php_value max_input_time 900
   php_value memory_limit 256M
 </IfModule>
 <IfModule mod_headers.c>

@@ -1,8 +1,8 @@
-import {query,command,upload} from '../api.js?v=20261029-10';
-import {heading,escape,toast,breadcrumbs,confirmAction,empty,icon} from '../components/common.js?v=20261029-10';
-import {attachValidation} from '../components/form-validation.js?v=20261029-10';
-import {homeCarousel,slideMedia,slideStyleDefaults,applySlideStyles} from '../components/home-carousel.js?v=20261029-10';
-import {isExternalLink,isPublicLink} from '../components/public-link.js?v=20261029-10';
+import {query,command,upload} from '../api.js?v=20261030-1';
+import {heading,escape,toast,breadcrumbs,confirmAction,empty,icon} from '../components/common.js?v=20261030-1';
+import {attachValidation} from '../components/form-validation.js?v=20261030-1';
+import {homeCarousel,slideMedia,slideStyleDefaults,applySlideStyles} from '../components/home-carousel.js?v=20261030-1';
+import {isExternalLink,isPublicLink} from '../components/public-link.js?v=20261030-1';
 const fields=['title','subtitle','alt','fit','focal',...Object.keys(slideStyleDefaults)];
 const options=values=>values.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
 const payload=item=>Object.fromEntries(['title','subtitle','alt','active','position','fit','focal','link_url',...Object.keys(slideStyleDefaults)].map(key=>[key,item[key]]));

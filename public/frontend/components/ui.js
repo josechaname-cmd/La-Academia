@@ -1,4 +1,4 @@
-import {motion} from '../design/runtime.js?v=20261029-10';
+import {motion} from '../design/runtime.js?v=20261030-1';
 export const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const paths={
   tag:'M3 3h8l10 10-8 8L3 11Z M7 7h.01',

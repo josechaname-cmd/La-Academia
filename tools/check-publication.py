@@ -19,7 +19,8 @@ allowed_root_files = {".gitignore", ".gitattributes", ".htaccess", "README.md", 
 allowed_sql = {"backend/database/schema.sql", "docs/multisede/propuesta-esquema.sql"}
 private_extensions = {".csv", ".tsv", ".xls", ".xlsx", ".doc", ".docx", ".ppt", ".pptx",
                       ".pdf", ".pem", ".key", ".p12", ".pfx", ".db", ".sqlite", ".sqlite3",
-                      ".log", ".dump", ".bak", ".zip", ".7z", ".tar", ".gz", ".patch"}
+                      ".log", ".dump", ".bak", ".zip", ".7z", ".tar", ".gz", ".patch",
+                      ".mp4", ".webm", ".mov", ".avi", ".mkv"}
 secret_patterns = {
     "private key": re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     "GitHub token": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{25,})\b"),

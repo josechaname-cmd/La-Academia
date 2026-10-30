@@ -67,3 +67,7 @@ Si el proveedor exige `public_html` y no permite cambiar la raíz del dominio, h
 Apache no estaba escuchando en el puerto 80 durante la revisión. Las pruebas iniciaron sus propias instancias, las cerraron y eliminaron sus temporales; no modificaron la configuración activa ni iniciaron servicios permanentes. No conectaron a MySQL ni validaron operaciones sobre datos. La prueba de `/api/v1/health` contra la instalación normal queda para cuando Apache y MySQL estén iniciados.
 
 La plantilla solo se ha validado con el Apache/PHP de este XAMPP. El servidor de hosting debe verificarla con su versión, módulos y controlador PHP antes de activarla.
+
+## Carga de videos de hasta 500 MB
+
+Se necesita FFprobe, la migración de metadatos y límites de PHP/proxy coherentes. El ejemplo de Apache se actualizó a 500M por archivo y 512M por cuerpo. PHP-FPM requiere configurar su propio pool/panel. Revisa [Videos: instalación y hosting](VIDEOS.md).

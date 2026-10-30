@@ -16,6 +16,8 @@ return array_replace([
     'pdftoppm'=>$project.'/tools/runtime/poppler/bin/pdftoppm.exe',
     'soffice'=>$project.'/tools/runtime/libreoffice/program/soffice.com',
     'max_file_size'=>50*1024*1024,
+    'max_video_size'=>500*1024*1024,
+    'ffprobe'=>getenv('ACADEMIA_FFPROBE')?:$project.'/tools/runtime/ffmpeg/bin/ffprobe.exe',
     'max_attempts'=>2, // Compatibility fallback; each exam version stores its own limit.
     'local_unlimited_login'=>true,
     'cache_directory'=>getenv('ACADEMIA_CACHE')?:$project.'/storage/cache',

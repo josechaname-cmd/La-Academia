@@ -30,6 +30,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló el flujo del examen.' }
     node tests/content-views.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló el registro de visitas.' }
+    node tests/video-materials.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Falló el flujo de videos.' }
+    & 'C:\xampp\php\php.exe' tests/video-policy.php
+    if ($LASTEXITCODE -ne 0) { throw 'Fallaron límites o rangos de video.' }
     node tests/dashboard.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló el resumen del panel.' }
     node tests/session-routing.mjs
@@ -58,4 +62,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la exportación XLSX sintética.' }
     python tests/apache-access.py
     if ($LASTEXITCODE -ne 0) { throw 'Falló la protección HTTP de Apache.' }
+    python tests/entrypoint-apache.py
+    if ($LASTEXITCODE -ne 0) { throw 'Fallaron las entradas Apache o los límites de video.' }
 } finally { Pop-Location }

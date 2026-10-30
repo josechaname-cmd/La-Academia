@@ -53,6 +53,7 @@ try {
     $test->pdo->exec('SET FOREIGN_KEY_CHECKS=1');
     (new Academia\Migrations\ExamPolicyMigration($test))->run();
     (new Academia\Migrations\SliderContentMigration($test))->run();
+    (new Academia\Migrations\VideoMaterialsMigration($test))->run();
     $test->run("INSERT INTO sites(name,address) VALUES('Sede de pruebas','')");
     $test->run("INSERT INTO categories(scope,name) VALUES('course','Pruebas'),('event','Pruebas')");
     $test->run('INSERT INTO home_popup_guard(id) VALUES(1)');

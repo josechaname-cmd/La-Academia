@@ -7,6 +7,7 @@ const course={id:42,title:'Curso con portada propia',category:'SSOMA',descriptio
 let writes=0,reloads=0,fail=true;
 globalThis.fetch=async(url,options={})=>{const path=new URL(url).pathname.split('/api/v1/')[1];let data;
  if(path==='session')data={user:{id:1,role:'capacitador',name:'Autor real'},csrf:'test'};
+ else if(path==='admin/materials/options')data={document_max_bytes:50*1024*1024,video_max_bytes:500*1024*1024,video_enabled:true};
  else if(path.startsWith('categories'))data=['SSOMA'];
  else if(path==='admin/courses/42')data=structuredClone(course);
  else if(path==='admin/courses/42/exam')data=null;
@@ -26,5 +27,5 @@ form.dispatchEvent(new Event('submit',{cancelable:true}));await flush();assert.e
 assert.match(courseCover(course),/files\/88/);assert(!courseCards([course]).includes(course.description));
 page=await courseEditor(42,async()=>reloads++);root.innerHTML=page.html;cleanup=page.mount(root);assert.equal(root.querySelector('#save-cover').disabled,false,'Can return to same PDF after custom cover');root.querySelector('#save-cover').click();await flush();assert.equal(course.custom_cover_id,null);cleanup();
 page=await examEditor(42,async()=>{});root.innerHTML=page.html;cleanup=page.mount(root);assert.equal(root.querySelectorAll('.question-editor').length,1);assert(root.querySelector('[data-remove-question]').disabled);root.querySelector('#add-question').click();assert.equal(root.querySelectorAll('.question-editor').length,2);root.querySelector('[data-remove-question="1"]').click();await flush();assert.equal(root.querySelectorAll('.question-editor').length,1);cleanup();
-URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;const {toast}=await import('../public/frontend/components/ui.js?v=20261029-10');clearTimeout(toast.timer);dom.window.close();
+URL.createObjectURL=originalCreate;URL.revokeObjectURL=originalRevoke;const {toast}=await import('../public/frontend/components/ui.js?v=20261030-1');clearTimeout(toast.timer);dom.window.close();
 console.log('OK mejoras capacitación: paso Publicar, preview/carga de portada y reintento, regreso a PDF, cards sin descripción y examen nuevo dinámico.');

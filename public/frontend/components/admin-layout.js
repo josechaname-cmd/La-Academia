@@ -1,5 +1,5 @@
-import {screens} from '../design/runtime.js?v=20261029-10';
-import {setCourseMenuExpanded,setEventMenuExpanded,setUserMenuExpanded} from './admin-shell.js?v=20261029-10';
+import {screens} from '../design/runtime.js?v=20261030-1';
+import {setCourseMenuExpanded,setEventMenuExpanded,setUserMenuExpanded} from './admin-shell.js?v=20261030-1';
 export function adminLayout(){
   const toggle=document.querySelector('#admin-menu-toggle'),mobile=matchMedia(`(max-width: ${screens.mobile}px)`);
   const preference='la-academia.admin-sidebar-collapsed';

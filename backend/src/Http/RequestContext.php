@@ -15,8 +15,12 @@ final class RequestContext {
             try{$data=json_decode($raw,false,64,JSON_THROW_ON_ERROR);}catch(\JsonException){Http::fail(400,'JSON no válido.');}
             if(!is_object($data))Http::fail(400,'Se esperaba un objeto JSON.');
             $this->input=json_decode($raw,true,64,JSON_THROW_ON_ERROR);
-        }elseif($this->method!=='GET'&&!str_contains($type,'multipart/form-data')){Http::fail(415,'Usa application/json o multipart/form-data.');}
-        else $this->input=$_POST;
+        }elseif(!in_array($this->method,['GET','HEAD'],true)&&!str_contains($type,'multipart/form-data')){Http::fail(415,'Usa application/json o multipart/form-data.');}
+        else {
+            $max=\Academia\Services\MaterialUploadPolicy::bytes(ini_get('post_max_size'));
+            if(str_contains($type,'multipart/form-data')&&$max>0&&(int)($_SERVER['CONTENT_LENGTH']??0)>$max)Http::fail(413,'La carga supera el límite del servidor. Selecciona un archivo más pequeño.',['file'=>'Archivo demasiado grande para esta instalación.']);
+            $this->input=$_POST;
+        }
     }
     public function id(string $key='id'): int {
         $value=$this->params[$key]??$this->input[$key]??$_GET[$key]??null;

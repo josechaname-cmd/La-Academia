@@ -41,7 +41,8 @@ with tempfile.TemporaryDirectory(prefix='academia-entrypoint-') as temporary:
     assert scratch.parent == Path(tempfile.gettempdir()).resolve()
     assert scratch.name.startswith('academia-entrypoint-')
     config_override = scratch / 'application.php'
-    config_override.write_text("<?php return ['environment'=>'test','db_name'=>'academia_entrypoint_unused','db_user'=>'unused','db_password'=>'unused'];", encoding='utf-8')
+    limits_report=scratch/'limits.json'
+    config_override.write_text("<?php file_put_contents("+repr(limits_report.as_posix())+",json_encode([ini_get('upload_max_filesize'),ini_get('post_max_size'),ini_get('max_input_time')])); return ['environment'=>'test','db_name'=>'academia_entrypoint_unused','db_user'=>'unused','db_password'=>'unused'];", encoding='utf-8')
     modules = ['authz_core', 'authz_host', 'dir', 'mime', 'rewrite', 'headers', 'env']
     for profile in ['local-root', 'public-root']:
         port = free_port()
@@ -104,6 +105,8 @@ php_admin_value error_log "{(scratch / (profile + '.php.log')).as_posix()}"
                     raise RuntimeError('Apache temporal no inició.')
                 assert status == 200 and b'frontend/app.js' in body and b'<?php' not in body, (profile, 'portal', status)
                 assert headers['X-Content-Type-Options'] == 'nosniff'
+                assert "media-src 'self' blob:" in headers['Content-Security-Policy']
+                assert json.loads(limits_report.read_text())==['500M','512M','900'],profile
                 assert request(base + 'index.php')[0] == 200
                 assert request(base, 'HEAD')[0] == 200
                 assert request(base, 'POST')[0] == 405
@@ -116,7 +119,7 @@ php_admin_value error_log "{(scratch / (profile + '.php.log')).as_posix()}"
                     assert request(base + path)[0] == 403, (profile, path)
                 for path in ['not-a-route', 'assets/not-a-file.css', 'api/v10/health']:
                     assert request(base + path)[0] == 404, (profile, path)
-                print(f'OK {profile}: PHP, portal, recursos, API, métodos y rutas privadas; sin MySQL.', flush=True)
+                print(f'OK {profile}: PHP, límites 500M/512M, medios CSP, portal, API y rutas privadas; sin MySQL.', flush=True)
             finally:
                 if process.poll() is None:
                     process.terminate()

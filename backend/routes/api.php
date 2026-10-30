@@ -31,6 +31,8 @@ return [
  ['POST','/events/{id}/view','view','event','public',200],
  ['GET','/categories','content','categories.list','public',200],
  ['GET','/files/{id}','content','file','public',200],
+ ['HEAD','/files/{id}','content','file','public',200],
+ ['GET','/admin/materials/options','content','upload.options','admin',200],
  ['GET','/files/{id}/thumbnail','content','thumbnail','public',200],
  ['GET','/files/{id}/preview','content','preview','public',200],
  ['GET','/files/{id}/preview-status','content','preview.status','public',200],

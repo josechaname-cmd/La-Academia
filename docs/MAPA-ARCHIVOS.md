@@ -380,3 +380,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 - [Plan multisede](PLAN-MULTISEDE-2026-10-28.md) y [plan JWT](PLAN-JWT.md): propuestas; no describen funciones enteramente implementadas.
 
 Al agregar, retirar o cambiar la responsabilidad de un archivo, actualizar este mapa y el apartado correspondiente del manual. Los cambios de API deben reflejarse también en sus contratos y pruebas.
+
+## Materiales de video · 30 de octubre de 2026
+
+[Videos](VIDEOS.md) detalla las responsabilidades de `VideoMaterialsMigration`, `VideoInspector`, `MaterialUploadPolicy`, `ByteRange`, el selector `material-upload.js` y las pruebas `video-materials.mjs`, `video-policy.php` y `video-http.py`. El instalador `tools/install-video-runtime.py` guarda dependencias verificadas fuera de Git.

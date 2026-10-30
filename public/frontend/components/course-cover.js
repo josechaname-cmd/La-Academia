@@ -1,5 +1,5 @@
-import {query,previewUrl,fileUrl} from '../api.js?v=20261029-10';
-import {escape,icon} from './common.js?v=20261029-10';
+import {query,previewUrl,fileUrl} from '../api.js?v=20261030-1';
+import {escape,icon} from './common.js?v=20261030-1';
 export function courseCover(course){
  if(course.custom_cover_id)return `<div class="document-cover"><img src="${fileUrl(course.custom_cover_id)}" alt="Portada de ${escape(course.title)}" loading="lazy"></div>`;
  const id=course.cover_file_id,status=course.cover_status;
