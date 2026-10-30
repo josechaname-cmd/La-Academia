@@ -42,8 +42,8 @@ final class CourseAccess
     {
         $actor = $this->auth->user();
         if (!$actor) Http::fail(404, 'Archivo no disponible.');
+        if($this->records->filePolicy((int)$file['id']))return; // Policies are shared by this installation's administrators.
         if (CoursePolicy::siteId($actor) === null) return;
-        if($policy=$this->records->filePolicy((int)$file['id'])){CoursePolicy::requireCourse($actor,$policy);return;}
         if ($file['course_id']) {
             CoursePolicy::requireCourse($actor, $this->records->course((int)$file['course_id']));
             return;

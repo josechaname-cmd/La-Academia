@@ -1,6 +1,6 @@
-import {query,fileUrl,previewUrl} from '../api.js?v=20261030-4';
-import {escape,icon} from './common.js?v=20261030-4';
-import {motion,screens} from '../design/runtime.js?v=20261030-4';
+import {query,fileUrl,previewUrl} from '../api.js?v=20261030-5';
+import {escape,icon} from './common.js?v=20261030-5';
+import {motion,screens} from '../design/runtime.js?v=20261030-5';
 const normalize=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 const searchIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>';
 export function mountPublicHeader(){
@@ -31,7 +31,7 @@ export function mountPublicHeader(){
    status.classList.toggle('sr-only',count>0);
    status.textContent=count?`${count} ${count===1?'resultado':'resultados'}`:'No encontramos coincidencias. Prueba otro título o categoría.';
    matches.innerHTML=filtered.filter(group=>group.items.length).map(group=>`<section class="search-group" data-kind="${group.route}" aria-label="${group.label}"><div class="search-group-heading"><h2>${group.label}</h2><span>${group.items.length}</span></div>${group.items.map(item=>{
-    const source=group.route==='curso'?(item.custom_cover_id?fileUrl(item.custom_cover_id):item.cover_status==='ready'&&item.cover_file_id?previewUrl(item.cover_file_id,item.cover_version):''):item.images?.[0]?.id?fileUrl(item.images[0].id):'';
+    const source=group.route==='politicas'?(item.cover_image_id?fileUrl(item.cover_image_id):''):group.route==='curso'?(item.custom_cover_id?fileUrl(item.custom_cover_id):item.cover_status==='ready'&&item.cover_file_id?previewUrl(item.cover_file_id,item.cover_version):''):item.images?.[0]?.id?fileUrl(item.images[0].id):'';
     return `<a href="#${group.route}/${Number(item.id)}"><span class="search-result-media" aria-hidden="true">${icon(group.route==='eventos'?'calendar':'book')}${source?`<img class="search-thumbnail" src="${escape(source)}" alt="" loading="lazy">`:''}</span><span class="search-result-copy"><strong>${escape(item.title)}</strong><small>${escape(item.category??'')}</small></span><span class="search-result-next" aria-hidden="true">${icon('next')}</span></a>`;
    }).join('')}</section>`).join('');
   }catch{if(ticket===sequence&&!disposed){announce('No se pudo cargar la búsqueda.');matches.innerHTML='<button class="button white small" type="button" data-search-retry>Reintentar</button>';}}

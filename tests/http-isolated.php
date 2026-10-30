@@ -77,10 +77,19 @@ if(!is_resource($server))throw new RuntimeException('HTTP test server failed');
     putenv('ACADEMIA_TEST_BASE=http://'.$address.'/la-academia/');
     putenv('PYTHONIOENCODING=utf-8');
     foreach(['http-contract.py','media-http.py','video-http.py','policies-http.py'] as $script){
+        if($script==='policies-http.py'){
+            $policyFilesBefore=$db->run('SELECT id,storage_key FROM files ORDER BY id')->fetchAll();
+            $policyDiskBefore=glob($config['storage'].'/*');
+        }
         $process=proc_open(['python',$root.'/tests/'.$script],[0=>['pipe','r'],1=>STDOUT,2=>STDERR],$childPipes,$root,null,['bypass_shell'=>true,'create_no_window'=>true]);
         if(!is_resource($process))throw new RuntimeException('Python tests failed to start');
         if(in_array($script,['http-contract.py','video-http.py','policies-http.py'],true))fwrite($childPipes[0],json_encode($fixture));fclose($childPipes[0]);
         if(proc_close($process)!==0)throw new RuntimeException('HTTP contract failed: '.$script);
+        if($script==='policies-http.py'){
+            if($policyFilesBefore!==$db->run('SELECT id,storage_key FROM files ORDER BY id')->fetchAll()||$policyDiskBefore!==glob($config['storage'].'/*'))throw new RuntimeException('Policy replacement, rollback or deletion left orphaned files.');
+            if((int)$db->run('SELECT COUNT(*) FROM policies')->fetchColumn()!==0)throw new RuntimeException('Policy fixtures were not deleted.');
+            echo "OK Políticas: rollback y eliminación sin archivos huérfanos en SQL ni almacenamiento.\n";
+        }
     }
     if(str_contains(file_get_contents($log),$fixture['password']))throw new RuntimeException('Sensitive data reached HTTP log');
     echo "OK HTTP aislado: cuenta SQL con privilegios mínimos, log sin contraseña y almacenamiento separado.\n";

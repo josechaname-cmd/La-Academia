@@ -1,4 +1,4 @@
-import {createReadCache} from './read-cache.js?v=20261030-4';
+import {createReadCache} from './read-cache.js?v=20261030-5';
 const endpoint = new URL('../api/v1/', import.meta.url);
 let sessionData=null,sessionPromise=null,sessionFetchedAt=0;
 const reads=createReadCache();let activityRevision=null;
@@ -55,18 +55,18 @@ function resolve(agent,action,values={}){
  return {method,url:new URL(path,endpoint),remaining};
 }
 export function fileUrl(id,download=false){const url=new URL(`files/${encodeURIComponent(id)}`,endpoint);if(download)url.searchParams.set('download','1');return url.href;}
-async function request(agent,action,{data,params={},file,onProgress}={}){
+async function request(agent,action,{data,params={},file,files={},onProgress}={}){
  const {method,url,remaining}=resolve(agent,action,data??params);
  const headers={Accept:'application/json'};let body;
  if(method==='GET'){Object.entries(remaining).forEach(([key,value])=>url.searchParams.set(key,value));}
  else{
   if(!sessionData)await session();headers['X-CSRF-Token']=sessionData.csrf;
-  if(file){body=new FormData();body.set('file',file);Object.entries(remaining).forEach(([key,value])=>body.set(key,value));}
+  if(file||Object.values(files).some(Boolean)){body=new FormData();if(file)body.set('file',file);Object.entries(files).forEach(([key,value])=>{if(value)body.set(key,value);});Object.entries(remaining).forEach(([key,value])=>body.set(key,value));}
   else{headers['Content-Type']='application/json';body=JSON.stringify(remaining);}
  }
  let response;
  try{
-  if(file&&onProgress&&typeof XMLHttpRequest!=='undefined')response=await new Promise((resolve,reject)=>{
+  if(body instanceof FormData&&onProgress&&typeof XMLHttpRequest!=='undefined')response=await new Promise((resolve,reject)=>{
    const xhr=new XMLHttpRequest();xhr.open(method,url.href);xhr.withCredentials=true;Object.entries(headers).forEach(([key,value])=>xhr.setRequestHeader(key,value));
    xhr.upload.addEventListener('progress',event=>{if(event.lengthComputable)onProgress(Math.min(100,Math.round(event.loaded/event.total*100)));});
    xhr.addEventListener('load',()=>resolve({ok:xhr.status>=200&&xhr.status<300,status:xhr.status,json:async()=>JSON.parse(xhr.responseText)}));
@@ -102,6 +102,7 @@ export async function command(agent,action,data={}){
  }finally{reads.clear();}
 }
 export async function upload(agent,action,file,params={},options={}){reads.clear();try{return await request(agent,action,{data:params,file,onProgress:options.onProgress});}finally{reads.clear();}}
+export async function uploadBundle(agent,action,files,params={},options={}){reads.clear();try{return await request(agent,action,{data:params,files,onProgress:options.onProgress});}finally{reads.clear();}}
 
 export function examResultsUrl(id){return new URL(`admin/reports/exams/${encodeURIComponent(id)}/export`,endpoint).href;}
 

@@ -1,5 +1,5 @@
-import {escape,icon} from './ui.js?v=20261030-4';
-export {escape,icon,breadcrumbs,pagination,alert,toast,modal,busy,confirmAction} from './ui.js?v=20261030-4';
+import {escape,icon} from './ui.js?v=20261030-5';
+export {escape,icon,breadcrumbs,pagination,alert,toast,modal,busy,confirmAction} from './ui.js?v=20261030-5';
 export const optionList = (list, selected = '') => list.map(value => `<option value="${escape(value)}" ${value === selected ? 'selected' : ''}>${escape(value)}</option>`).join('');
 export function heading(eyebrow, title, subtitle = '', actions = '') { return `<div class="heading"><div><span class="eyebrow">${escape(eyebrow)}</span><h1>${escape(title)}</h1><p>${escape(subtitle)}</p></div><div class="actions">${actions}</div></div>`; }
 export const empty = (text, action = '') => `<div class="empty"><span class="empty-mark" aria-hidden="true">${icon('empty')}</span><h2>${escape(text)}</h2>${action}</div>`;

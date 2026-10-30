@@ -1,9 +1,10 @@
-import {query,command,upload,fileUrl} from '../api.js?v=20261030-4';
-import {heading,breadcrumbs,escape,empty,field,busy,toast,confirmAction,icon,date} from '../components/common.js?v=20261030-4';
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-4';
-import {attachValidation} from '../components/form-validation.js?v=20261030-4';
-import {materialViewer} from '../components/material-viewer.js?v=20261030-4';
+import {query,command,uploadBundle,fileUrl} from '../api.js?v=20261030-5';
+import {heading,breadcrumbs,escape,empty,field,busy,toast,confirmAction,icon,date} from '../components/common.js?v=20261030-5';
+import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-5';
+import {attachValidation} from '../components/form-validation.js?v=20261030-5';
+import {policyDocument} from '../components/policy-document.js?v=20261030-5';
 const sizeLabel=bytes=>Number(bytes)<1024*1024?`${Math.max(1,Math.ceil(Number(bytes)/1024))} KB`:`${(Number(bytes)/1024/1024).toFixed(1)} MB`;
+const coverImage=(policy,{preview=false}={})=>policy.cover_image_id?`<img src="${fileUrl(policy.cover_image_id)}" alt="${preview?'Vista previa de la portada':'Portada de '+escape(policy.title)}" loading="lazy">`:`<div class="policy-cover-placeholder">${icon('image')}<span>${preview?'Tu imagen de portada':'Documento institucional'}</span></div>`;
 
 export async function policiesPage(admin=false){
  const policies=await query('policy',admin?'admin.list':'list');
@@ -13,7 +14,7 @@ export async function policiesPage(admin=false){
   function render(){
    const term=searchText(search.value),rows=policies.filter(item=>searchText(`${item.title} ${item.description}`).includes(term)&&(!filter?.value||String(item.active)===filter.value));
    const visible=pager.slice(rows);
-   results.innerHTML=rows.length?visible.map(item=>`<article class="panel policy-card"><div class="policy-card-top"><span class="policy-file-symbol" aria-hidden="true">${icon('book')}<small>PDF</small></span><span class="hint">${sizeLabel(item.size)}${admin?` · ${Number(item.active)?'Publicado':'Borrador'}`:''}</span></div><h2><a href="#${admin?'admin/politicas':'politicas'}/${item.id}">${escape(item.title)}</a></h2><p class="policy-description">${escape(item.description)}</p><small class="hint">Actualizado: ${date(item.updated_at)}</small><div class="policy-card-actions"><a class="button ${admin?'white':'primary'}" href="#${admin?'admin/politicas':'politicas'}/${item.id}">${admin?'Gestionar':'Ver política'} ${icon('next')}</a><a class="button white" href="${fileUrl(item.file_id,true)}" aria-label="Descargar PDF: ${escape(item.title)}" title="Descargar PDF">${icon('download')}</a></div></article>`).join(''):empty(policies.length?'No hay políticas que coincidan.':admin?'Todavía no has agregado políticas.':'Próximamente encontrarás aquí las políticas publicadas.');
+   results.innerHTML=rows.length?visible.map(item=>`<article class="panel policy-card"><a class="policy-card-cover" href="#${admin?'admin/politicas':'politicas'}/${item.id}" aria-label="${admin?'Gestionar':'Ver'} ${escape(item.title)}">${coverImage(item)}<span class="policy-cover-badge">PDF · ${sizeLabel(item.size)}</span></a><div class="policy-card-body">${admin?`<span class="badge" data-tone="${Number(item.active)?'success':'neutral'}">${Number(item.active)?'Publicado':'Borrador'}</span>`:''}<h2><a href="#${admin?'admin/politicas':'politicas'}/${item.id}">${escape(item.title)}</a></h2><p class="policy-description">${escape(item.description)}</p><div class="policy-card-actions"><small class="hint">${date(item.updated_at)}</small><a class="button white" href="${fileUrl(item.file_id,true)}" aria-label="Descargar PDF: ${escape(item.title)}" title="Descargar PDF">${icon('download')} Descargar</a></div></div></article>`).join(''):empty(policies.length?'No hay políticas que coincidan.':admin?'Todavía no has agregado políticas.':'Próximamente encontrarás aquí las políticas publicadas.');
   }
   const change=()=>{pager.reset();render();};search.addEventListener('input',change);filter?.addEventListener('change',change);render();
  }};
@@ -21,41 +22,55 @@ export async function policiesPage(admin=false){
 
 export async function policyPage(id){
  const policy=await query('policy','get',{id});
- const viewer=materialViewer([{id:policy.file_id,extension:'pdf',original_name:policy.original_name,size:policy.size}],{title:'Documento'});
- return {html:`<div class="container section policy-detail">${breadcrumbs([{label:'Políticas',href:'#politicas'},{label:policy.title}])}<header class="policy-detail-heading"><span class="eyebrow">POLÍTICA · PDF · ${sizeLabel(policy.size)}</span><h1>${escape(policy.title)}</h1><p class="policy-full-description">${escape(policy.description)}</p><div class="policy-detail-actions"><span class="hint">Actualizado: ${date(policy.updated_at)}</span><a class="button primary" href="${fileUrl(policy.file_id,true)}">${icon('download')} Descargar PDF</a></div></header>${viewer.html}<p class="hint">Si tu dispositivo no muestra el documento, puedes descargarlo y abrirlo en tu lector de PDF.</p></div>`,mount:root=>viewer.mount(root)};
+ const viewer=policyDocument(policy);
+ return {html:`<div class="container section policy-detail">${breadcrumbs([{label:'Políticas',href:'#politicas'},{label:policy.title}])}<div class="policy-reader"><aside class="policy-detail-info"><div class="policy-detail-cover">${coverImage(policy)}</div><div class="policy-detail-copy"><span class="eyebrow">DOCUMENTO INSTITUCIONAL</span><h1>${escape(policy.title)}</h1><p class="policy-full-description">${escape(policy.description)}</p><dl class="policy-facts"><div><dt>Formato</dt><dd>PDF · ${sizeLabel(policy.size)}</dd></div><div><dt>Actualizado</dt><dd>${date(policy.updated_at)}</dd></div></dl></div></aside>${viewer.html}</div></div>`,mount:root=>viewer.mount(root)};
 }
 
-export async function policyEditor(id,user){
+export async function policyEditor(id){
  const creating=id==='nueva';
- const [policy,sites,limits]=await Promise.all([creating?Promise.resolve({title:'',description:'',active:1}):query('policy','admin.get',{id}),creating&&user.role==='superadmin'?query('admin','sites.list'):Promise.resolve([]),query('content','upload.options')]);
- const activeSites=sites.filter(site=>Number(site.active));
+ const [policy,limits]=await Promise.all([creating?Promise.resolve({title:'',description:'',active:1}):query('policy','admin.get',{id}),query('content','upload.options')]);
  const maxBytes=Math.min(50*1024*1024,limits.document_max_bytes),maxMB=Math.floor(maxBytes/1024/1024);
- const viewer=creating?null:materialViewer([{id:policy.file_id,extension:'pdf',original_name:policy.original_name,size:policy.size}],{title:'PDF guardado'});
- return {html:`${breadcrumbs([{label:'Políticas',href:'#admin/politicas'},{label:creating?'Nueva':policy.title}])}${heading('POLÍTICAS',creating?'Nueva política':'Gestionar política',creating?'Agrega un título claro, una descripción y el PDF.':'Puedes actualizar el texto, sustituir el PDF o retirar la publicación.')}<div class="policy-editor-layout"><section class="panel padded"><form id="policy-form"><div class="form-grid">${field('Título','title',policy.title,'required minlength="3" maxlength="160"')}<label class="field full">Descripción<textarea name="description" rows="4" required minlength="10" maxlength="1500">${escape(policy.description)}</textarea></label>${creating&&user.role==='superadmin'?`<label class="field full">Sede responsable<select name="site_id" required><option value="">Selecciona una sede</option>${activeSites.map(site=>`<option value="${site.id}" ${activeSites.length===1?'selected':''}>${escape(site.name)}</option>`).join('')}</select></label>`:''}<label class="field full">${creating?'Documento PDF':'Reemplazar PDF (opcional)'}<input type="file" name="file" accept=".pdf,application/pdf" ${creating?'required':''}><small>PDF · hasta ${maxMB} MB.${creating?'':' Si no eliges otro archivo, se conserva el actual.'}</small></label><p class="hint full" data-policy-file role="status">${creating?'Ningún archivo seleccionado.':`Actual: ${escape(policy.original_name)} · ${sizeLabel(policy.size)}`}</p><label class="course-exam-option full"><input type="checkbox" name="active" ${Number(policy.active)?'checked':''}><span><strong>Visible en Políticas</strong><small>Desmarca para guardar como borrador.</small></span></label></div><div class="policy-upload-progress" hidden><progress max="100" value="0" aria-label="Progreso de carga"></progress><span role="status"></span></div><div class="actions"><a class="button white" href="#admin/politicas">Volver</a><button class="button primary" type="submit">${creating?'Guardar política':'Guardar cambios'}</button></div></form>${creating?'':`<div class="policy-remove"><button class="button danger" data-delete-policy>${icon('trash')} Eliminar política</button></div>`}</section><aside class="policy-editor-preview">${viewer?viewer.html:'<div class="panel padded"><span class="policy-file-symbol" aria-hidden="true">'+icon('book')+'<small>PDF</small></span><h2>Un documento, fácil de consultar</h2><p>La publicación tendrá su propia página con título, descripción, visor y descarga. Revisa el PDF que seleccionas antes de confirmar.</p></div>'}</aside></div>`,mount(root){
-  let disposed=false,saving=false;const form=root.querySelector('#policy-form'),input=form.elements.file,progress=root.querySelector('.policy-upload-progress');
+ const viewer=creating?null:policyDocument(policy,{title:'PDF guardado'});
+ return {html:`${breadcrumbs([{label:'Políticas',href:'#admin/politicas'},{label:creating?'Nueva':policy.title}])}${heading('POLÍTICAS',creating?'Nueva política':'Gestionar política',creating?'Elige una portada, describe la política y adjunta su PDF.':'Actualiza la portada, el texto o el PDF; cada archivo se conserva si no lo reemplazas.')}<div class="policy-editor-layout"><section class="panel padded"><form id="policy-form"><div class="form-grid">${field('Título','title',policy.title,'required minlength="3" maxlength="160"')}<label class="field full">Descripción<textarea name="description" rows="4" required minlength="10" maxlength="1500">${escape(policy.description)}</textarea></label><label class="field full">${policy.cover_image_id?'Reemplazar portada (opcional)':'Imagen de portada'}<input type="file" name="cover_image" accept=".jpg,.jpeg,.png,.webp" ${creating?'required':''}><small>JPG, PNG o WEBP · hasta 8 MB. Tú eliges la imagen que se mostrará.</small></label><label class="field full">${creating?'Documento PDF':'Reemplazar PDF (opcional)'}<input type="file" name="file" accept=".pdf,application/pdf" ${creating?'required':''}><small>PDF · hasta ${maxMB} MB.${creating?'':' Si no eliges otro archivo, se conserva el actual.'}</small></label><p class="hint full" data-policy-file role="status">${creating?'Ningún archivo seleccionado.':`Actual: ${escape(policy.original_name)} · ${sizeLabel(policy.size)}`}</p><label class="course-exam-option full"><input type="checkbox" name="active" ${Number(policy.active)?'checked':''}><span><strong>Visible en Políticas</strong><small>Desmarca para guardar como borrador.</small></span></label></div><div class="policy-upload-progress" hidden><progress max="100" value="0" aria-label="Progreso de carga"></progress><span role="status"></span></div><div class="actions"><a class="button white" href="#admin/politicas">Volver</a><button class="button primary" type="submit">${creating?'Guardar política':'Guardar cambios'}</button></div></form>${creating?'':`<div class="policy-remove"><button class="button danger" data-delete-policy>${icon('trash')} Eliminar política</button></div>`}</section><aside class="policy-editor-preview"><section class="panel policy-preview-panel"><div class="policy-preview-heading"><h2>Así se verá</h2><span class="hint">Vista previa</span></div><div class="policy-card policy-live-card"><div class="policy-card-cover" data-policy-cover-preview>${coverImage(policy,{preview:true})}</div><div class="policy-card-body"><span class="badge">PDF</span><h3 data-policy-title-preview>${escape(policy.title||'Título de tu política')}</h3><p class="policy-description" data-policy-description-preview>${escape(policy.description||'Una descripción breve ayudará a encontrar el documento.')}</p></div></div></section></aside></div>${viewer?`<details class="policy-saved-pdf"><summary>Revisar PDF guardado · ${escape(policy.original_name)}</summary>${viewer.html}</details>`:''}`,mount(root){
+  let disposed=false,saving=false,coverBlob='';const form=root.querySelector('#policy-form'),input=form.elements.file,coverInput=form.elements.cover_image,progress=root.querySelector('.policy-upload-progress');
   const cleanupViewer=viewer?.mount(root),button=form.querySelector('[type=submit]');
-  const values=()=>({title:form.elements.title.value.trim(),description:form.elements.description.value.trim(),active:form.elements.active.checked?1:0,...(form.elements.site_id?{site_id:form.elements.site_id.value}:{})});
+  const values=()=>({title:form.elements.title.value.trim(),description:form.elements.description.value.trim(),active:form.elements.active.checked?1:0});
   let baseline=JSON.stringify(values());
-  function sync(){button.disabled=saving||(!creating&&baseline===JSON.stringify(values())&&!input.files.length);}
+  function sync(){
+   button.disabled=saving||(!creating&&baseline===JSON.stringify(values())&&!input.files.length&&!coverInput.files.length);
+   root.querySelector('[data-policy-title-preview]').textContent=form.elements.title.value.trim()||'Título de tu política';
+   root.querySelector('[data-policy-description-preview]').textContent=form.elements.description.value.trim()||'Una descripción breve ayudará a encontrar el documento.';
+  }
   const validate=attachValidation(form,()=>{
-   const file=input.files[0];if(!file)return [];
-   return !/\.pdf$/i.test(file.name)||!file.size||file.size>maxBytes?[{control:input,message:`Selecciona un PDF de hasta ${maxMB} MB.`}]:[];
+   const file=input.files[0],cover=coverInput.files[0],issues=[];
+   if(file&&(!/\.pdf$/i.test(file.name)||!file.size||file.size>maxBytes))issues.push({control:input,message:`Selecciona un PDF de hasta ${maxMB} MB.`});
+   if(cover&&(!/\.(jpe?g|png|webp)$/i.test(cover.name)||!cover.size||cover.size>8*1024*1024))issues.push({control:coverInput,message:'Selecciona una imagen JPG, PNG o WEBP de hasta 8 MB.'});
+   return issues;
   });
   form.addEventListener('input',sync);form.addEventListener('change',sync);
   input.addEventListener('change',()=>{const file=input.files[0];root.querySelector('[data-policy-file]').textContent=file?`${file.name} · ${sizeLabel(file.size)}`:creating?'Ningún archivo seleccionado.':`Actual: ${policy.original_name} · ${sizeLabel(policy.size)}`;});sync();
+  const releaseCover=()=>{if(coverBlob)URL.revokeObjectURL(coverBlob);coverBlob='';};
+  coverInput.addEventListener('change',()=>{
+   releaseCover();const preview=root.querySelector('[data-policy-cover-preview]'),file=coverInput.files[0];preview.innerHTML=coverImage(policy,{preview:true});
+   if(file&&/\.(jpe?g|png|webp)$/i.test(file.name)&&file.size>0&&file.size<=8*1024*1024){
+    coverBlob=URL.createObjectURL(file);const img=document.createElement('img');img.src=coverBlob;img.alt='Vista previa de la portada elegida';preview.replaceChildren(img);
+    img.addEventListener('error',()=>{if(!disposed&&img.isConnected){preview.innerHTML='<div class="policy-cover-placeholder">No se pudo leer la imagen. Selecciona otra.</div>';coverInput.setCustomValidity('No se pudo leer la imagen seleccionada.');}},{once:true});
+   }
+   coverInput.setCustomValidity('');sync();
+  });
   const leave=event=>{if(saving){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',leave);
   form.addEventListener('submit',async event=>{
    event.preventDefault();if(saving||!validate())return;saving=true;
    try{
-    const data=values(),file=input.files[0];
-    if(!await confirmAction(`${data.active?'La política estará visible para consulta y descarga.':'Se guardará como borrador, sin acceso público.'}${file&&!creating?' El PDF actual será reemplazado.':''}`,{title:creating?'Guardar política':'Guardar cambios',label:'Confirmar'}))return;
+    const data=values(),file=input.files[0],cover=coverInput.files[0];
+    if(!await confirmAction(`${data.active?'La política estará visible para consulta y descarga.':'Se guardará como borrador, sin acceso público.'}${file&&!creating?' El PDF actual será reemplazado.':''}${cover&&!creating?' Se actualizará la portada.':''}`,{title:creating?'Guardar política':'Guardar cambios',label:'Confirmar'}))return;
     if(disposed)return;
     await busy(button,async()=>{
      const controls=[...form.querySelectorAll('input,textarea,select')];controls.forEach(control=>control.disabled=true);
      try{
-      if(file)progress.hidden=false;
+      if(file||cover)progress.hidden=false;
       const params={...data,...(creating?{}:{id:Number(id)})};
-      const saved=file?await upload('policy',creating?'create':'save',file,params,{onProgress:percent=>{if(disposed)return;progress.querySelector('progress').value=percent;progress.querySelector('span').textContent=percent>=100?'Validando y guardando…':`Subiendo PDF… ${percent} %`;}}):await command('policy','save',params);
+      const saved=file||cover?await uploadBundle('policy',creating?'create':'save',{file,cover_image:cover},params,{onProgress:percent=>{if(disposed)return;progress.querySelector('progress').value=percent;progress.querySelector('span').textContent=percent>=100?'Validando y guardando…':`Subiendo archivos… ${percent} %`;}}):await command('policy','save',params);
       if(disposed)return;baseline=JSON.stringify(data);Object.assign(policy,saved);toast('Política guardada.');location.hash='admin/politicas';
      }finally{controls.forEach(control=>control.disabled=false);progress.hidden=true;}
     });
@@ -63,8 +78,8 @@ export async function policyEditor(id,user){
   });
   root.querySelector('[data-delete-policy]')?.addEventListener('click',async event=>{
    if(saving)return;const target=event.currentTarget;saving=true;
-   try{if(!await confirmAction(`Se eliminará «${policy.title}» y su PDF. No se puede deshacer.`,{title:'Eliminar política',label:'Eliminar'}))return;if(disposed)return;await busy(target,async()=>{await command('policy','delete',{id:Number(id)});if(!disposed){toast('Política eliminada.');location.hash='admin/politicas';}});}finally{saving=false;if(!disposed)sync();}
+   try{if(!await confirmAction(`Se eliminará «${policy.title}» junto con su PDF y portada. No se puede deshacer.`,{title:'Eliminar política',label:'Eliminar'}))return;if(disposed)return;await busy(target,async()=>{await command('policy','delete',{id:Number(id)});if(!disposed){toast('Política eliminada.');location.hash='admin/politicas';}});}finally{saving=false;if(!disposed)sync();}
   });
-  return ()=>{disposed=true;cleanupViewer?.();window.removeEventListener('beforeunload',leave);};
+  return ()=>{disposed=true;releaseCover();cleanupViewer?.();window.removeEventListener('beforeunload',leave);};
  }};
 }

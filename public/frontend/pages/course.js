@@ -1,10 +1,10 @@
-import {breadcrumbs} from '../components/ui.js?v=20261030-4';
-import {recordContentView,viewCountLabel} from '../components/content-views.js?v=20261030-4';
-import {mountEvaluation} from '../components/evaluation-dialog.js?v=20261030-4';
-import {query} from '../api.js?v=20261030-4';
-import {escape} from '../components/common.js?v=20261030-4';
-import {courseCover,mountCourseCovers} from '../components/course-cover.js?v=20261030-4';
-import {materialViewer} from '../components/material-viewer.js?v=20261030-4';
+import {breadcrumbs} from '../components/ui.js?v=20261030-5';
+import {recordContentView,viewCountLabel} from '../components/content-views.js?v=20261030-5';
+import {mountEvaluation} from '../components/evaluation-dialog.js?v=20261030-5';
+import {query} from '../api.js?v=20261030-5';
+import {escape} from '../components/common.js?v=20261030-5';
+import {courseCover,mountCourseCovers} from '../components/course-cover.js?v=20261030-5';
+import {materialViewer} from '../components/material-viewer.js?v=20261030-5';
 export async function coursePage(id) {
   const course=await query('content','get',{id});const viewer=materialViewer(course.materials,{viewCount:course.view_count??0,customCoverId:course.custom_cover_id});const exam=course.exam,available=exam?.state==='open',withoutExam=Number(course.exam_required??1)===0;
   const author=course.creator_name||'Autor no registrado';

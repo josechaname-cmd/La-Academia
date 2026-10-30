@@ -1,5 +1,5 @@
-import {query,previewUrl,fileUrl} from '../api.js?v=20261030-4';
-import {escape,icon} from './common.js?v=20261030-4';
+import {query,previewUrl,fileUrl} from '../api.js?v=20261030-5';
+import {escape,icon} from './common.js?v=20261030-5';
 export function courseCoverUrl(course){
  return course.custom_cover_id?fileUrl(course.custom_cover_id):course.cover_file_id&&course.cover_status==='ready'?previewUrl(course.cover_file_id,course.cover_version):'';
 }

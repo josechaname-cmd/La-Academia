@@ -1,8 +1,8 @@
-import {query,fileUrl,previewUrl} from '../api.js?v=20261030-4';
-import {escape,errorBox,icon} from './common.js?v=20261030-4';
-import {viewCountLabel} from './content-views.js?v=20261030-4';
-import {isVideo,materialDuration} from './material-upload.js?v=20261030-4';
-import {courseCoverUrl} from './course-cover.js?v=20261030-4';
+import {query,fileUrl,previewUrl} from '../api.js?v=20261030-5';
+import {escape,errorBox,icon} from './common.js?v=20261030-5';
+import {viewCountLabel} from './content-views.js?v=20261030-5';
+import {isVideo,materialDuration} from './material-upload.js?v=20261030-5';
+import {courseCoverUrl} from './course-cover.js?v=20261030-5';
 const expandIcon='<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 9 3 3 M3 8V3h5 M15 9l6-6 M16 3h5v5 M9 15l-6 6 M3 16v5h5 M15 15l6 6 M16 21h5v-5"/></svg>';
 export function materialViewer(files,{viewCount=null,customCoverId=null,title='Materiales'}={}){
  const html=`<section class="panel viewer"><div class="panel-heading viewer-heading"><h2>${escape(title)}</h2>${viewCount!==null?`<span class="course-view-count" role="status">${icon('eye')}<span data-course-view-count>${viewCountLabel(viewCount)}</span></span>`:''}</div><div class="material-toolbar"><div class="tabs" role="tablist" aria-label="Materiales">${files.map((file,index)=>`<button type="button" role="tab" id="material-tab-${file.id}" data-material="${file.id}" aria-controls="material-stage" tabindex="${index===0?0:-1}" aria-selected="${index===0}" aria-label="${escape(file.original_name)}">${escape(file.extension.toUpperCase())} · ${index+1}</button>`).join('')}</div><button type="button" class="button white material-expand" data-expand-material disabled aria-label="Preparando vista ampliada" title="Preparando vista ampliada">${expandIcon}</button></div><div id="material-stage" class="material-stage" role="tabpanel" tabindex="0"></div><div class="material-footer" ${files.length?'':'hidden'}><span id="material-name"></span><a id="material-download">Descargar original ↓</a></div></section>`;

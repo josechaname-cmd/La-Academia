@@ -32,7 +32,7 @@ final class AccessRepository
     {
         return $this->db->run('SELECT id,site_id FROM courses WHERE custom_cover_id=?', [$id])->fetchAll();
     }
-    public function filePolicy(int $id): ?array {return $this->db->run('SELECT id,site_id FROM policies WHERE file_id=?',[$id])->fetch()?:null;}
+    public function filePolicy(int $id): ?array {return $this->db->run('SELECT id FROM policies WHERE file_id=? OR cover_image_id=?',[$id,$id])->fetch()?:null;}
 
     public function restrictedPortalImage(int $id): bool
     {

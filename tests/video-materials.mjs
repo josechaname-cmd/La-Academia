@@ -22,7 +22,7 @@ globalThis.fetch=async(url,options={})=>{
 const {coursePage}=await import('../public/frontend/pages/course.js');
 const {courseEditor}=await import('../public/frontend/pages/admin-courses.js');
 const {materialUploadFields,mountMaterialUpload}=await import('../public/frontend/components/material-upload.js');
-const {upload}=await import('../public/frontend/api.js?v=20261030-4');
+const {upload}=await import('../public/frontend/api.js?v=20261030-5');
 const root=document.querySelector('main'),flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 let page=await coursePage(42);root.innerHTML=page.html;let cleanup=page.mount(root);const first=root.querySelector('video');
 assert.match(first.poster,/files\/88$/,'The player uses the image chosen by the author');

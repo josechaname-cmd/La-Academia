@@ -1,5 +1,5 @@
-import {upload,fileUrl} from '../api.js?v=20261030-4';
-import {escape} from './common.js?v=20261030-4';
+import {upload,fileUrl} from '../api.js?v=20261030-5';
+import {escape} from './common.js?v=20261030-5';
 export const photoPickerHtml='<section class="full event-photo-picker"><label class="field">Imágenes del evento<input name="images" type="file" accept=".jpg,.jpeg,.png,.webp" multiple><small>Selecciona de 3 a 12 imágenes para publicar. Luego marca cuál será la portada principal. JPG, PNG o WEBP · hasta 8 MB por imagen.</small></label><p class="field-error" data-photo-error role="alert" hidden></p><p class="hint" data-photo-count aria-live="polite"></p><div class="photo-preview-grid"></div></section>';
 export function mountPhotoPicker(form,existing=[],selectedCoverId=null){
   const input=form.elements.images,container=form.querySelector('.event-photo-picker'),grid=container.querySelector('.photo-preview-grid'),error=container.querySelector('[data-photo-error]'),counter=container.querySelector('[data-photo-count]');

@@ -1,4 +1,4 @@
-import {escape,icon} from './ui.js?v=20261030-4';
+import {escape,icon} from './ui.js?v=20261030-5';
 
 export const searchText=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
 

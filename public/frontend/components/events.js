@@ -1,6 +1,6 @@
-import {previousIcon,nextIcon} from './gallery-icons.js?v=20261030-4';
-import {escape,empty,date} from './common.js?v=20261030-4';
-import {fileUrl} from '../api.js?v=20261030-4';
+import {previousIcon,nextIcon} from './gallery-icons.js?v=20261030-5';
+import {escape,empty,date} from './common.js?v=20261030-5';
+import {fileUrl} from '../api.js?v=20261030-5';
 export function eventCards(events,admin=false){
  if(!events.length)return empty('No hay eventos para esta categoría.');
  return events.map(item=>{const images=item.images||[],detailHash=`#${admin?'admin/':''}eventos/${item.id}`,cover=images.length?(admin?`<button type="button" class="post-open" data-open-gallery="${item.id}" aria-label="Abrir publicación: ${escape(item.title)}"><img src="${fileUrl(images[0].id)}" alt="${escape(item.title)} · Imagen principal" loading="lazy"></button>`:`<a class="post-open event-cover-link" href="${detailHash}" aria-label="Ver evento: ${escape(item.title)}"><img src="${fileUrl(images[0].id)}" alt="${escape(item.title)} · Imagen principal" loading="lazy">${images.length>1?`<span class="event-photo-count">${images.length} imágenes</span>`:''}</a>`):`<div class="event-placeholder"><strong>La Academia</strong><span>Evento sin imágenes</span></div>`,meta=[item.category,date(item.starts_at)].filter(Boolean).join(' · ');

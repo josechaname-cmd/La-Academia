@@ -1,10 +1,10 @@
-import {motion} from '../design/runtime.js?v=20261030-4';
+import {motion} from '../design/runtime.js?v=20261030-5';
 export const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const paths={
   tag:'M3 3h8l10 10-8 8L3 11Z M7 7h.01',
   refresh:'M20 7v5h-5 M4 17v-5h5 M6 6a8 8 0 0 1 13 2l1 4 M4 12l1 4a8 8 0 0 0 13 2',
   edit:'M15 4 20 9 M4 20l5-1L21 7l-5-5L4 14Z',trash:'M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6',image:'M3 3h18v18H3Z M3 17l6-6 4 4 3-3 5 5 M15 7h.01',pause:'M8 5v14 M16 5v14',
-  download:'M12 3v13 M6 10l6 6 6-6 M4 17v4h16v-4',upload:'M12 16V3 M6 9 12 3 18 9 M4 16v5h16v-5',previous:'M15 6 9 12 15 18',next:'M9 6 15 12 9 18',close:'M6 6 18 18 M18 6 6 18',grip:'M8 5h.01 M16 5h.01 M8 12h.01 M16 12h.01 M8 19h.01 M16 19h.01',
+  expand:'M9 3H3v6 M15 3h6v6 M21 15v6h-6 M3 15v6h6',download:'M12 3v13 M6 10l6 6 6-6 M4 17v4h16v-4',upload:'M12 16V3 M6 9 12 3 18 9 M4 16v5h16v-5',previous:'M15 6 9 12 15 18',next:'M9 6 15 12 9 18',close:'M6 6 18 18 M18 6 6 18',grip:'M8 5h.01 M16 5h.01 M8 12h.01 M16 12h.01 M8 19h.01 M16 19h.01',
   home:'M3 11 12 3 21 11 M5 10v11h14V10 M9 21v-7h6v7',book:'M3 4h7l2 2 2-2h7v16h-7l-2 1-2-1H3Z M12 6v15',
   users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M18 4a4 4 0 0 1 0 7 M22 21v-2a4 4 0 0 0-3-4',
   building:'M4 21V3h16v18 M9 21v-5h6v5 M8 7h2 M14 7h2 M8 11h2 M14 11h2',

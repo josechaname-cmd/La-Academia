@@ -13,8 +13,8 @@ final class PolicyAgent implements AgentInterface {
   if(in_array($action,['admin.list','admin.get'],true)){$context->requireMethod('GET');return $action==='admin.list'?$this->policies->list($actor):$this->policies->get($context->id(),$actor);}
   $context->requireMethod('POST');
   return match($action){
-   'create'=>$this->policies->save($context->input,$_FILES['file']??null,null,$actor),
-   'save'=>$this->policies->save($context->input,$_FILES['file']??null,$context->id(),$actor),
+   'create'=>$this->policies->save($context->input,$_FILES['file']??null,null,$actor,$_FILES['cover_image']??null),
+   'save'=>$this->policies->save($context->input,$_FILES['file']??null,$context->id(),$actor,$_FILES['cover_image']??null),
    'delete'=>$this->policies->remove($context->id(),$actor),
    default=>Http::fail(404,'Acción no encontrada.'),
   };

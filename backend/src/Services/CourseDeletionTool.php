@@ -33,7 +33,7 @@ final class CourseDeletionTool {
             foreach(array_unique($images) as $image){
                 $file=$this->db->run('SELECT * FROM files WHERE id=? AND course_id IS NULL FOR UPDATE',[$image])->fetch();
                 if(!$file)continue;
-                $referenced=$this->db->run('SELECT id FROM courses WHERE custom_cover_id=? UNION ALL SELECT id FROM announcements WHERE image_id=? UNION ALL SELECT id FROM events WHERE image_id=? UNION ALL SELECT event_id FROM event_images WHERE file_id=? UNION ALL SELECT id FROM home_popup WHERE image_id=? UNION ALL SELECT id FROM home_slides WHERE image_id=? LIMIT 1',array_fill(0,6,$image))->fetchColumn();
+                $referenced=$this->db->run('SELECT id FROM courses WHERE custom_cover_id=? UNION ALL SELECT id FROM announcements WHERE image_id=? UNION ALL SELECT id FROM events WHERE image_id=? UNION ALL SELECT event_id FROM event_images WHERE file_id=? UNION ALL SELECT id FROM home_popup WHERE image_id=? UNION ALL SELECT id FROM home_slides WHERE image_id=? UNION ALL SELECT id FROM policies WHERE cover_image_id=? LIMIT 1',array_fill(0,7,$image))->fetchColumn();
                 if($referenced)continue;
                 $this->db->run('DELETE FROM files WHERE id=?',[$image]);$owned[]=$file;
             }

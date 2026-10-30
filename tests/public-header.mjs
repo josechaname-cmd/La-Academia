@@ -5,7 +5,7 @@ for(const key of ['window','document','Event','KeyboardEvent','AbortController']
 let reduced=false,calls=0,animations=0,failed=false;
 window.matchMedia=q=>({matches:q.includes('reduced')?reduced:false});
 document.querySelector('.brand').animate=()=>{animations++;return {cancel(){}};};
-globalThis.fetch=async url=>{calls++;if(failed)throw Error('offline');return {ok:true,json:async()=>({data:String(url).endsWith('/policies')?[{id:9,title:'Protección de datos',description:'Política institucional'}]:String(url).endsWith('/courses')?[{id:1,title:'Educación vial',category:'Seguridad',description:'Ruta segura'},{id:2,title:'<img src=x onerror=alert(1)>',category:'Salud'}]:[{id:3,title:'Educación en equipo',category:'Encuentro',description:'Actividad'}]})};};
+globalThis.fetch=async url=>{calls++;if(failed)throw Error('offline');return {ok:true,json:async()=>({data:String(url).endsWith('/policies')?[{id:9,cover_image_id:90,title:'Protección de datos',description:'Política institucional'}]:String(url).endsWith('/courses')?[{id:1,title:'Educación vial',category:'Seguridad',description:'Ruta segura'},{id:2,title:'<img src=x onerror=alert(1)>',category:'Salud'}]:[{id:3,title:'Educación en equipo',category:'Encuentro',description:'Actividad'}]})};};
 const {mountPublicHeader}=await import('../public/frontend/components/public-header.js');const dispose=mountPublicHeader();
 const input=document.querySelector('input'),results=document.querySelector('.public-search-results');
 const flush=()=>new Promise(r=>setTimeout(r,190));
@@ -18,7 +18,7 @@ input.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))
 document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(results.hidden);assert.equal(document.activeElement,input);await flush();assert(results.hidden,'Escape must not reopen search through focus');
 await search('seguridad');assert.equal(document.querySelectorAll('.search-group a').length,1);assert.equal(calls,3,'Typing reuses public data');
 await search('<img');assert.equal(document.querySelector('.search-matches img'),null);assert.match(document.querySelector('.search-group strong').textContent,/<img/);
-await search('proteccion');assert.equal(document.querySelector('.search-group a').hash,'#politicas/9');assert.equal(calls,3,'Policies share the search cache');
+await search('proteccion');assert.equal(document.querySelector('.search-group a').hash,'#politicas/9');assert.match(document.querySelector('.search-group img').src,/files\/90/);assert.equal(calls,3,'Policies share the search cache');
 await search('inexistente');assert.match(document.querySelector('.search-status').textContent,/No encontramos/);
 input.value='educacion';input.dispatchEvent(new Event('input'));window.dispatchEvent(new Event('hashchange'));await flush();assert(results.hidden,'Navigation cancels pending debounce');
 Object.defineProperty(window,'scrollY',{value:80,configurable:true});window.dispatchEvent(new Event('scroll'));assert(document.querySelector('.header').classList.contains('header-is-scrolled'));
