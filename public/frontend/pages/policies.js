@@ -2,7 +2,7 @@ import {query,command,uploadBundle,fileUrl} from '../api.js?v=20261030-5';
 import {heading,breadcrumbs,escape,empty,field,busy,toast,confirmAction,icon,date} from '../components/common.js?v=20261030-5';
 import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-5';
 import {attachValidation} from '../components/form-validation.js?v=20261030-5';
-import {policyDocument} from '../components/policy-document.js?v=20261030-5';
+import {policyDocument} from '../components/policy-document.js?v=20261030-6';
 const sizeLabel=bytes=>Number(bytes)<1024*1024?`${Math.max(1,Math.ceil(Number(bytes)/1024))} KB`:`${(Number(bytes)/1024/1024).toFixed(1)} MB`;
 const coverImage=(policy,{preview=false}={})=>policy.cover_image_id?`<img src="${fileUrl(policy.cover_image_id)}" alt="${preview?'Vista previa de la portada':'Portada de '+escape(policy.title)}" loading="lazy">`:`<div class="policy-cover-placeholder">${icon('image')}<span>${preview?'Tu imagen de portada':'Documento institucional'}</span></div>`;
 
@@ -22,8 +22,8 @@ export async function policiesPage(admin=false){
 
 export async function policyPage(id){
  const policy=await query('policy','get',{id});
- const viewer=policyDocument(policy);
- return {html:`<div class="container section policy-detail">${breadcrumbs([{label:'Políticas',href:'#politicas'},{label:policy.title}])}<div class="policy-reader"><aside class="policy-detail-info"><div class="policy-detail-cover">${coverImage(policy)}</div><div class="policy-detail-copy"><span class="eyebrow">DOCUMENTO INSTITUCIONAL</span><h1>${escape(policy.title)}</h1><p class="policy-full-description">${escape(policy.description)}</p><dl class="policy-facts"><div><dt>Formato</dt><dd>PDF · ${sizeLabel(policy.size)}</dd></div><div><dt>Actualizado</dt><dd>${date(policy.updated_at)}</dd></div></dl></div></aside>${viewer.html}</div></div>`,mount:root=>viewer.mount(root)};
+ const viewer=policyDocument(policy,{externalControls:true});
+ return {html:`<div class="container section policy-detail">${breadcrumbs([{label:'Políticas',href:'#politicas'},{label:policy.title}])}<div class="policy-reader"><aside class="policy-detail-info"><div class="policy-detail-cover">${coverImage(policy)}</div><div class="policy-detail-copy"><span class="eyebrow">DOCUMENTO INSTITUCIONAL</span><h1>${escape(policy.title)}</h1><p class="policy-full-description">${escape(policy.description)}</p><div class="policy-detail-controls">${viewer.controls}</div></div></aside>${viewer.html}</div></div>`,mount:root=>viewer.mount(root)};
 }
 
 export async function policyEditor(id){

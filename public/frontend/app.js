@@ -17,7 +17,7 @@ import {examEditor} from './pages/admin-exam.js?v=20261030-5';
 import {reportsPage} from './pages/admin-reports.js?v=20261030-5';
 import {notificationCenter} from './components/notification-center.js?v=20261030-5';
 import {eventsPage} from './pages/admin-events.js?v=20261030-5';
-import {policiesPage,policyPage,policyEditor} from './pages/policies.js?v=20261030-5';
+import {policiesPage,policyPage,policyEditor} from './pages/policies.js?v=20261030-6';
 observeUI(document.body);
 mountPublicHeader();
 const layout=adminLayout();

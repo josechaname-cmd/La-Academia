@@ -12,8 +12,10 @@ Los borradores solo son accesibles para las cuentas administrativas.
 La biblioteca presenta seis tarjetas por página, con portada, título,
 descripción, fecha y descarga directa. La imagen y el título abren el documento.
 El detalle coloca la portada y la información a un lado y el PDF al otro;
-en pantallas pequeñas se apilan. El visor se puede ampliar para ocupar el ancho
-disponible y ofrece descarga y apertura en otra pestaña.
+en pantallas pequeñas se apilan. Debajo de la descripción se ubican los controles
+para ampliar y descargar, sin los datos de formato y actualización en el detalle.
+Al ampliar, los controles acompañan al visor para poder restaurar la vista.
+También se ofrece apertura en otra pestaña.
 
 En **Políticas → Nueva política** se adjuntan el PDF y una imagen elegida por el
 usuario; la portada nunca se extrae del documento. El título y la descripción
