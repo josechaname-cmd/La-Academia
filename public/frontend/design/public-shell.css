@@ -30,30 +30,28 @@ body:not(.admin-panel) > .header nav > .admin-link:hover { transform:translateY(
   background:linear-gradient(115deg,var(--ds-color-ink),var(--ds-color-brand-active));color:var(--ds-color-on-brand);border:0;
 }
 .support-footer::before { content:"";position:absolute;inset:0 0 auto;height:var(--ds-border-strong);background:linear-gradient(90deg,var(--ds-color-teal),var(--ds-color-info-border),var(--ds-color-accent)); }
-.support-main { display:flex;align-items:flex-end;justify-content:space-between;gap:var(--ds-space-8); }
-.support-intro { min-width:0; }
-.support-kicker { display:block;font-size:var(--ds-text-xs);font-weight:var(--ds-font-strong);letter-spacing:.08em;color:var(--ds-color-info-border);margin-bottom:var(--ds-space-2); }
+.support-main { display:flex;align-items:center;justify-content:space-between;gap:var(--ds-space-8); }
+.support-intro { display:grid;gap:var(--ds-space-2);min-width:0; }
 .support-intro h2 { margin:0;font-size:var(--ds-text-xl);font-weight:var(--ds-font-bold);color:var(--ds-color-on-brand); }
-.support-contact { display:grid;justify-items:end;gap:var(--ds-space-1);min-width:0;font-style:normal;text-align:right; }
+.support-contact { display:grid;justify-items:start;gap:var(--ds-space-1);min-width:0;font-style:normal;text-align:left; }
 .support-contact > span { color:var(--ds-color-line);font-size:var(--ds-text-xs); }
 .support-email { color:var(--ds-color-on-brand);font-size:var(--ds-text-md);font-weight:var(--ds-font-strong);overflow-wrap:anywhere;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--ds-color-info-border) 65%,transparent);text-underline-offset:4px;transition:color var(--ds-motion-fast),text-decoration-color var(--ds-motion-fast); }
 .support-email:hover { color:var(--ds-color-info-border);text-decoration-color:currentColor; }
 .support-email:focus-visible { outline-color:var(--ds-color-on-brand); }
-.support-bottom { display:flex;align-items:center;justify-content:space-between;gap:var(--ds-space-4);margin-top:var(--ds-space-6);padding-top:var(--ds-space-4);border-top:var(--ds-border-width) solid color-mix(in srgb,var(--ds-color-on-brand) 18%,transparent); }
-.support-bottom small,.support-brand-links > span { color:var(--ds-color-line);font-size:var(--ds-text-xs); }
-.support-brand-links { display:flex;align-items:center;flex-wrap:wrap;gap:var(--ds-space-4); }
-.support-social { display:flex;align-items:center;gap:var(--ds-space-2); }
-.support-social a { display:grid;place-items:center;width:var(--ds-size-control);height:var(--ds-size-control);color:var(--ds-color-on-brand); }
+.support-bottom { margin-top:var(--ds-space-6);padding-top:var(--ds-space-4);text-align:center;border-top:var(--ds-border-width) solid color-mix(in srgb,var(--ds-color-on-brand) 18%,transparent); }
+.support-bottom small { color:var(--ds-color-line);font-size:var(--ds-text-xs); }
+.support-social { display:flex;align-items:center;flex-shrink:0;gap:var(--ds-space-3); }
+.support-social a { display:grid;place-items:center;width:var(--ds-space-12);height:var(--ds-space-12);color:var(--ds-color-on-brand); }
 .support-social a:hover { color:var(--ds-color-accent); }
 .support-social a:focus-visible { outline-color:var(--ds-color-on-brand); }
-.support-social svg { display:block;width:var(--ds-size-icon);height:var(--ds-size-icon); }
+.support-social svg { display:block;width:var(--ds-space-8);height:var(--ds-space-8); }
 @media (--screen-mobile) {
   body:not(.admin-panel) > .header nav > a { padding-inline:var(--ds-space-2); }
   body:not(.admin-panel) > .header nav > .admin-link { margin-left:0;padding-inline:var(--ds-space-3); }
   .support-footer { padding-top:var(--ds-space-6); }
-  .support-main { flex-direction:column;align-items:flex-start;gap:var(--ds-space-4); }
-  .support-contact { justify-items:start;text-align:left; }
-  .support-bottom { flex-direction:column;align-items:flex-start;gap:var(--ds-space-2);margin-top:var(--ds-space-5); }
+  .support-main { flex-direction:column;gap:var(--ds-space-4);text-align:center; }
+  .support-contact { justify-items:center;text-align:center; }
+  .support-bottom { margin-top:var(--ds-space-5); }
 }
 
 /* Search belongs to the public shell, not the authenticated workspace. */
