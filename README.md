@@ -1,153 +1,177 @@
 # La Academia
 
-Plataforma de capacitación con materiales PDF/PowerPoint, evaluaciones, gestión
-por sede, resultados y administración de contenido. Backend PHP y MySQL,
-frontend JavaScript sin compilación obligatoria en producción.
+**Plataforma de capacitación interna de ACEAPERU.** Reúne materiales de aprendizaje,
+evaluaciones, políticas y comunicaciones institucionales en un portal web.
+Permite a los capacitadores publicar contenido y consultar resultados, y a los
+trabajadores acceder a los materiales y rendir evaluaciones con su DNI.
 
-**Instalación desde GitHub y protección de datos:**
-[guía de publicación e instalación](docs/PUBLICACION-GITHUB.md) y
-[tratamiento de información privada](SECURITY.md). El repositorio distribuye
-el código; la base de datos, credenciales, personal y materiales se mantienen
-fuera de Git. La configuración de ejemplo está en `storage/config.example.php`.
+[Instalación](docs/PUBLICACION-GITHUB.md) · [Manual técnico](docs/DOCUMENTACION-TECNICA.md) · [Mapa de archivos](docs/MAPA-ARCHIVOS.md) · [Hosting y subdominios](docs/DESPLIEGUE-Y-SUBDOMINIOS.md)
 
-**Carpeta activa de la instalación de desarrollo: `C:\xampp\htdocs\la-academia`.**
+## Qué permite hacer
 
-**Documentación técnica:** [manual del sistema](docs/DOCUMENTACION-TECNICA.md), [mapa de archivos](docs/MAPA-ARCHIVOS.md) y [despliegue en hosting y subdominios por sede](docs/DESPLIEGUE-Y-SUBDOMINIOS.md). Describe la implementación actual y distingue las funciones pendientes para separar portales y lecturas identificadas.
+| Módulo | Funciones |
+| --- | --- |
+| **Inicio** | Buscar capacitaciones, eventos y políticas; consultar publicaciones recientes; mostrar sliders y un popup institucional. |
+| **Capacitaciones** | Crear cursos con o sin examen, agregar descripción y portada, cargar PDF/PPT/PPTX y videos MP4/WebM, publicar, editar, archivar o eliminar con confirmación. |
+| **Lectura y reproducción** | Consultar documentos dentro de la página, ampliar el PDF, reproducir videos y descubrir otras capacitaciones de la misma sede en tarjetas laterales. |
+| **Evaluaciones** | Configurar preguntas, nota mínima, duración, periodo de disponibilidad y entre 1 y 10 intentos. Calificar sobre 20 y conservar versiones anteriores. |
+| **Resultados** | Consultar participantes, notas e intentos; revisar gráficos de vistas y rendimiento; exportar resultados por examen y versión a Excel. |
+| **Colaboradores y sedes** | Gestionar trabajadores individualmente o mediante carga masiva CSV/XLSX, validar la sede y revisar los cambios antes de confirmar. |
+| **Políticas** | Publicar documentos generales de la instalación con PDF, portada, título y descripción; permitir su lectura y descarga. |
+| **Eventos y comunicación** | Publicar eventos con galerías; administrar sliders en una sola pantalla, ordenarlos por arrastre y configurar títulos, estilos y enlaces opcionales. |
+| **Administración** | Gestionar accesos, roles, sedes y notificaciones automáticas de resultados, cierres de examen y visitas. |
 
-Abrir <http://localhost/la-academia/> con Apache y MySQL iniciados en XAMPP. Se edita directamente esta carpeta; no hay copia de trabajo en Documentos ni paso de publicación/sincronización.
+Los videos admiten hasta **500 MB**, sujetos a la configuración del servidor.
+La portada se elige al administrar la capacitación. Al alcanzar **90 % de
+aciertos o más**, la evaluación deja de ofrecer nuevos intentos; la nota mínima
+de aprobación la define el creador del examen.
 
-**Revisión de interfaz:** [correcciones y validación del frontend](docs/REVISION-FRONTEND-UX-2026-10-29.md).
+## Quién utiliza el sistema
 
-## Organización
+| Perfil | Alcance |
+| --- | --- |
+| **Trabajador** | Consulta el contenido publicado. Para rendir un examen, se identifica con su DNI; el servidor verifica que esté activo y pertenezca a la sede de la capacitación. |
+| **Capacitador** | Administra capacitaciones, exámenes y resultados de su sede. También puede gestionar eventos y políticas generales. |
+| **Superadministrador** | Administra todas las sedes, colaboradores y accesos, además de los sliders y popups de Inicio. |
+
+El trabajador no necesita una cuenta administrativa. Los permisos del panel y
+las reglas del examen se comprueban en el backend.
+
+## Flujo de una capacitación
+
+1. **Preparar:** crear la capacitación, asignar la sede, elegir si tendrá examen
+   y cargar materiales y portada.
+2. **Configurar y publicar:** definir preguntas y criterios de evaluación cuando
+   corresponda, y publicar el contenido.
+3. **Participar:** consultar los materiales y, si hay examen, confirmar el DNI
+   antes de responder.
+4. **Consultar resultados:** revisar las notas en el panel y descargar el reporte
+   Excel de la versión correspondiente.
+
+Después de la primera publicación, la modalidad con/sin examen se conserva.
+La información y las preguntas se pueden actualizar manteniendo el historial.
+[Guía de gestión de capacitaciones](docs/GESTION-CAPACITACIONES.md).
+
+Las vistas de una capacitación se registran al abrir el material o comenzar a
+reproducir el video, una vez por capacitación y sesión; se excluyen los accesos
+administrativos. Son contadores de consulta, no constancias individuales de
+lectura o de finalización de un video.
+
+## Tecnología y requisitos
+
+- **Backend:** PHP 8.2 o superior, API HTTP/JSON y MySQL 8.
+- **Frontend:** JavaScript con módulos nativos, HTML y CSS adaptable a escritorio y móvil.
+- **Servidor web:** Apache con reescritura de rutas; HTTPS para producción.
+- **Documentos:** LibreOffice y Poppler para conversiones y vistas previas;
+  LibreOffice también se utiliza para importar el padrón en XLSX.
+- **Videos:** FFprobe para validar formatos y obtener sus características.
+- **Desarrollo y pruebas:** Node.js, Python y PowerShell. Node.js no es necesario
+  para servir la aplicación en producción.
+
+## Organización del repositorio
 
 ```text
-la-academia/
-├── .htaccess                 Entrada protegida: solo publica interfaz y API
-├── public/
-│   ├── index.php             Única entrada PHP
-│   ├── frontend/             Páginas y componentes JavaScript
-│   └── assets/               CSS, imágenes y logo
-├── backend/
-│   ├── routes/api.php        Rutas y permisos de la API
-│   ├── src/                  Servicios, repositorios y lógica
-│   ├── config/               Configuración de aplicación
-│   ├── views/                HTML y footer
-│   ├── database/             Esquema SQL
-│   └── scripts/              Mantenimiento por consola
-├── storage/                  Acceso web denegado
-│   ├── config.php            Conexión privada, excluida de Git
-│   ├── files/                Materiales originales
-│   ├── cache/                Caché regenerable
-│   ├── previews/             Portadas y PDF derivados regenerables
-│   └── backups/              Recuperación e instalaciones retiradas
-├── tools/                   Validación y lanzador de conversión
-│   └── runtime/              LibreOffice y Poppler locales, excluidos de Git
-├── tests/                    Pruebas
-├── docs/                     Documentación
-└── archive/                  Historial retirado, sin ejecución web
+public/
+  index.php                  Entrada única del portal y la API
+  frontend/                  Páginas, componentes y fuentes del diseño
+  assets/                    Estilos generados y recursos públicos
+backend/
+  routes/api.php             Rutas y permisos de la API
+  src/                       Servicios, repositorios, validaciones y migraciones
+  config/                    Configuración de aplicación y permisos SQL
+  views/                     Plantillas HTML y pie de página
+  database/schema.sql        Esquema inicial, complementado por migraciones
+  scripts/                   Instalación, diagnóstico y mantenimiento
+storage/
+  config.example.php         Ejemplo de configuración sin credenciales reales
+tools/                       Compilación de estilos, validaciones y despliegue
+tests/                       Pruebas automatizadas y dependencias de desarrollo
+docs/                        Manuales y documentación técnica
 ```
 
-Apache reescribe la URL del portal y `/api/v1/` hacia `public/index.php`; `/frontend/` y `/assets/` hacia los recursos de `public/`. Las carpetas privadas y el acceso directo por `/public/` se bloquean. No se necesita modificar Apache ni cambiar la dirección del portal. Las rutas de sesión existentes se conservan.
+La configuración privada y los directorios de materiales, vistas previas,
+caché y respaldos se crean en cada instalación y quedan fuera de Git.
+El [mapa de archivos](docs/MAPA-ARCHIVOS.md) explica las responsabilidades del
+código actual.
 
-Para un dominio, la raíz web recomendada es `public`, conservando `public/index.php` como única entrada PHP. La configuración local actual requiere adaptar sus reglas para ese modo: [validación del arranque y guía de hosting](docs/ARRANQUE-Y-HOSTING.md), con plantilla Apache probada sin alterar esta instalación.
+## Instalación y despliegue
 
-La base `la_academia` continúa administrada por MySQL en su directorio propio de XAMPP. No mover sus archivos físicos dentro del proyecto.
+1. Clonar el repositorio y preparar PHP, MySQL y las dependencias de medios que
+   utilizará la instalación.
+2. Crear una base vacía y completar la configuración privada tomando como base
+   [config.example.php](storage/config.example.php). Separar la cuenta web de
+   la cuenta de mantenimiento.
+3. Ejecutar las migraciones y el diagnóstico con la configuración de mantenimiento:
 
-## Logo e icono de la pestaña
+   ```sh
+   php backend/scripts/migrate.php
+   php backend/scripts/check-database.php
+   ```
 
-- Logo principal: `public/assets/image/logo/Logotipo la academia.png`.
-- Favicon de Chrome: **`public/assets/image/favicon/favicon.png`**.
+4. Configurar Apache con **`public/` como raíz web**, HTTPS y permisos de escritura
+   en el almacenamiento privado. La plantilla está en
+   [public-directory.conf.example](tools/apache/public-directory.conf.example).
+5. Completar la creación inicial del superadministrador mediante acceso local
+   autorizado y cargar sedes, colaboradores y contenido desde el panel.
 
-Para cambiar el icono de la pestaña, reemplazar `favicon.png` por una imagen PNG cuadrada, recomendada de **256 × 256 píxeles**, con el mismo nombre. No basta con cambiar la extensión de un JPG o ICO: debe guardarse/exportarse realmente como PNG. El favicon es independiente del logo principal. Por ahora contiene una copia del logo existente hasta que se coloque el icono definitivo.
+El `.htaccess` de la raíz corresponde al entorno local XAMPP y restringe el
+acceso al equipo. Para hosting se debe aplicar la
+[guía de arranque](docs/ARRANQUE-Y-HOSTING.md); subir los archivos sin configurar
+el servidor no completa la instalación. La
+[guía de publicación](docs/PUBLICACION-GITHUB.md) desarrolla estos pasos.
 
-Configuración: `backend/views/shell.php`. La URL incorpora automáticamente la fecha de modificación del archivo para renovar la caché al reemplazarlo. Después de sustituirlo, volver a cargar la página; si Chrome conserva el icono anterior, cerrar esa pestaña y abrirla de nuevo.
+Para usar varios subdominios con el código actual, cada sede puede disponer de
+una instalación con base de datos, archivos y sesiones independientes. La
+separación automática de una base compartida según el dominio requiere desarrollo
+adicional. [Despliegue por sede](docs/DESPLIEGUE-Y-SUBDOMINIOS.md).
 
-## Sistema de diseño
+## Desarrollo y validación
 
-Tokens, componentes, fuentes CSS y comandos: [Guía de diseño](docs/DISENO.md). Las hojas en `public/assets/` son generadas; editar `public/frontend/design/` y ejecutar `node tools/build-design.mjs`.
+Instalar las dependencias de desarrollo desde la raíz del repositorio:
 
-## Popup de Inicio
+```sh
+npm ci --prefix tests --ignore-scripts
+python -m pip install -r tests/requirements.txt
+```
 
-El superadmin puede configurar imagen, enlace y activación en **Panel → Eventos → Popup de Inicio**. [Guía de uso y estructura](docs/POPUP-INICIO.md).
+Al modificar estilos, editar `public/frontend/design/` y generar los archivos
+públicos con `node tools/build-design.mjs`. No editar directamente el CSS generado.
 
-## Trabajo diario
-
-Abrir esta carpeta en el editor. Los cambios PHP se aplican directamente; los recursos principales CSS/JS incorporan automáticamente su fecha de modificación para evitar caché antigua. Los imports internos conservan versiones explícitas hasta completar su migración controlada.
+En el entorno Windows/XAMPP previsto por las herramientas:
 
 ```powershell
-& './tools/check-local.ps1'
+powershell -NoProfile -File tools/check-local.ps1
 ```
 
-Para migraciones de esquema explícitas:
+La suite valida sintaxis, imports, diseño, interfaces mediante DOM simulado,
+contratos HTTP, roles, sedes, exámenes, archivos y base de datos. Las pruebas CRUD
+utilizan bases temporales y datos sintéticos. Las rutas de PHP/Apache de las
+herramientas locales deben adaptarse si se usa otro entorno.
 
-```powershell
-& 'C:\xampp\php\php.exe' './backend/scripts/migrate.php'
-```
+El diagnóstico `php backend/scripts/check-database.php` es de solo lectura;
+`--json` devuelve las comprobaciones en formato estructurado.
+[Relaciones, índices y diagnóstico de la base](docs/BASE-DE-DATOS.md).
 
-El antiguo sincronizador se conserva únicamente como historial en `archive/retired-tools/`; ya no se utiliza. Los respaldos son copias de recuperación, no instalaciones activas.
+## Documentación por función
 
-## Funciones y soporte
+| Tema | Guía |
+| --- | --- |
+| Configuración y arquitectura | [Manual técnico](docs/DOCUMENTACION-TECNICA.md) |
+| Backend e integración | [Contrato de la API](docs/API.md) |
+| Creación, edición y eliminación de cursos | [Capacitaciones](docs/GESTION-CAPACITACIONES.md) |
+| Materiales y portadas | [Documentos](docs/MATERIALES.md) · [Videos](docs/VIDEOS.md) |
+| Biblioteca institucional | [Políticas](docs/POLITICAS.md) |
+| Comunicación en Inicio | [Slider](docs/SLIDER-INICIO.md) · [Popup](docs/POPUP-INICIO.md) |
+| Componentes y estilos | [Sistema de diseño](docs/DISENO.md) |
+| Base de datos y mantenimiento | [Base de datos](docs/BASE-DE-DATOS.md) |
 
-Exámenes con una o más preguntas, autor registrado, apertura en hora de Perú, cierre opcional y duración por intento. Nota proporcional sobre 20. Exportación Excel por examen/versión durante y después del periodo. Campana de actividad automática con actualización cada 30 segundos. Carrusel automático sin reproducción manual ni contador.
+## Datos privados y soporte
 
-Soporte: **Área de TI**, con el correo autorizado en `support_email` dentro de la configuración privada o `ACADEMIA_SUPPORT_EMAIL`. Footer del portal sin logo, derechos reservados a ACEAPERU; oculto dentro del panel autenticado.
+Este repositorio contiene código, esquema, pruebas y documentación. Credenciales,
+padrones, resultados, archivos cargados, sesiones y respaldos permanecen fuera
+del repositorio. Antes de publicar cambios se puede comprobar el contenido
+preparado en Git con `python tools/check-publication.py`.
+[Tratamiento de información privada](SECURITY.md).
 
-- [Arquitectura](docs/ARQUITECTURA.md).
-- [Operación local](docs/OPERACION-LOCAL.md).
-- [API](docs/API.md).
-- [Validación](docs/VALIDACION.md).
-- [Auditoría](docs/AUDITORIA.md).
-- [Auditoría técnica y plan de arquitectura · 27-10-2026](docs/AUDITORIA-ARQUITECTURA-2026-10-27.md).
-- [Procesos](docs/PROCESOS.md).
-- [Datos y migraciones](docs/DATOS-Y-MIGRACION.md).
-- [Base de datos: relaciones, índices y diagnóstico](docs/BASE-DE-DATOS.md).
-- [Materiales y portadas](docs/MATERIALES.md).
-
-
-## Slider y popups de Inicio
-
-El superadmin gestiona **Eventos → Slider de Inicio** desde el panel: imágenes, orden, visibilidad, encuadre y vista previa de escritorio/móvil antes de guardar. Las imágenes existentes se importan una sola vez; las nuevas se cargan desde el formulario, sin editar código. Rotación cada cinco segundos con puntos expandibles. [Guía del slider](docs/SLIDER-INICIO.md).
-
-**Eventos → Popup de Inicio** contiene la lista de anuncios con CRUD, previsualización y activación exclusiva: solo uno activo. Título opcional, tamaño compacto/estándar, recorte opcional y destino guiado a evento, capacitación o modo informativo. [Guía de popups](docs/POPUP-INICIO.md).
-
-La antigua gestión de Avisos y banners permanece retirada; la campana recibe actividad del sistema automáticamente.
-
-## Navegación del panel
-
-El encabezado, sidebar y campana permanecen montados al cambiar de sección. Los submenús se cierran al salir de su sección; abrir un destino hijo despliega su grupo. El Inicio muestra vistas acumuladas por publicación en barras, con filtros locales, métricas, evaluaciones y accesos rápidos. Solo las publicaciones activas contribuyen al alcance. El contenido anterior se conserva hasta que la siguiente vista esté lista. La caché vive solamente en memoria: capacitaciones administrativas y eventos por 30 segundos y categorías por 60 segundos (máximo 64 consultas). Se invalida antes y después de escrituras, al cambiar de usuario o sesión, y ante errores de autorización. Los detalles de edición, exámenes, resultados, usuarios, sedes y notificaciones consultan al servidor; no se guardan respuestas privadas en localStorage ni en la caché HTTP.
-
-Validar la caché de navegación sin tocar la base de datos: `node tests/navigation-cache.mjs`.
-
-## Capacitaciones y actividad automática — 3 de octubre de 2026
-
-El panel abre en **Inicio**, con un resumen general. **Capacitaciones** abre el listado y su flecha despliega **Resultados**, también accesible desde la página de capacitaciones. La gestión manual de Avisos está retirada. La campana enlaza al contenido, evento o versión de examen correspondiente: resultados recibidos, cierre de examen y modificaciones de capacitaciones, materiales, periodos y eventos.
-
-El historial persiste en `activity_log`; la caché solo acelera su lectura. Una nueva revisión limpia la caché de navegación y actualiza Resultados si está abierto, conservando sus filtros. Detalles del funcionamiento, tiempos y límites: [Actividad y notificaciones](docs/ACTIVIDAD.md).
-
-Las notificaciones se abren pulsando toda la tarjeta y desaparecen al quedar leídas; no incluyen botones de detalle ni de marcado manual.
-
-
-## Creación y publicación
-
-Guardar el examen conduce al paso **Publicar**. Publicar devuelve al listado con confirmación destacada. El editor permite subir una portada propia o recuperar la primera página del PDF/PPT. Las tarjetas muestran títulos destacados sin descripción; el detalle conserva el texto completo. Véanse [Procesos](docs/PROCESOS.md) y [Materiales](docs/MATERIALES.md).
-
-## Revisión del backend y MySQL — 28 de octubre de 2026
-
-[Informe completo, hallazgos, correcciones y pendientes](docs/AUDITORIA-BACKEND-2026-10-27.md). Inventario de los 71 endpoints (evidencia local excluida de Git). La suite `tools/check-local.ps1` utiliza bases temporales con datos sintéticos; no ejecuta pruebas CRUD sobre la base activa.
-
-
-[Correcciones de gravedad alta y permisos](docs/CORRECCIONES-ALTAS-2026-10-28.md): PHP actualizado, cuenta SQL limitada, identificación previa obligatoria por DNI y dashboard por rol.
-
-## Gestión individual y carga de colaboradores — 28 de octubre de 2026
-
-En **Usuarios → Colaboradores**, busca por DNI, nombre o cargo, o abre el directorio de una sede. Las acciones **Editar** y **Eliminar** aparecen como iconos con etiquetas; también se puede eliminar desde la ficha. Agregar, guardar, reactivar, eliminar y confirmar una carga solicitan verificar los datos antes de escribir. Eliminar desactiva al trabajador y su acceso de capacitador, cierra sus sesiones y conserva las evaluaciones. **Actualizar directorio** obtiene los datos actuales conservando el filtro. El DNI se mantiene como identificador del historial.
-
-La sección se llama **Carga masiva** y acepta trabajadores de cualquier sede: **Validar archivo → revisar sedes y cambios → Confirmar carga**. La sede escrita en cada fila tiene prioridad; las filas vacías requieren una sede seleccionada expresamente. Se rechazan sedes desconocidas, inactivas o ambiguas y DNI duplicados. La revisión muestra altas, actualizaciones, traslados, reactivaciones y accesos vinculados; si hay cambios posteriores en los trabajadores o sus accesos, se exige validar de nuevo.
-
-La gestión individual y la carga actualizan el mismo padrón, los datos de evaluaciones/reportes y los accesos de capacitador. Un traslado actualiza la sede del acceso y cierra sus sesiones, manteniendo la sede histórica de los cursos y resultados. Reactivar un trabajador no habilita automáticamente una cuenta administrativa desactivada; eso se realiza desde Usuarios. Pruebas con datos sintéticos: `node tests/personnel.mjs` y `php tests/isolated.php personnel-import.php`; contratos en [API](docs/API.md).
-
-## Videos en las capacitaciones
-
-El editor permite cargar MP4/WebM de hasta 500 MB como materiales, con vista previa y progreso. El portal reproduce sin autoplay y cuenta una vista por capacitación/sesión al comenzar la reproducción. Consulta [videos: configuración, API, BD y pruebas](docs/VIDEOS.md).
-
-La gestión distingue creación y edición después de publicar: [capacitaciones](docs/GESTION-CAPACITACIONES.md). La biblioteca de [Políticas en PDF](docs/POLITICAS.md) incluye carga, consulta y descarga.
+El contacto de **Área de TI** se configura mediante `support_email` o
+`ACADEMIA_SUPPORT_EMAIL` en cada instalación.

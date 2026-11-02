@@ -12,7 +12,7 @@ No hay despliegue intermedio ni archivos activos en Documentos/ChatGPT. No se ca
 
 - `backend/config/application.php`: valores predeterminados y rutas relativas al proyecto.
 - `storage/config.php`: configuración privada de MySQL, excluida de Git.
-- `public/assets/slider/`: imágenes del slider, detectadas automáticamente al abrir Inicio. Orden por nombre, sin lista en código.
+- `home_slides` y `storage/files/`: el slider se administra desde el panel, con orden manual por arrastre. `public/assets/slider/` conserva recursos heredados importados una sola vez; no es el flujo de carga habitual.
 - `storage/files/`: originales de materiales e imágenes; acceso solo a través de la API y sus permisos.
 - `storage/cache/`: caché regenerable; no guarda sesiones ni resultados.
 - `storage/previews/`: portadas JPEG y PDF derivados, registros y bloqueo del conversor.
@@ -29,7 +29,7 @@ Desde la raíz activa:
 & './tools/check-local.ps1'
 ```
 
-Este comando valida sintaxis, reglas, caché y HTTP; no sincroniza carpetas. Las pruebas de negocio revierten sus registros temporales. Para validar el generador XLSX puede ejecutarse `python tests/report_xlsx.py` si openpyxl está disponible.
+Este comando valida sintaxis, reglas, caché y HTTP; no sincroniza carpetas. Las pruebas de negocio se ejecutan con bases temporales y datos sintéticos mediante `tests/isolated.php`. Para validar el generador XLSX puede ejecutarse `python tests/report_xlsx.py` si openpyxl está disponible.
 
 Las migraciones se ejecutan explícitamente con `C:\xampp\php\php.exe backend/scripts/migrate.php`. Los importadores de la instalación antigua y el sincronizador retirado están en `archive/retired-tools`, solo como historial.
 
@@ -47,6 +47,6 @@ Diagnóstico: `api/v1/health` verifica conexión y tablas. Errores internos se c
 
 Las pruebas DOM de evaluación y administración usan jsdom exclusivamente como dependencia de desarrollo. Instalación reproducible desde la raíz del proyecto: `npm ci --prefix tests --ignore-scripts`. Después ejecutar `powershell -ExecutionPolicy Bypass -File tools/check-local.ps1`.
 
-`tests/evaluation-state.mjs` comprueba respuestas y reloj; `tests/evaluation-dialog.mjs` verifica consulta por DNI, presentación de nombre/cargo, registro mínimo, navegación, cierre/reanudación, revisión, envío, error/reintento y limpieza; `tests/admin-exam.mjs` verifica horario opcional, duración obligatoria, disponibilidad sin pérdida de edición y filtros locales de tarjetas. No realizan inspección visual ni requieren cuenta de usuario.
+`tests/evaluation-state.mjs` comprueba respuestas y reloj; `tests/evaluation-dialog.mjs` verifica consulta por DNI, presentación de nombre/cargo, registro mínimo, navegación, cierre/reanudación, revisión, envío, error/reintento y limpieza; `tests/admin-exam.mjs` verifica apertura y duración requeridas, cierre opcional, disponibilidad sin pérdida de edición y filtros locales de tarjetas. No realizan inspección visual ni requieren cuenta de usuario.
 
 Las pruebas `tests/course-editor.mjs` y `tests/report-navigation.mjs` están incluidas en la comprobación estándar. Verifican cambios pendientes, examen opcional, pasos de preparación, transiciones de reportes y respuestas fuera de orden mediante DOM simulado, sin validación visual.

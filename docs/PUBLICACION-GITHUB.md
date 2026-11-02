@@ -22,10 +22,12 @@ publica una copia de la instalación ni despliega automáticamente el sitio.
    mantenimiento con permisos DDL mediante `ACADEMIA_MAINTENANCE_CONFIG`, en un
    archivo privado fuera de la raíz web. La cuenta de la aplicación debe tener
    los permisos limitados indicados en `backend/config/database-permissions.php`.
-4. Ejecutar `php backend/scripts/migrate.php`. Esto crea la estructura; no importa
+4. Ejecutar `php backend/scripts/migrate.php` y después
+   `php backend/scripts/check-database.php`. Esto crea y verifica la estructura; no importa
    trabajadores, notas ni archivos de otra instalación.
 5. Dar permisos de escritura a los directorios privados necesarios e instalar
-   LibreOffice y Poppler si se usarán vistas previas de documentos.
+   LibreOffice y Poppler si se usarán vistas previas de documentos, y FFprobe
+   para videos. Ajustar los límites de PHP/web para admitir cargas de hasta 500 MB.
 6. Configurar la raíz web en `public/`, HTTPS y la creación inicial del administrador.
    Cargar luego las imágenes del slider y el contenido autorizado desde el panel.
 

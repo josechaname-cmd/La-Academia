@@ -1,6 +1,6 @@
 # La Academia · Mapa de archivos
 
-**Revisión:** 29 de octubre de 2026. Inventario de archivos activos y auxiliares del proyecto, contrastado con el disco. [Manual técnico](DOCUMENTACION-TECNICA.md) · [Despliegue](DESPLIEGUE-Y-SUBDOMINIOS.md).
+**Revisión:** 2 de noviembre de 2026. Inventario de los archivos actuales distribuidos en Git, contrastado con el código. [Manual técnico](DOCUMENTACION-TECNICA.md) · [Despliegue](DESPLIEGUE-Y-SUBDOMINIOS.md).
 
 ## Cómo usar este mapa
 
@@ -14,15 +14,11 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 
 | Archivo | Responsabilidad |
 |---|---|
+| [.gitattributes](../.gitattributes) | Normaliza los finales de línea de los archivos distribuidos. |
+| [SECURITY.md](../SECURITY.md) | Alcance público del repositorio y tratamiento de información privada. |
 | [.gitignore](../.gitignore) | Excluye configuración/datos, respaldos, archivos retirados y dependencias locales. |
 | [.htaccess](../.htaccess) | Reglas XAMPP: Require local, reescritura hacia public y bloqueo de privados. |
-| [README.md](../README.md) | Entrada documental y comandos de trabajo del proyecto. |
-
-## assets
-
-| Archivo | Responsabilidad |
-|---|---|
-| learning.css (evidencia local excluida de Git) | Resto heredado de la raíz; el shell actual carga public/assets/learning.css. |
+| [README.md](../README.md) | Presentación del sistema, funciones, roles, instalación y validación. |
 
 ## backend
 
@@ -60,6 +56,8 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [migrate.php](../backend/scripts/migrate.php) | CLI de esquema más ajustes/backfills; escribe con cuenta de mantenimiento. |
 | [orphan-report.php](../backend/scripts/orphan-report.php) | Reporta archivos sin referencias para revisión; no los elimina. |
 | [preview-worker.php](../backend/scripts/preview-worker.php) | CLI que procesa la cola de conversiones de una instancia y finaliza. |
+| [check-database.php](../backend/scripts/check-database.php) | Diagnóstico CLI de solo lectura: relaciones, índices y reglas de datos; salida resumida o JSON sin datos personales. |
+
 
 ## backend/src/Agents
 
@@ -73,6 +71,8 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [HomeSliderAgent.php](../backend/src/Agents/HomeSliderAgent.php) | Acciones públicas y administrativas del carrusel. |
 | [ReportAgent.php](../backend/src/Agents/ReportAgent.php) | Consultas de resumen/resultados y exportación protegidas por acceso. |
 | [ViewAgent.php](../backend/src/Agents/ViewAgent.php) | Entrada para registrar aperturas públicas de cursos/eventos. |
+| [PolicyAgent.php](../backend/src/Agents/PolicyAgent.php) | Coordina consulta pública y gestión administrativa de políticas generales. |
+
 
 ## backend/src/Exceptions
 
@@ -115,6 +115,11 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [PortalMediaMigration.php](../backend/src/Migrations/PortalMediaMigration.php) | Estructura/estilos de medios y primera importación del slider. |
 | [PreviewMigration.php](../backend/src/Migrations/PreviewMigration.php) | Portadas y tabla/cola inicial de derivados de materiales. |
 | [TrainingEditorMigration.php](../backend/src/Migrations/TrainingEditorMigration.php) | Portada personalizada, autor del examen y nota decimal. |
+| [CoursePublicationMigration.php](../backend/src/Migrations/CoursePublicationMigration.php) | Conserva la primera publicación para impedir cambiar la modalidad de cursos ya publicados. |
+| [DatabaseIntegrityMigration.php](../backend/src/Migrations/DatabaseIntegrityMigration.php) | Repara índices ausentes, verifica unicidad del DNI y mejora búsquedas de publicación y derivados. |
+| [PolicyMigration.php](../backend/src/Migrations/PolicyMigration.php) | Crea y actualiza políticas, documento PDF y portada; mantiene compatibilidad con la sede histórica nullable. |
+| [VideoMaterialsMigration.php](../backend/src/Migrations/VideoMaterialsMigration.php) | Agrega duración, dimensiones y codecs a los metadatos de archivos de video. |
+
 
 ## backend/src/Repositories
 
@@ -154,6 +159,11 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [PersonnelImportTool.php](../backend/src/Services/PersonnelImportTool.php) | Recibe CSV/XLSX, convierte Excel con LibreOffice, normaliza filas y gestiona temporales. |
 | [ReportExport.php](../backend/src/Services/ReportExport.php) | Construye el reporte XLSX desde resultados, separado de la consulta SQL. |
 | [SliderImages.php](../backend/src/Services/SliderImages.php) | Descubre imágenes heredadas del slider para su importación inicial. |
+| [CourseDeletionTool.php](../backend/src/Services/CourseDeletionTool.php) | Elimina definitivamente un curso y sus dependencias, preservando archivos compartidos y coordinando el worker. |
+| [MaterialUploadPolicy.php](../backend/src/Services/MaterialUploadPolicy.php) | Calcula formatos y límites efectivos de carga según configuración, PHP y disponibilidad de FFprobe. |
+| [PolicyTool.php](../backend/src/Services/PolicyTool.php) | CRUD de políticas generales con PDF y portada, permisos administrativos y compensación de archivos. |
+| [VideoInspector.php](../backend/src/Services/VideoInspector.php) | Inspecciona videos con FFprobe y valida codecs, duración y dimensiones antes de aceptar la carga. |
+
 
 ## backend/src/Support
 
@@ -168,6 +178,9 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [Validation.php](../backend/src/Support/Validation.php) | Validaciones reutilizables de texto, números, opciones y otros campos. |
 | [XlsxWriter.php](../backend/src/Support/XlsxWriter.php) | Genera el libro Excel exportable sin requerir LibreOffice. |
 | [ZipTool.php](../backend/src/Support/ZipTool.php) | Lee las entradas de diapositivas PPTX con límites de tamaño/cantidad. |
+| [ByteRange.php](../backend/src/Support/ByteRange.php) | Interpreta rangos HTTP para servir videos y permitir saltos de reproducción. |
+| [DatabaseAudit.php](../backend/src/Support/DatabaseAudit.php) | Comprueba estructura, claves foráneas, registros huérfanos, índices y reglas lógicas sin modificar datos. |
+
 
 ## backend/src/Validators
 
@@ -236,6 +249,11 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [notification-center.js](../public/frontend/components/notification-center.js) | Campana, sondeo, revisiones y navegación a elementos de actividad. |
 | [public-header.js](../public/frontend/components/public-header.js) | Cabecera pública y búsqueda de publicaciones. |
 | [ui.js](../public/frontend/components/ui.js) | Iconos, modales, confirmaciones, toast, carga y elementos UI accesibles. |
+| [home-course-shelf.js](../public/frontend/components/home-course-shelf.js) | Organiza Inicio en grupos de hasta tres filas con navegación lateral y teclado. |
+| [material-upload.js](../public/frontend/components/material-upload.js) | Selector de documento/video, validación de tamaño, vista previa y progreso de carga. |
+| [policy-document.js](../public/frontend/components/policy-document.js) | Visor de PDF de políticas con ampliación, descarga y restauración de controles. |
+| [related-courses.js](../public/frontend/components/related-courses.js) | Muestra hasta cuatro cursos publicados de la misma sede, prioriza categoría y gestiona carga, reintento y limpieza. |
+
 
 ## public/frontend/design
 
@@ -280,6 +298,8 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [catalog.js](../public/frontend/pages/catalog.js) | Catálogos públicos, filtros y navegación de publicaciones. |
 | [course.js](../public/frontend/pages/course.js) | Detalle de capacitación, materiales e integración del flujo de evaluación. |
 | [portal.js](../public/frontend/pages/portal.js) | Composición del Inicio público con medios y accesos al catálogo. |
+| [policies.js](../public/frontend/pages/policies.js) | Catálogo público, detalle, listado administrativo y editor de políticas con portada. |
+
 
 ## storage
 
@@ -334,6 +354,16 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [slider.mjs](../tests/slider.mjs) | Carrusel/indicadores, movimiento reducido y temporizadores. |
 | [training-enhancements.mjs](../tests/training-enhancements.mjs) | Mejoras y flujos de capacitación en interfaz. |
 | [xlsx_fixture.php](../tests/xlsx_fixture.php) | Construye datos/libro sintéticos para pruebas de exportación. |
+| [course-management.php](../tests/course-management.php) | Eliminación permanente, cascadas, archivos compartidos, rollback, modalidad fija e historial de preguntas. |
+| [course-related.mjs](../tests/course-related.mjs) | Sugerencias por sede/categoría, límite, portadas, reintento, respuestas tardías y ausencia de vistas automáticas. |
+| [database-integrity.php](../tests/database-integrity.php) | Instalación desde cero, migraciones repetidas, índices omitidos, duplicados, diagnóstico y planes EXPLAIN. |
+| [home-course-shelf.mjs](../tests/home-course-shelf.mjs) | Límite de tres filas, navegación lateral, teclado, adaptación y limpieza del catálogo de Inicio. |
+| [policies-http.py](../tests/policies-http.py) | API de políticas con PDF/portada reales de prueba, permisos, privacidad, reemplazo y eliminación. |
+| [policies.mjs](../tests/policies.mjs) | Interfaz de políticas: búsqueda, visor, descarga, editor, portadas y confirmaciones. |
+| [video-http.py](../tests/video-http.py) | Carga y lectura HTTP de videos, codecs, sedes, portadas manuales, rangos, vistas y eliminación. |
+| [video-materials.mjs](../tests/video-materials.mjs) | Reproducción, conteo de vistas, portada manual, límites, previsualización y progreso de carga. |
+| [video-policy.php](../tests/video-policy.php) | Límites de tamaño, cálculo de rangos y disponibilidad del inspector de video. |
+
 
 ## tools
 
@@ -345,6 +375,10 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [configure-database-user.php](../tools/configure-database-user.php) | Procedimiento local de privilegios mínimos; modifica cuenta/configuración solo con --apply. |
 | [start-preview-worker.ps1](../tools/start-preview-worker.ps1) | Lanza PHP/worker oculto con rutas de XAMPP; específico de Windows. |
 | [update-php-runtime.ps1](../tools/update-php-runtime.ps1) | Mantenimiento del PHP local; no es un paso de publicación del sitio. |
+| [check-publication.py](../tools/check-publication.py) | Revisa archivos preparados en Git: rutas privadas, patrones de secretos y enlaces documentales. |
+| [install-video-runtime.py](../tools/install-video-runtime.py) | Instala el runtime de video local verificado; los ejecutables quedan excluidos de Git. |
+| [sync-database-permissions.php](../tools/sync-database-permissions.php) | Sincroniza permisos DML por tabla de la cuenta web usando mantenimiento; requiere --apply. |
+
 
 ## tools/apache
 
@@ -363,7 +397,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | `storage/previews` | Derivados, lock y perfil/log del conversor; específico de cada instancia |
 | `storage/cache` | Regenerable; no compartir entre bases/sedes |
 | `storage/backups` | Recuperación e instalaciones retiradas; nunca usar como raíz pública |
-| `tools/runtime` | LibreOffice/Poppler de Windows locales; sustituir por binarios del hosting |
+| `tools/runtime` | LibreOffice, Poppler y FFprobe locales; configurar sus equivalentes en el hosting |
 | `tests/node_modules` | Dependencias de desarrollo; no forman parte del servidor de producción |
 | `archive` | Historial de proyectos/sincronizadores retirados; no ejecutar ni publicar |
 | `docs/DATA GENERAL OPERATIVO Y ADM.xlsx` | Fuente administrativa con datos; no es un recurso público ni se carga en cada petición |
@@ -376,11 +410,8 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 - [Hosting y subdominios](DESPLIEGUE-Y-SUBDOMINIOS.md): procedimientos, ejemplos y alcance pendiente.
 - [Arranque y Apache](ARRANQUE-Y-HOSTING.md): evidencia de los dos perfiles de entrada.
 - [API](API.md), [diseño](DISENO.md), [materiales](MATERIALES.md), [actividad](ACTIVIDAD.md), [procesos](PROCESOS.md).
+- [Capacitaciones](GESTION-CAPACITACIONES.md), [políticas](POLITICAS.md), [videos](VIDEOS.md) y [base de datos](BASE-DE-DATOS.md): funciones y mantenimiento actuales.
 - [Auditoría de backend](AUDITORIA-BACKEND-2026-10-27.md) y [correcciones](CORRECCIONES-ALTAS-2026-10-28.md): evidencia histórica.
 - [Plan multisede](PLAN-MULTISEDE-2026-10-28.md) y [plan JWT](PLAN-JWT.md): propuestas; no describen funciones enteramente implementadas.
 
 Al agregar, retirar o cambiar la responsabilidad de un archivo, actualizar este mapa y el apartado correspondiente del manual. Los cambios de API deben reflejarse también en sus contratos y pruebas.
-
-## Materiales de video · 30 de octubre de 2026
-
-[Videos](VIDEOS.md) detalla las responsabilidades de `VideoMaterialsMigration`, `VideoInspector`, `MaterialUploadPolicy`, `ByteRange`, el selector `material-upload.js` y las pruebas `video-materials.mjs`, `video-policy.php` y `video-http.py`. El instalador `tools/install-video-runtime.py` guarda dependencias verificadas fuera de Git.

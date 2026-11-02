@@ -37,16 +37,23 @@ Error:
 | 429 | Límite de login para conexión no local |
 | 500/503 | Error interno o servicio no disponible |
 
-Los IDs de ruta son enteros positivos y tienen prioridad sobre el cuerpo. Un POST de creación con `id` es rechazado para evitar que se interprete como edición. DELETE no implica siempre borrado físico: los cursos se archivan; los eventos sí se eliminan de su tabla, conservando su registro de actividad.
+Los IDs de ruta son enteros positivos y tienen prioridad sobre el cuerpo. Un POST de creación con `id` es rechazado para evitar que se interprete como edición. DELETE no implica siempre borrado físico: la ruta estándar de cursos archiva y `/admin/courses/{id}/permanent` elimina definitivamente con confirmación; los eventos sí se eliminan de su tabla, conservando su registro de actividad.
 
 ## Rutas
 
-Las listas de cursos incluyen `published_at`: fecha de la última publicación registrada en la actividad del curso. Si un curso histórico no tiene ese evento, se usa `created_at` como respaldo. El catálogo público se ordena por `published_at` descendente; la lista administrativa conserva el orden de creación. Las fechas SQL representan la hora de Perú (`-05:00`). En el inicio se muestran como «Hoy», «Hace un día» o «Hace N días», según el día calendario en `America/Lima`.
+Las listas y el detalle de cursos incluyen `published_at`: fecha de la última publicación registrada en la actividad del curso. Si un curso histórico no tiene ese evento, se usa `created_at` como respaldo. El catálogo público se ordena por `published_at` descendente; la lista administrativa conserva el orden de creación. Las fechas SQL representan la hora de Perú (`-05:00`). En el inicio se muestran como «Hoy», «Hace un día» o «Hace N días», según el día calendario en `America/Lima`.
 
 La tabla siguiente se genera a partir del archivo de rutas en esta entrega. La fuente de verdad ejecutable es `backend/routes/api.php`.
 
 | Método | Ruta | Permiso | Éxito |
 |---|---|---|---|
+| GET | `/policies` | public | 200 |
+| GET | `/policies/{id}` | public | 200 |
+| GET | `/admin/policies` | admin | 200 |
+| GET | `/admin/policies/{id}` | admin | 200 |
+| POST | `/admin/policies` | admin | 201 |
+| POST | `/admin/policies/{id}` | admin | 200 |
+| DELETE | `/admin/policies/{id}` | admin | 200 |
 | GET | `/home-popup` | public | 200 |
 | GET | `/admin/home-popup` | superadmin | 200 |
 | POST | `/admin/home-popup` | superadmin | 201 |
@@ -71,11 +78,13 @@ La tabla siguiente se genera a partir del archivo de rutas en esta entrega. La f
 | GET | `/events` | public | 200 |
 | GET | `/courses` | public | 200 |
 | GET | `/courses/{id}` | public | 200 |
-| DELETE | `/admin/courses/{id}/permanent` | admin de la sede o superadmin | 200 |
 | POST | `/courses/{id}/view` | public | 200 |
 | POST | `/events/{id}/view` | public | 200 |
 | GET | `/categories` | public | 200 |
 | GET | `/files/{id}` | public | 200 |
+| HEAD | `/files/{id}` | public | 200 |
+| GET | `/admin/materials/options` | admin | 200 |
+| DELETE | `/admin/courses/{id}/permanent` | admin | 200 |
 | GET | `/files/{id}/thumbnail` | public | 200 |
 | GET | `/files/{id}/preview` | public | 200 |
 | GET | `/files/{id}/preview-status` | public | 200 |

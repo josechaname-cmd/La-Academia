@@ -1,6 +1,6 @@
 # La Academia · Documentación técnica
 
-**Versión documental:** 1.0 · **Fecha:** 29 de octubre de 2026, America/Lima.
+**Versión documental:** 1.1 · **Actualización:** 2 de noviembre de 2026, America/Lima.
 **Código revisado:** `C:\xampp\htdocs\la-academia`.
 **Destinatarios:** desarrollo, soporte, administración del servidor y responsables de capacitación.
 
@@ -23,8 +23,9 @@ La Academia es una aplicación de capacitación con catálogo público y panel a
 
 | Módulo | Comportamiento actual |
 |---|---|
-| Portal | Inicio, carrusel, popup activo, catálogo de capacitaciones y eventos |
-| Capacitaciones | Material PDF/PPT/PPTX, portada, borrador, publicación y archivado |
+| Portal | Inicio, carrusel, popup activo y búsqueda de capacitaciones, eventos y políticas |
+| Capacitaciones | Material PDF/PPT/PPTX y MP4/WebM, portada elegida, borrador, publicación, edición, archivado y eliminación definitiva confirmada |
+| Políticas | Documentos generales con PDF, portada, descripción, visor ampliable y descarga |
 | Evaluaciones | Preguntas versionadas, apertura/cierre, duración, identificación previa por DNI, intentos y calificación sobre 20 |
 | Resultados | Participantes por versión de examen, estados de entrega y exportación XLSX |
 | Inicio administrativo | Vistas, promedios y participación; comparación de cinco elementos por página, detalle lateral y Top 3/5/10 |
@@ -32,7 +33,7 @@ La Academia es una aplicación de capacitación con catálogo público y panel a
 | Usuarios | Accesos de capacitador y superadmin, contraseñas, estado y sede |
 | Sedes | Registro de sedes y asociación con trabajadores, capacitadores y capacitaciones |
 | Eventos y medios | Publicaciones con galería, administración del carrusel y de popups |
-| Actividad | Campana con resultados, cambios, cierres e hitos de vistas |
+| Actividad | Campana con resultados, cierres de examen e hitos de vistas |
 
 La gestión manual de avisos está retirada de la interfaz; subsisten rutas/tablas de compatibilidad. Los objetos llamados `Agents` son controladores deterministas que coordinan servicios: no son agentes de IA ni llaman a modelos externos.
 
@@ -40,7 +41,7 @@ La gestión manual de avisos está retirada de la interfaz; subsisten rutas/tabl
 
 - El catálogo publicado es público. El filtro administrativo por sede no convierte el catálogo en un portal privado de esa sede.
 - No existe todavía una resolución de `subdominio → sede` en el backend.
-- Eventos, carrusel y popup no tienen aislamiento general por sede dentro de una base compartida.
+- Eventos, políticas, carrusel y popup no tienen aislamiento general por sede dentro de una base compartida.
 - Las vistas son contadores anónimos por publicación y sesión. No equivalen a trabajadores identificados ni demuestran lectura completa.
 - El DNI se solicita antes del examen. No autentica por sí solo a la persona ni identifica las aperturas previas del material.
 - Varias instalaciones pueden usar la misma versión del código con bases y almacenamiento independientes. Esto separa los datos entre portales, pero no impide por sí mismo que alguien visite otro portal.
@@ -55,7 +56,7 @@ La guía de [subdominios](DESPLIEGUE-Y-SUBDOMINIOS.md) desarrolla las dos opcion
 | Apache | 2.4.58 Win64 | Requiere reglas de reescritura y ejecución de PHP; usar una versión actualizada del proveedor |
 | Servidor de base de datos | `SELECT VERSION()` devolvió **MySQL 8.0.46** | Esta es la referencia real de compatibilidad |
 | Cliente SQL de XAMPP | Se identifica como MariaDB 10.4.32 | La versión del cliente no identifica el motor conectado; usar herramientas de copia compatibles con MySQL |
-| Base activa | `la_academia`, 19 tablas; collation de la base `utf8mb4_unicode_ci` | Verificar también las collations de las tablas al restaurar |
+| Base activa | `la_academia`, 20 tablas; collation de la base `utf8mb4_unicode_ci` | Verificar también las collations de las tablas al restaurar |
 | Frontend | JavaScript nativo con módulos ES; HTML y CSS | No necesita un servidor Node en producción |
 | Dependencias de desarrollo | jsdom 26.1.0, PostCSS 8.5.32; openpyxl 3.1.5 para pruebas | Instalación de pruebas separada del runtime web |
 | Conversores | LibreOffice y Poppler configurados como ejecutables locales | El hosting debe permitir instalarlos/ejecutarlos si se necesitan conversiones e importación XLSX |
@@ -153,17 +154,19 @@ No hay un lector automático de `.env`. Escribir variables en un archivo `.env` 
 | `preview_directory` | `storage/previews` | Derivados, cola/lock y perfil del conversor |
 | `cache_directory`, `cache_ttl` | `storage/cache`, 60 segundos | Caché del backend; algunas lecturas fijan TTL específico |
 | `soffice`, `pdftoppm` | Ejecutables bajo `tools/runtime` para Windows | Conversión Office y rasterización PDF |
-| `max_file_size` | 50 × 1024 × 1024 bytes | Límite de archivos de materiales; otros flujos tienen límites propios |
+| `max_file_size` | 50 × 1024 × 1024 bytes | Límite de documentos; otros flujos tienen límites propios |
+| `max_video_size` | 500 × 1024 × 1024 bytes | Límite de videos, sujeto también al servidor web/PHP |
+| `ffprobe` | Ejecutable bajo `tools/runtime/ffmpeg/bin` para Windows | Validación de videos y extracción de metadatos; configurable con `ACADEMIA_FFPROBE` |
 | `max_attempts` | 2 | Respaldo de compatibilidad; manda el límite guardado en cada versión de examen |
 | `local_unlimited_login` | true | Exención local del límite de login; poner false en producción |
 | `session_idle_seconds` | 3600 | Caducidad de la sesión administrativa por inactividad |
 | `preview_worker_enabled` | true implícito | Permite el disparador automático Windows; en Linux usar el worker CLI programado |
 
-La carga de personal está limitada a 8 MB y admite CSV/XLSX. El servidor web/PHP debe admitir los límites de la aplicación; la configuración local fija `upload_max_filesize=50M`, `post_max_size=56M` y `memory_limit=256M`.
+La carga de personal está limitada a 8 MB y admite CSV/XLSX. El servidor web/PHP debe admitir los límites de la aplicación; la configuración local fija `upload_max_filesize=500M`, `post_max_size=512M` y `memory_limit=256M`.
 
 ### Configuración efectiva inspeccionada
 
-Se cargó la configuración vigente y se extrajeron únicamente campos no secretos. En esta instalación se verificó `environment=local`, exención de login en loopback activada, respaldo de dos intentos, límite de materiales de 52 428 800 bytes, TTL de caché de 60 segundos, inactividad administrativa de 3600 segundos y disparador de previews habilitado. Los ejecutables configurados de LibreOffice y Poppler existen. La conexión web usa una cuenta distinta de root y tiene contraseña configurada; no se registró su valor.
+En la revisión inicial del 29 de octubre se cargó la configuración y se extrajeron únicamente campos no secretos. En esta instalación se verificó `environment=local`, exención de login en loopback activada, respaldo de dos intentos, límite de materiales de 52 428 800 bytes, TTL de caché de 60 segundos, inactividad administrativa de 3600 segundos y disparador de previews habilitado. Los ejecutables configurados de LibreOffice y Poppler existen. La conexión web usa una cuenta distinta de root y tiene contraseña configurada; no se registró su valor.
 
 Estos son valores **locales**, no una configuración de producción para copiar sin cambios. Al publicar, establecer la configuración propia del hosting y verificarla nuevamente.
 
@@ -171,7 +174,7 @@ No existe una clave operativa `site_id`, `tenant_id` o `ACADEMIA_SITE_ID` que co
 
 ## 6. Datos y relaciones
 
-Se consultaron únicamente metadatos para verificar estas 19 tablas; no se copiaron filas personales a la documentación.
+Se consultaron únicamente metadatos para verificar estas 20 tablas; no se copiaron filas personales a la documentación.
 
 | Tabla | Contenido y relación principal |
 |---|---|
@@ -181,7 +184,8 @@ Se consultaron únicamente metadatos para verificar estas 19 tablas; no se copia
 | `auth_attempts` | Control de frecuencia de login e identificación; huellas, no contraseñas |
 | `categories` | Categorías por ámbito course/event |
 | `courses` | Capacitación, sede, autor, publicación, portada y contador de vistas |
-| `files` | Metadatos y clave aleatoria de cada archivo privado |
+| `files` | Metadatos y clave aleatoria de cada archivo privado; duración, dimensiones y codecs para videos |
+| `policies` | Documentos generales con referencia al PDF y a su portada; sin filtro de sede |
 | `exams` | Versiones, preguntas, horario, duración, estado, máximo de intentos y nota mínima |
 | `enrollments` | Matrícula de un DNI en un examen; datos de participante |
 | `attempts` | Intentos pendientes/completados, token, respuestas, nota y fechas |
@@ -195,7 +199,7 @@ Se consultaron únicamente metadatos para verificar estas 19 tablas; no se copia
 | `portal_media_migrations` | Marcador de importación inicial de medios heredados |
 | `announcements` | Compatibilidad histórica de avisos retirados |
 
-Relación principal: **sede → capacitación → versión de examen → matrícula → intentos**. Una persona puede tener matrículas en varios exámenes. `files` también soporta imágenes de eventos, slider y popup; no todos sus registros pertenecen a una capacitación.
+Relación principal: **sede → capacitación → versión de examen → matrícula → intentos**. Una persona puede tener matrículas en varios exámenes. `files` también soporta imágenes de eventos, slider, popup y políticas; no todos sus registros pertenecen a una capacitación.
 
 `schema.sql` es solo la base del esquema. `backend/scripts/migrate.php` ejecuta las migraciones complementarias y ajustes de datos. No se ejecutan migraciones durante cada petición web. El script usa una cuenta de mantenimiento, distinta de la cuenta de operación definida por `database-permissions.php`.
 
@@ -232,7 +236,7 @@ La API no usa JWT ni un servicio externo de autenticación. `PLAN-JWT.md` es una
 
 Los materiales e imágenes se almacenan fuera de `public` mediante claves aleatorias. La API verifica visibilidad/permisos antes de servirlos. Los derivados se identifican por hash y tampoco se publican como una carpeta de acceso libre.
 
-Flujo de un material: **subida → validación → registro en files → cola file_previews → worker → PDF/JPEG derivados → visor y portada**. El worker usa un lock por directorio, procesa la cola, registra éxito/error e invalida caché. Tiene recuperación de tareas interrumpidas y límite de tiempo por conversión.
+Flujo de un documento: **subida → validación → registro en files → cola file_previews → worker → PDF/JPEG derivados → visor y portada**. El worker usa un lock por directorio, procesa la cola, registra éxito/error e invalida caché. Tiene recuperación de tareas interrumpidas y límite de tiempo por conversión.
 
 - Windows/XAMPP: `DocumentPreviewTool::kick()` llama al lanzador PowerShell local.
 - Linux: ese disparador retorna sin iniciar proceso. Se debe programar `php backend/scripts/preview-worker.php` mediante el sistema del hosting.
@@ -240,7 +244,11 @@ Flujo de un material: **subida → validación → registro en files → cola fi
 - Importación XLSX: `PersonnelImportTool` invoca LibreOffice para convertir a CSV en un temporal privado. Sin LibreOffice se puede usar CSV; XLSX no queda operativo automáticamente.
 - Exportación XLSX: se genera con `XlsxWriter`; no utiliza LibreOffice para escribir el reporte.
 
+Los videos siguen un flujo propio: carga → validación con FFprobe → metadatos en `files` → reproducción con soporte de rangos HTTP. Su portada se carga como imagen elegida por el creador; no se extraen fotogramas. El límite configurado es 500 MB. Véanse [Videos](VIDEOS.md) y [Políticas](POLITICAS.md).
+
 Los binarios bajo `tools/runtime` son locales y están excluidos de Git. Sus rutas, permisos, perfiles de Office y comportamiento de procesos deben ensayarse en Linux. No se ha certificado todavía la conversión en un servidor de hosting.
+
+El detalle de capacitación muestra las vistas y el tiempo desde la publicación junto al título. Hasta cuatro tarjetas laterales sugieren otros cursos publicados de la misma sede, priorizando la categoría. Mostrar esas tarjetas no incrementa vistas. [Gestión de capacitaciones](GESTION-CAPACITACIONES.md).
 
 ## 9. Frontend, diseño y cachés
 
@@ -311,6 +319,8 @@ Ensayar la restauración en una instalación aislada y comparar sedes, cursos, a
 | Trabajador no puede evaluar | DNI activo, sede de curso/padrón, identificación vigente, horario e intentos |
 
 El endpoint `/api/v1/health` comprueba conexión y un conjunto de tablas, no todos los permisos, conversiones ni aislamiento entre dominios. Consultar logs por `request_id`; no publicar dumps ni mensajes de PDO.
+
+El diagnóstico `php backend/scripts/check-database.php` revisa relaciones, índices y reglas de datos en una transacción de solo lectura; `--json` ofrece salida estructurada sin datos personales. `DatabaseIntegrityMigration` corrige índices ausentes y comprueba duplicados antes de crear la restricción de DNI. [Relaciones y mantenimiento de la base](BASE-DE-DATOS.md).
 
 ## 12. Alcance de esta revisión
 
