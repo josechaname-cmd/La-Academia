@@ -52,9 +52,9 @@ Después de la primera publicación, la modalidad con/sin examen se conserva.
 La información y las preguntas se pueden actualizar manteniendo el historial.
 [Guía de gestión de capacitaciones](docs/GESTION-CAPACITACIONES.md).
 
-Las vistas de una capacitación se registran al abrir el material o comenzar a
-reproducir el video, una vez por capacitación y sesión; se excluyen los accesos
-administrativos. Son contadores de consulta, no constancias individuales de
+Las vistas de una capacitación se registran al entrar a su página, sin exigir
+abrir materiales, reproducir videos ni rendir el examen. Se cuenta una vez por
+capacitación y sesión; se excluyen los accesos administrativos. Son contadores de consulta, no constancias individuales de
 lectura o de finalización de un video.
 
 ## Tecnología y requisitos

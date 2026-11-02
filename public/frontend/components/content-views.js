@@ -5,7 +5,7 @@ export function viewCountLabel(value,{compact=false}={}){
   return `${count.toLocaleString('es-PE')}${compact?'':count===1?' vista':' vistas'}`;
 }
 
-// Called when opening course material or an event, never for catalog cards.
+// Called when entering a course page or opening an event, never for catalog cards.
 // Deduplication and administrator exclusion are enforced by the server session.
 export function recordContentView(kind,id,fileId=null) {
   return command('view',kind,{id:Number(id),...(fileId?{file_id:Number(fileId)}:{})}).catch(()=>null);

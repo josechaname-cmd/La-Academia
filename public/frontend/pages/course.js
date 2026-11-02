@@ -16,15 +16,15 @@ export async function coursePage(id) {
   return {html:`<div class="container section course-detail">${breadcrumbs([{label:'Capacitaciones',href:'#capacitaciones'},{label:course.title}])}<div class="course-detail-grid"><div class="course-detail-main"><section class="panel course-detail-hero" aria-labelledby="course-detail-title"><div class="course-detail-copy"><span class="eyebrow">${escape(course.category)}</span><h1 id="course-detail-title">${escape(course.title)}</h1><div class="course-detail-meta"><span class="course-view-count" data-course-view-status role="img" aria-label="${viewCountLabel(course.view_count)}" title="${viewCountLabel(course.view_count)}">${icon('eye')}<span data-course-view-count aria-hidden="true">${viewCountLabel(course.view_count,{compact:true})}</span></span>${publishedTime(course.published_at??course.created_at)}</div><p>${escape(course.description)}</p><div class="course-author" aria-label="Autor: ${escape(author)}"><span class="course-author-face" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01M8.5 15c1.9 1.7 5.1 1.7 7 0"/></svg></span><span><small>AUTOR</small><strong>${escape(author)}</strong></span></div></div><div class="course-detail-cover">${courseCover(course)}</div></section><div class="learning-layout ${withoutExam?'learning-material-only':''}">${viewer.html}${withoutExam?'':`<aside class="panel learning-aside"><span class="eyebrow">EVALUACIÓN</span><h2>Comprueba lo aprendido</h2><div class="course-exam-availability" role="status"><span class="badge" data-tone="${available?'success':'neutral'}">${stateLabel}</span>${available&&closing?`<p>Activo hasta ${escape(closing)} (Perú).</p>`:''}</div><dl><div><dt>Evaluación</dt><dd>${Number(exam?.question_count)||0} preguntas</dd></div><div><dt>Nota mínima</dt><dd>${exam?.passing_score!=null?`${Number(exam.passing_score)} / 20`:'Sin mínimo definido'}</dd></div><div><dt>Intentos permitidos</dt><dd>${Number(exam?.max_attempts)||2}</dd></div></dl>${exam?.duration_minutes?`<p class="hint">${Number(exam.duration_minutes)} minutos por intento.</p>`:''}<button id="start-evaluation" class="button primary" ${available?'':'disabled'}>${available?'Empezar evaluación':exam?.state==='scheduled'?'Examen programado':exam?.state==='disabled'?'Examen desactivado':exam?.state==='closed'?'Examen finalizado':'Examen no disponible'}</button></aside>`}</div></div>${related.html}</div></div>`,mount(root){
    let disposed=false;
    const cleanupCovers=mountCourseCovers(root),cleanupRelated=related.mount(root);
-   const cleanupViewer=viewer.mount(root,{onOpen:async file=>{
-    const result=await recordContentView('course',course.id,file?.id);
+   const cleanupViewer=viewer.mount(root);
+   // Count the displayed course page independently of material or exam interaction.
+   void recordContentView('course',course.id).then(result=>{
     if(!disposed&&result?.view_count!=null){
      root.querySelector('[data-course-view-count]').textContent=viewCountLabel(result.view_count,{compact:true});
      const counter=root.querySelector('[data-course-view-status]'),label=viewCountLabel(result.view_count);
      counter.setAttribute('aria-label',label);counter.title=label;
     }
-    return result;
-   }});
+   });
    const cleanupEvaluation=withoutExam?()=>{}:mountEvaluation(root,course);
    return ()=>{disposed=true;cleanupRelated();cleanupCovers();cleanupEvaluation();cleanupViewer();};
   }};

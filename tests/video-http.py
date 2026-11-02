@@ -113,14 +113,14 @@ with tempfile.TemporaryDirectory(prefix='academia-video-fixtures-') as temporary
     body,_=guest.call(f'files/{fid}',headers={'Range':'bytes=0-3','If-Range':'tomorrow'},binary=True);assert body==video
     body,headers=guest.call(f'files/{fid}','HEAD',headers={'Range':'bytes=0-3'});assert body==b'' and int(headers['Content-Length'])==len(video)
     body,headers=guest.call(f'files/{fid}?download=1',binary=True);assert body==video and headers['Content-Disposition'].startswith('attachment')
-    detail,_=guest.call(f'courses/{cid}');assert int(detail['view_count'])==0,'Preload, seek and download never record video playback'
+    detail,_=guest.call(f'courses/{cid}');assert int(detail['view_count'])==0,'File requests alone do not record a course entry'
     guest.call(f'courses/{cid}/view','POST',{'file_id':fixture['files'][0]},expected=404)
     guest.call(f'courses/{cid}/view','POST',{'file_id':fid},expected=403,token=False)
-    first,_=guest.call(f'courses/{cid}/view','POST',{'file_id':fid})
-    repeat,_=guest.call(f'courses/{cid}/view','POST',{'file_id':second['id']})
-    review,_=admin.call(f'courses/{cid}/view','POST',{'file_id':fid})
+    first,_=guest.call(f'courses/{cid}/view','POST',{})
+    repeat,_=guest.call(f'courses/{cid}/view','POST',{})
+    review,_=admin.call(f'courses/{cid}/view','POST',{})
     assert first['recorded'] and first['view_count']==1 and not repeat['recorded'] and not review['recorded']
-    fresh=Client();counted,_=fresh.call(f'courses/{cid}/view','POST',{'file_id':fid});assert counted['view_count']==2
+    fresh=Client();counted,_=fresh.call(f'courses/{cid}/view','POST',{});assert counted['view_count']==2
     admin.call(f'admin/files/{second["id"]}','DELETE',{});admin.call(f'admin/files/{fid}','DELETE',{})
     draft,_=admin.call(f'admin/courses/{cid}');assert draft['status']=='draft' and draft['materials']==[] and int(draft['view_count'])==2
     guest.call(f'files/{fid}',expected=404)

@@ -59,8 +59,10 @@ cargar sugerencias ofrece Reintentar sin bloquear el material ni el examen.
 Junto al título principal aparecen el ojo con el contador y «Hoy», «Hace un día»
 o los días transcurridos, calculados en horario de Perú. La fecha corresponde
 a la publicación registrada; los cursos históricos sin ese registro usan su
-fecha de creación. Mostrar portadas o sugerencias no registra vistas: se mantiene
-el conteo al abrir el documento o comenzar la reproducción del video.
+fecha de creación. La vista se registra al entrar a la página de la capacitación,
+sin abrir documentos, reproducir videos ni rendir el examen. Mostrar tarjetas en
+el catálogo o sugerencias no registra vistas. Se conserva una vista por
+capacitación y sesión, excluyendo administradores.
 
 [related-courses.js](../public/frontend/components/related-courses.js) utiliza
 el catálogo público y limpia las cargas pendientes al salir de la página.

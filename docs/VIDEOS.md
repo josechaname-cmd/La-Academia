@@ -50,7 +50,8 @@ final depende del soporte multimedia del navegador/dispositivo.
 | [ByteRange.php](../backend/src/Support/ByteRange.php) | Interpretación de un rango HTTP de bytes |
 | [VideoMaterialsMigration.php](../backend/src/Migrations/VideoMaterialsMigration.php) | Nuevas columnas opcionales en `files` |
 | [material-upload.js](../public/frontend/components/material-upload.js) | Selección, límites, vista previa local y progreso |
-| [material-viewer.js](../public/frontend/components/material-viewer.js) | Reproductor integrado, cambio de material y apertura real |
+| [material-viewer.js](../public/frontend/components/material-viewer.js) | Reproductor integrado, cambio de material y visor |
+| [course.js](../public/frontend/pages/course.js) | Registro de vista al entrar al detalle, independiente del video y del examen |
 | [ContentViews.php](../backend/src/Services/ContentViews.php) | Dedupe por curso/sesión y comprobación de pertenencia del material |
 
 Los binarios van en el directorio privado configurado por `storage`, por defecto
@@ -94,7 +95,7 @@ No se cambian sedes, notas, historial ni contadores existentes.
 | `GET /api/v1/files/{id}` | Video inline, `Accept-Ranges: bytes`, lectura por bloques sin cargar 500 MB en memoria |
 | `HEAD /api/v1/files/{id}` | Mismos permisos y cabeceras, sin cuerpo ni vista |
 | `GET /api/v1/files/{id}?download=1` | Descarga original, mismos permisos |
-| `POST /api/v1/courses/{id}/view` | JSON: `file_id` del material reproducido/abierto; CSRF requerido |
+| `POST /api/v1/courses/{id}/view` | JSON: `{}` al entrar a la capacitación; CSRF requerido; `file_id` opcional por compatibilidad |
 | `DELETE /api/v1/admin/files/{id}` | Elimina material y archivo conservando las reglas de publicación |
 
 Se atienden rangos simples `bytes=a-b`, `bytes=a-` y `bytes=-n` con 206,
@@ -111,23 +112,23 @@ de PHP: el frontend también reconoce esa respuesta aunque no contenga JSON.
 
 ## Regla de vistas
 
-Para video, el frontend notifica al recibir `playing`, cuando comienza la
-reproducción. `loadedmetadata`, `canplay`, `play` sin reproducción, solicitar
-fragmentos, adelantar y descargar un video no generan vistas. En documentos se
-conserva el conteo al abrir el visor o solicitar la descarga desde la interfaz.
+La interfaz registra una vista al entrar a la página de la capacitación. No
+requiere reproducir el video, abrir un documento ni rendir el examen. Cargar
+fragmentos, adelantar, reproducir o descargar materiales no envía vistas adicionales.
 
 La clave sigue siendo **capacitación + sesión**, compartida entre todos los
-materiales. Repetir, cambiar de material, abrir otra pestaña con la misma sesión
-o recargar no aumenta el total. Administradores quedan excluidos. Si se envía
-`file_id`, el servidor exige que pertenezca al curso publicado; el parámetro
-sigue siendo opcional para clientes anteriores. El contador compartido actualiza
-el visor, catálogo, inicio y panel mediante la invalidación de caché existente.
+materiales. Volver a entrar, abrir otra pestaña con la misma sesión o recargar
+no aumenta el total. Administradores quedan excluidos. La solicitud de entrada
+usa un cuerpo `{}`; si un cliente envía `file_id`, el servidor mantiene la
+comprobación de pertenencia al curso publicado.
 
-Son aperturas/inicios de reproducción, no trabajadores únicos ni evidencia de
-visionado completo. No se identifica al visitante por DNI, no se mide porcentaje
-visto y no se condiciona el examen a terminar el video. La API no certifica que
-un navegador haya reproducido realmente; el evento de reproducción lo comunica
-el cliente. No se mezclan estos datos con resultados del examen.
+El contador compartido actualiza el título, catálogo, Inicio y panel mediante
+la invalidación de caché existente. Un fallo al registrar la vista no bloquea
+la capacitación. Las respuestas tardías no modifican otra página al salir.
+
+Son entradas a la capacitación, no trabajadores únicos ni evidencia de visionado
+completo. No se identifica al visitante por DNI ni se mide porcentaje visto.
+El conteo es independiente de los resultados del examen.
 
 ## Instalación y hosting
 
