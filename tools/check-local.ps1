@@ -8,6 +8,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron formularios, acceso y visor.' }
     node tests/list-controls.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron los listados paginados.' }
+    node tests/async-updates.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Fallaron las actualizaciones parciales de formularios y listados.' }
     node tests/design-system.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Design system checks failed.' }
     python tests/check_source.py
@@ -42,6 +44,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló el resumen del panel.' }
     node tests/session-routing.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló la navegación al cambiar de sesión.' }
+    node tests/route-refresh.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la conservación de contexto al actualizar una vista.' }
     node tests/training-enhancements.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Training enhancements failed.' }
     node tests/personnel.mjs

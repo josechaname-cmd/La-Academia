@@ -245,6 +245,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [public-link.js](../public/frontend/components/public-link.js) | Comprueba enlaces públicos antes de renderizar sliders y popups. |
 | [home-popup.js](../public/frontend/components/home-popup.js) | Popup público y vista previa usando la misma composición. |
 | [list-controls.js](../public/frontend/components/list-controls.js) | Paginación local, búsqueda sin tildes y filtrado de tablas administrativas. |
+| [list-refresh.js](../public/frontend/components/list-refresh.js) | Actualización parcial tras guardar; conserva la pantalla y permite reconsultar sin repetir una escritura. |
 | [material-viewer.js](../public/frontend/components/material-viewer.js) | Visor de materiales, vista previa y descargas autorizadas. |
 | [notification-center.js](../public/frontend/components/notification-center.js) | Campana, sondeo, revisiones y navegación a elementos de actividad. |
 | [public-header.js](../public/frontend/components/public-header.js) | Cabecera pública y búsqueda de publicaciones. |
@@ -350,6 +351,8 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [requirements.txt](../tests/requirements.txt) | Dependencia Python de validación XLSX. |
 | [run.php](../tests/run.php) | Suite principal PHP de reglas/negocio; ejecutar mediante isolated.php. |
 | [session-routing.mjs](../tests/session-routing.mjs) | Entrada/salida de sesión y rutas apropiadas por identidad. |
+| [async-updates.mjs](../tests/async-updates.mjs) | CRUD asíncrono de listas, filtros/paginación, error posterior al guardado y respuestas tardías. |
+| [route-refresh.mjs](../tests/route-refresh.mjs) | Actualización del editor conservando scroll, navegación y cambios pendientes; operaciones de pantallas anteriores. |
 | [slider-files.php](../tests/slider-files.php) | Descubrimiento y orden de imágenes del slider. |
 | [slider.mjs](../tests/slider.mjs) | Carrusel/indicadores, movimiento reducido y temporizadores. |
 | [training-enhancements.mjs](../tests/training-enhancements.mjs) | Mejoras y flujos de capacitación en interfaz. |

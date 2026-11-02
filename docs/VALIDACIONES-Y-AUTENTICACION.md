@@ -17,6 +17,16 @@ Estas decisiones siguen los controles de [sesiones de PHP](https://www.php.net/m
 
 El trabajador se identifica por DNI antes del examen; ese flujo no equivale a una cuenta con contraseña. Las visitas a capacitaciones se cuentan al entrar, una por sesión, sin exigir examen ni reproducción del video.
 
+## Peticiones sin recargar la página
+
+La autenticación y el transporte son decisiones distintas: las sesiones PHP funcionan con peticiones asíncronas. `api.js` ya usa `fetch` para consultar/guardar con JSON y enviar la cookie y CSRF. AJAX describe ese intercambio en segundo plano; no exige jQuery ni XML. Para cargas con porcentaje de avance se conserva `XMLHttpRequest.upload`, que ofrece los eventos de progreso necesarios. Referencias: [Fetch y XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API) y [progreso de carga](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload).
+
+Los formularios interceptan el envío nativo. Usuarios, sedes y eventos actualizan sus filas/tarjetas manteniendo búsqueda y paginación. Si el guardado termina pero falla la consulta posterior, el botón de actualizar lista repite únicamente la lectura. Colaboradores, slider y popup también tienen actualizaciones locales; el examen conserva su flujo asíncrono.
+
+Guardar la información de una capacitación mantiene el formulario montado. Actualizar su portada/materiales puede reconstruir el editor para sincronizar sus secciones, pero conserva el menú, el desplazamiento y los textos pendientes de guardar. Las respuestas de una pantalla abandonada no redirigen a la persona ni vuelven a cargar su nueva sección. Crear contenido y publicarlo pueden navegar a otra ruta de la aplicación, sin recargar el documento HTML.
+
+Para la arquitectura actual se mantienen sesiones PHP: permiten comprobar permisos y revocar accesos en el servidor sin añadir gestión de tokens JWT. JWT sigue siendo una opción para necesidades futuras de integración; no constituye por sí solo una mejora de seguridad. [Consideraciones de OWASP sobre JWT y sesiones](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet).
+
 ## Formularios revisados
 
 La interfaz usa [form-validation.js](../public/frontend/components/form-validation.js) para errores por campo, foco, accesibilidad, longitudes, formatos, enteros y archivos. El backend vuelve a comprobar los datos mediante [Validation.php](../backend/src/Support/Validation.php) y las reglas de cada servicio. Ocultar controles o desactivar JavaScript no evita estas comprobaciones.

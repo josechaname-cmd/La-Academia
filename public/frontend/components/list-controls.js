@@ -29,7 +29,8 @@ export function mountPagination(host,{size=20,onChange=()=>{}}={}){
 }
 
 export function mountTableSearch(root){
-  const input=root.querySelector('[data-table-search]'),rows=[...root.querySelectorAll('tbody tr')],table=root.querySelector('.table-scroll'),empty=root.querySelector('[data-table-empty]');
+  const input=root.querySelector('[data-table-search]'),table=root.querySelector('.table-scroll'),empty=root.querySelector('[data-table-empty]');
+  let rows=[...root.querySelectorAll('tbody tr')];
   const pager=mountPagination(root.querySelector('[data-list-pagination]'),{onChange:render});
   function render(){
     const term=searchText(input.value),matching=rows.filter(row=>searchText(row.textContent).includes(term));
@@ -37,4 +38,5 @@ export function mountTableSearch(root){
     table.hidden=!matching.length;empty.hidden=!!matching.length;
   }
   input.addEventListener('input',()=>{pager.reset();render();});render();
+  return {refresh(){rows=[...root.querySelectorAll('tbody tr')];render();}};
 }

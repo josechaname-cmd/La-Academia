@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {JSDOM} from 'jsdom';
+const shell=(await readFile(new URL('../backend/views/shell.php',import.meta.url),'utf8')).replace(/<\?php[\s\S]*?\?>/g,'<footer class="support-footer"></footer>');
+const dom=new JSDOM(shell,{url:'http://localhost/la-academia/#admin/capacitaciones/42',pretendToBeVisual:true});
+for(const key of ['window','document','location','history','FormData','Event','CustomEvent','AbortController','localStorage','Node'])globalThis[key]=dom.window[key];
+globalThis.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});window.matchMedia=globalThis.matchMedia;
+const scrolls=[];window.scrollTo=options=>{scrolls.push(options);Object.defineProperty(window,'scrollY',{configurable:true,value:options.top});};window.HTMLElement.prototype.scrollIntoView=function(){};
+window.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new Event('close'));};window.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};
+const user={id:2,name:'Capacitador de prueba',role:'capacitador',site_id:1};
+const course={id:42,title:'Curso de prueba',description:'Descripción de prueba para el curso',category:'Pruebas',status:'draft',exam_required:0,first_published_at:null,cover_file_id:10,cover_status:'ready',exam:null,materials:[10,11].map(id=>({id,original_name:`Documento ${id}.pdf`,extension:'pdf',size:100,preview_status:'ready'}))};
+let delayCover=false,finishCover;const calls=[];
+globalThis.fetch=async(url,options={})=>{
+ const path=new URL(url).pathname.split('/api/v1/')[1];calls.push({path,method:options.method});let data;
+ if(path==='session')data={csrf:'synthetic',user,setup_required:false};
+ else if(path==='notifications')data={items:[],revision:'0'};
+ else if(path==='categories')data=['Pruebas'];
+ else if(path==='admin/materials/options')data={document_max_bytes:50*1024*1024,video_max_bytes:500*1024*1024,video_enabled:true};
+ else if(path==='admin/courses/42')data=structuredClone(course);
+ else if(path==='admin/courses/42/cover'){
+  if(delayCover)await new Promise(resolve=>finishCover=resolve);
+  course.cover_file_id=JSON.parse(options.body).file_id;data=structuredClone(course);
+ }else if(path==='admin/events')data=[];
+ else if(path==='admin/reports/summary')data={courses:0,published:0,evaluations:0};
+ else throw Error(path);
+ return {ok:true,json:async()=>({data})};
+};
+const flush=async()=>{for(let i=0;i<30;i++)await new Promise(resolve=>setImmediate(resolve));};
+await import('../public/frontend/app.js');await flush();
+const sidebar=document.querySelector('#admin-sidebar'),navigation=document.querySelector('#navigation'),beforeForm=document.querySelector('#course-form');assert(beforeForm);
+const change=(control,value,event='input')=>{control.value=value;control.dispatchEvent(new Event(event,{bubbles:true}));};
+change(beforeForm.elements.title,'Título pendiente de guardar');change(beforeForm.elements.description,'Descripción que sigue pendiente de guardar.');
+change(document.querySelector('#cover-file'),'11','change');Object.defineProperty(window,'scrollY',{configurable:true,value:720});const button=document.querySelector('#save-cover');button.focus();button.click();beforeForm.elements.description.focus();await flush();
+assert.notEqual(document.querySelector('#course-form'),beforeForm,'The materials refresh may replace the editor view');assert.equal(document.querySelector('#course-form').elements.title.value,'Título pendiente de guardar');assert.equal(document.querySelector('#course-form').elements.description.value,'Descripción que sigue pendiente de guardar.');assert.equal(document.querySelector('#course-save').disabled,false,'Unsaved information remains dirty after refreshing material metadata');
+assert.equal(document.querySelector('#admin-sidebar'),sidebar);assert.equal(document.querySelector('#navigation'),navigation);assert.equal(scrolls.at(-1).top,720);assert.equal(document.querySelector('#cover-file').value,'11');
+assert.equal(document.activeElement,document.querySelector('#course-form').elements.description,'The field being edited retains focus after a metadata refresh');
+// A save started on an old screen must never reroute the newly opened screen.
+delayCover=true;change(document.querySelector('#cover-file'),'10','change');document.querySelector('#save-cover').click();await flush();assert(finishCover);
+history.replaceState(null,'','#admin/eventos');window.dispatchEvent(new Event('hashchange'));await flush();const eventGrid=document.querySelector('#admin-events');assert(eventGrid);const reads=calls.length;finishCover();await flush();assert.equal(location.hash,'#admin/eventos');assert.equal(document.querySelector('#admin-events'),eventGrid);assert.equal(calls.length,reads,'An old mutation does not reload the new route');
+Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));
+dom.window.close();console.log('OK refresco de vista: fetch, navegación permanente, scroll y datos pendientes conservados, respuesta antigua sin redirigir ni recargar otra sección.');

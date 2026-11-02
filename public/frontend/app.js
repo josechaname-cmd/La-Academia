@@ -47,7 +47,11 @@ function updateNavigation(admin,identity,parts,announcements){
     else link.removeAttribute('aria-current');
   });
 }
-function commit(page,admin,user,section){
+function commit(page,admin,user,section,preserveScroll=false){
+  const position=preserveScroll?{top:window.scrollY,left:window.scrollX}:null,focusedId=preserveScroll?document.activeElement?.id:null;
+  const focusedName=preserveScroll&&document.activeElement?.closest('#course-form')?document.activeElement.name:null;
+  // Refreshing a cover or material must not discard information still being edited.
+  const draft=preserveScroll?[...(root.querySelector('#course-form')?.elements||[])].filter(control=>control.name&&['INPUT','SELECT','TEXTAREA'].includes(control.tagName)&&!['file','password'].includes(control.type)).map(control=>({name:control.name,value:control.value,checked:control.checked})):[];
   clearPage();let target=root;
   if(admin&&user){
     const key=userKey(user),workspace=root.querySelector('.workspace');
@@ -69,26 +73,32 @@ function commit(page,admin,user,section){
     layout.sync();
   }else{shellKey=null;root.innerHTML=page.html;}
   root.setAttribute('aria-busy','false');root.classList.remove('route-pending');
-  window.scrollTo({top:0,behavior:'instant'});
-  target.tabIndex=-1;target.focus({preventScroll:true});
+  target.tabIndex=-1;
+  if(!preserveScroll){window.scrollTo({top:0,behavior:'instant'});target.focus({preventScroll:true});}
   cleanupPage=page.mount?.(target)??null;
+  if(preserveScroll){
+    const form=target.querySelector('#course-form');
+    for(const value of draft){const control=form?.elements.namedItem(value.name);if(control&&!control.readOnly&&!control.disabled){if(control.type==='checkbox')control.checked=value.checked;else control.value=value.value;}}
+    if(draft.length)form?.dispatchEvent(new Event('input',{bubbles:true}));
+    const focused=focusedId?document.getElementById(focusedId):focusedName?form?.elements.namedItem(focusedName):null;(focused&&target.contains(focused)?focused:target).focus({preventScroll:true});window.scrollTo({...position,behavior:'instant'});
+  }
 }
-async function pageFor(parts,identity){
+async function pageFor(parts,identity,refresh){
   if(parts[0]==='admin'){
     if(!identity.user)return authPage(identity,route);
     const section=parts[1]||'';
     if(section==='capacitaciones'){
       if(parts[2]==='resultados')return reportsPage(parts[3]||'');
-      return parts[2]?courseEditor(parts[2],route,parts[3]==='publicar',identity.user):coursesPage(route);
+      return parts[2]?courseEditor(parts[2],refresh,parts[3]==='publicar',identity.user):coursesPage(refresh);
     }
     if(section==='examen'&&/^\d+$/.test(parts[2]||''))return examEditor(parts[2],route);
     if(section==='eventos'&&parts[2]==='slider')return sliderPage(parts[3]||'');
     if(section==='eventos'&&parts[2]==='popup')return homePopupPage(parts[3]||'');
-    if(section==='eventos')return eventsPage(route,parts[2]||'');
+    if(section==='eventos')return eventsPage(refresh,parts[2]||'');
     if(section==='politicas')return parts[2]?policyEditor(parts[2]):policiesPage(true);
     if(['usuarios','sedes','colaboradores'].includes(section)){
       if(identity.user.role!=='superadmin')throw new Error('Solo superadministración puede gestionar colaboradores, accesos y sedes.');
-      return section==='usuarios'?usersPage(route,identity.user):section==='sedes'?sitesPage(route):personnelPage(route);
+      return section==='usuarios'?usersPage(refresh,identity.user):section==='sedes'?sitesPage(refresh):personnelPage(refresh);
     }
     return overviewPage(identity.user);
   }
@@ -97,13 +107,14 @@ async function pageFor(parts,identity){
   if(parts[0]==='capacitaciones'||parts[0]==='eventos')return catalogPage(parts[0]==='eventos',parts[0]==='eventos'?parts[1]||'':'');
   return portalPage();
 }
-async function route(){
+async function route({preserveScroll=false}={}){
   if(/^#admin\/slider(?:\/|$)/.test(location.hash))history.replaceState(null,'',location.hash.replace('#admin/slider','#admin/eventos/slider'));
   if(location.hash==='#admin/popup')history.replaceState(null,'','#admin/eventos/popup');
   layout.close();document.querySelectorAll('.ui-confirm').forEach(dialog=>dialog.close());
   if(['#admin/banners','#admin/notificaciones','#admin/avisos'].includes(location.hash)){location.replace('#admin/capacitaciones');return;}
   if(location.hash==='#admin/resultados'){location.replace('#admin/capacitaciones/resultados');return;}
   const current=++generation,parts=location.hash.slice(1).split('/'),admin=parts[0]==='admin';
+  const source=location.hash,refresh=()=>current===generation&&source===location.hash?route({preserveScroll:true}):Promise.resolve();
   const section=parts[1]==='eventos'&&['popup','slider'].includes(parts[2])?'eventos/'+parts[2]:parts[1]==='examen'?'capacitaciones':parts[1]==='capacitaciones'&&parts[2]==='resultados'?'capacitaciones/resultados':parts[1]||'';
   document.querySelector('#event-lightbox')?.close();document.querySelector('#dialog')?.close();
   // Keep the current content and permanent navigation visible while the next view loads.
@@ -118,7 +129,7 @@ async function route(){
     document.body.classList.toggle('admin-mode',admin);layout.set(admin&&!!identity.user);
     const needsNavigation=navigationKey!==JSON.stringify([admin,userKey(identity.user)]);
     const [page,announcements]=await Promise.all([
-      pageFor(parts,identity),
+      pageFor(parts,identity,refresh),
       needsNavigation&&identity.user?query('admin','notifications.list').catch(error=>{
         if(error.status===401||error.status===403)throw error;
         return {items:[],unavailable:true};
@@ -126,7 +137,7 @@ async function route(){
     ]);
     if(current!==generation)return;
     updateNavigation(admin,identity,parts,announcements);
-    commit(page,admin,identity.user,section);
+    commit(page,admin,identity.user,section,preserveScroll);
     document.title=(root.querySelector('h1')?.textContent.trim()||(admin?'Administración':'Capacitación interna'))+' · La Academia';
   }catch(error){
     if(current!==generation)return;
