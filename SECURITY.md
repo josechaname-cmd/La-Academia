@@ -14,3 +14,7 @@ copias de seguridad, capturas administrativas ni exportaciones de la base.
   Si se filtra una credencial, revocarla primero y revisar el historial afectado.
 
 No incluir información sensible en issues, mensajes de commit o capturas.
+
+La autenticación implementada usa sesiones PHP y CSRF; JWT es una propuesta.
+Los controles, sus límites y las pruebas están en
+[Validaciones y autenticación](docs/VALIDACIONES-Y-AUTENTICACION.md).

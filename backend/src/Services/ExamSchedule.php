@@ -13,7 +13,7 @@ final class ExamSchedule {
             $value=str_replace('T',' ',$value);
             if(strlen($value)===16)$value.=':00';
             $date=\DateTimeImmutable::createFromFormat('!Y-m-d H:i:s',$value,new \DateTimeZone('America/Lima'));
-            if(!$date||$date->format('Y-m-d H:i:s')!==$value)Http::fail(422,'Indica las fechas de apertura y cierre.',[$key=>'Fecha y hora válidas obligatorias.']);
+            if(!$date||$date->format('Y-m-d H:i:s')!==$value||(int)$date->format('Y')<1000)Http::fail(422,'Indica las fechas de apertura y cierre.',[$key=>'Usa una fecha válida entre los años 1000 y 9999.']);
             $dates[$key]=$value;
         }
         if($dates['closes_at']!==null&&$dates['closes_at']<=$dates['opens_at'])Http::fail(422,'El cierre debe ser posterior a la apertura.',['closes_at'=>'Debe ser posterior a la apertura.']);

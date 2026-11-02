@@ -67,7 +67,7 @@ try {
     file_put_contents($configFile, '<?php return array_replace(is_file('.var_export($private, true).') ? require '.var_export($private, true).' : [], '.var_export($overrides, true).');');
     putenv('ACADEMIA_CONFIG='.$configFile);
     foreach ($targets as $target) {
-        if (!in_array($target, ['run.php', 'backend-regression.php', 'concurrency.php', 'personnel-import.php', 'http-isolated.php', 'exam-policy.php', 'course-management.php', 'database-integrity.php'], true)) throw new RuntimeException('Suite no permitida.');
+        if (!in_array($target, ['run.php', 'backend-regression.php', 'concurrency.php', 'personnel-import.php', 'http-isolated.php', 'exam-policy.php', 'course-management.php', 'database-integrity.php', 'validation-security.php'], true)) throw new RuntimeException('Suite no permitida.');
         $process = proc_open([PHP_BINARY, $root.'/tests/'.$target], [0=>['pipe','r'],1=>STDOUT,2=>STDERR], $pipes, $root, null, ['bypass_shell'=>true,'create_no_window'=>true]);
         if (!is_resource($process)) throw new RuntimeException('No se pudo iniciar la suite.');
         fclose($pipes[0]);

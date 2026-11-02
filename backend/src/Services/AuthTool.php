@@ -10,12 +10,14 @@ final class AuthTool {
     public function __construct(private Database $db, private array $config, bool $touch=true) {
         if (session_status()!==PHP_SESSION_ACTIVE) {
             session_name('LAACADEMIA');
-            session_set_cookie_params(['httponly'=>true,'secure'=>!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off','samesite'=>'Strict','path'=>rtrim(dirname(Http::entryScript($_SERVER['SCRIPT_NAME']??'/la-academia/index.php')),'/').'/']);
-            ini_set('session.use_strict_mode','1'); session_start();
+            $secure=($config['environment']??'local')==='production'||(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off');
+            session_set_cookie_params(['lifetime'=>0,'domain'=>'','httponly'=>true,'secure'=>$secure,'samesite'=>'Strict','path'=>rtrim(dirname(Http::entryScript($_SERVER['SCRIPT_NAME']??'/la-academia/index.php')),'/').'/']);
+            ini_set('session.use_strict_mode','1');ini_set('session.use_cookies','1');ini_set('session.use_only_cookies','1');ini_set('session.use_trans_sid','0');session_start();
         }
         $_SESSION['csrf']??=bin2hex(random_bytes(32));
-        if (isset($_SESSION['admin']) && time()-(int)($_SESSION['last_seen']??0)>($config['session_idle_seconds']??3600)) {
-            unset($_SESSION['admin'],$_SESSION['last_seen']);
+        if(isset($_SESSION['admin']))$_SESSION['authenticated_at']??=$_SESSION['last_seen']??time();
+        if (isset($_SESSION['admin']) && (time()-(int)($_SESSION['last_seen']??0)>=($config['session_idle_seconds']??3600)||time()-(int)$_SESSION['authenticated_at']>=($config['session_absolute_seconds']??43200))) {
+            unset($_SESSION['admin'],$_SESSION['last_seen'],$_SESSION['authenticated_at']);
             session_regenerate_id(true);
             $_SESSION['csrf']=bin2hex(random_bytes(32));
         }
@@ -40,20 +42,23 @@ final class AuthTool {
         $user=$this->user();$empty=$user?false:!(bool)$this->db->run('SELECT id FROM admins LIMIT 1')->fetchColumn();
         return ['user'=>$user,'csrf'=>$_SESSION['csrf'],'setup_required'=>$empty,'setup_allowed'=>$empty&&$this->local()];
     }
-    private function local(): bool { return in_array($_SERVER['REMOTE_ADDR']??'', ['127.0.0.1','::1'],true); }
+    private function local(): bool { return in_array($this->config['environment']??'local',['local','test'],true)&&in_array($_SERVER['REMOTE_ADDR']??'', ['127.0.0.1','::1'],true); }
     private function rateLimit(): void {
         // Local development: loopback logins do not consume or enforce the attempt limit.
-        if ($this->local() && $this->config['local_unlimited_login']) return;
+        if ($this->local() && ($this->config['local_unlimited_login']??false)) return;
         $ip=hash('sha256',$_SERVER['REMOTE_ADDR']??'unknown');
-        $this->db->run('DELETE FROM auth_attempts WHERE created_at < NOW() - INTERVAL 1 DAY');
-        if ((int)$this->db->run('SELECT COUNT(*) FROM auth_attempts WHERE ip_hash=? AND created_at>NOW()-INTERVAL 15 MINUTE',[$ip])->fetchColumn()>=5) Http::fail(429,'Demasiados intentos. Espera 15 minutos.');
-        $this->db->run('INSERT INTO auth_attempts(ip_hash) VALUES (?)',[$ip]);
+        $lock='login:'.substr(hash('sha256',$this->config['db_name'].':'.$ip),0,48);
+        if(!$this->db->run('SELECT GET_LOCK(?,2)',[$lock])->fetchColumn())Http::fail(429,'Acceso en curso. Espera un momento y reintenta.');
+        try{
+            $this->db->run('DELETE FROM auth_attempts WHERE created_at < NOW() - INTERVAL 1 DAY');
+            if ((int)$this->db->run('SELECT COUNT(*) FROM auth_attempts WHERE ip_hash=? AND created_at>NOW()-INTERVAL 15 MINUTE',[$ip])->fetchColumn()>=5) Http::fail(429,'Demasiados intentos. Espera 15 minutos.');
+            $this->db->run('INSERT INTO auth_attempts(ip_hash) VALUES (?)',[$ip]);
+        }finally{$this->db->run('SELECT RELEASE_LOCK(?)',[$lock]);}
     }
     public function setup(array $input): array {
-        if (!$this->local()) Http::fail(403,'La configuración inicial debe realizarse desde este equipo.');
+        if (!$this->local()) Http::fail(403,'La configuración inicial requiere un entorno local con acceso desde el propio servidor.');
         $this->rateLimit();
-        $name=Validation::text($input,'name',3,120);$email=strtolower(Validation::text($input,'email',5,190));$password=\Academia\Validators\Password::forCreation($input['password']??null);
-        if (!filter_var($email,FILTER_VALIDATE_EMAIL)) Http::fail(422,'Correo no válido.');
+        $name=Validation::text($input,'name',3,120);$email=Validation::email($input);$password=\Academia\Validators\Password::forCreation($input['password']??null);
         if (!$this->db->run("SELECT GET_LOCK('la_academia_setup',5)")->fetchColumn()) Http::fail(409,'Configuración en curso.');
         try {
             if ($this->db->run('SELECT COUNT(*) FROM admins')->fetchColumn()) Http::fail(409,'Ya existe un administrador.');
@@ -63,8 +68,8 @@ final class AuthTool {
     }
     public function login(array $input): array {
         $password=$input['password']??null;
-        if(!is_string($password)||$password===''||strlen($password)>200)Http::fail(422,'Completa la contraseña.',['password'=>'Completa este campo.']);
-        return $this->authenticate(strtolower(Validation::text($input,'email',5,190)),$password);
+        if(!is_string($password)||$password===''||strlen($password)>72||str_contains($password,"\0"))Http::fail(422,'Revisa la contraseña.',['password'=>'Escribe la contraseña completa, de hasta 72 bytes.']);
+        return $this->authenticate(Validation::email($input),$password);
     }
     private function authenticate(string $email,string $password,bool $limit=true): array {
         if ($limit) $this->rateLimit();
@@ -73,9 +78,9 @@ final class AuthTool {
         $this->resolvedIdentity=null;
         session_regenerate_id(true);
         $_SESSION['admin']=['id'=>(int)$user['id'],'auth_version'=>(int)$user['auth_version']];
-        $_SESSION['last_seen']=time();$_SESSION['csrf']=bin2hex(random_bytes(32));
+        $_SESSION['last_seen']=time();$_SESSION['authenticated_at']=time();$_SESSION['csrf']=bin2hex(random_bytes(32));
         $this->db->run('DELETE FROM auth_attempts WHERE ip_hash=?',[hash('sha256',$_SERVER['REMOTE_ADDR']??'unknown')]);
         return $this->session();
     }
-    public function logout(): array { $this->resolvedIdentity=null;$this->resolvedUser=null;unset($_SESSION['admin'],$_SESSION['last_seen']);session_regenerate_id(true);$_SESSION['csrf']=bin2hex(random_bytes(32));return $this->session(); }
+    public function logout(): array { $this->resolvedIdentity=null;$this->resolvedUser=null;unset($_SESSION['admin'],$_SESSION['last_seen'],$_SESSION['authenticated_at']);session_regenerate_id(true);$_SESSION['csrf']=bin2hex(random_bytes(32));return $this->session(); }
 }

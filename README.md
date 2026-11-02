@@ -111,8 +111,13 @@ código actual.
 4. Configurar Apache con **`public/` como raíz web**, HTTPS y permisos de escritura
    en el almacenamiento privado. La plantilla está en
    [public-directory.conf.example](tools/apache/public-directory.conf.example).
-5. Completar la creación inicial del superadministrador mediante acceso local
-   autorizado y cargar sedes, colaboradores y contenido desde el panel.
+5. Preparar el primer superadministrador mediante acceso local autorizado en
+   entorno `local`, con acceso externo bloqueado. Volver a `production` antes de
+   habilitar el portal; en producción `/setup` está deshabilitado y la cookie
+   requiere HTTPS. Cargar sedes, colaboradores y contenido desde el panel.
+
+La autenticación usa **sesiones PHP y CSRF; no JWT**. Consulta las
+[validaciones, duplicados y autenticación](docs/VALIDACIONES-Y-AUTENTICACION.md).
 
 El `.htaccess` de la raíz corresponde al entorno local XAMPP y restringe el
 acceso al equipo. Para hosting se debe aplicar la

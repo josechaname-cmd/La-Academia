@@ -23,7 +23,7 @@ final class PolicyTool {
   $hasCover=$coverUpload&&($coverUpload['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE;
   if(!$id&&!$hasFile)Http::fail(422,'Selecciona el PDF de la política.',['file'=>'Adjunta un PDF.']);
   if(!$id&&!$hasCover)Http::fail(422,'Selecciona una imagen de portada.',['cover_image'=>'Adjunta una imagen JPG, PNG o WEBP.']);
-  if($hasFile&&strtolower(pathinfo($upload['name']??'',PATHINFO_EXTENSION))!=='pdf')Http::fail(422,'Las políticas solo admiten archivos PDF.',['file'=>'Selecciona un PDF.']);
+  if($hasFile&&(!is_string($upload['name']??null)||strtolower(pathinfo($upload['name'],PATHINFO_EXTENSION))!=='pdf'))Http::fail(422,'Las políticas solo admiten un archivo PDF.',['file'=>'Selecciona un PDF.']);
   return $this->db->transaction(function()use($upload,$coverUpload,$id,$actor,$title,$description,$active,$hasFile,$hasCover){
    if($id)$this->db->run('SELECT id FROM policies WHERE id=? FOR UPDATE',[$id])->fetch();
    $current=$id?$this->get($id,$actor):null;

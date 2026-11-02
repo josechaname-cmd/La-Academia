@@ -95,6 +95,7 @@ return [
     'pdftoppm' => '/usr/bin/pdftoppm',
     'local_unlimited_login' => false,
     'session_idle_seconds' => 3600,
+    'session_absolute_seconds' => 43200,
     'preview_worker_enabled' => false,
 ];
 ```
@@ -132,7 +133,7 @@ El administrador completa usuario/grupo, socket, capacidad del pool y conexión 
      /usr/bin/php /srv/academia/brena/backend/scripts/migrate.php
    ```
 
-4. Inicializar la primera cuenta de superadmin desde el servidor por loopback o mediante una base inicial preparada y revisada. El endpoint `/setup` exige dirección de origen local y que no exista un administrador. No hay actualmente un comando CLI de creación de superadmin ni se debe abrir indiscriminadamente ese endpoint a Internet.
+4. Inicializar la primera cuenta de superadmin desde el servidor por loopback o mediante una base inicial preparada y revisada. El endpoint `/setup` exige entorno `local`/`test`, dirección de origen local y que no exista un administrador; está deshabilitado en `production`. Si se usa para inicializar, mantener el acceso externo bloqueado y volver a `production` antes de habilitarlo. No hay actualmente un comando CLI de creación de superadmin ni se debe abrir indiscriminadamente ese endpoint a Internet.
 5. Si se usa el endpoint, obtener primero cookie y CSRF de `/api/v1/session` y enviarlos al POST `/api/v1/setup`. El operador puede acceder desde el propio servidor usando el nombre del VirtualHost y resolución a loopback, respetando su certificado. El payload contiene nombre, email y contraseña; mantenerlo fuera de logs/historial de comandos. Después verificar que `setup_required` sea false.
 6. Crear la sede, importar solo su padrón validado, crear sus capacitadores y publicar su contenido. Una instalación nueva de Norte no debe recibir un clon con todos los trabajadores y resultados de Breña.
 7. Habilitar acceso público después de comprobar cuenta inicial, rutas y separación. Si hay proxy, revisar cómo llega `REMOTE_ADDR`: no interpretar a todos los clientes como loopback.
@@ -211,7 +212,7 @@ La aplicación omite el atributo Domain de la cookie, por lo que el navegador la
 
 Además de cookies separadas, usar almacenamiento de sesiones independiente en el servidor. Las cuentas usan IDs numéricos que pueden coincidir entre bases; no compartir archivos de sesión ni un mismo namespace Redis entre instancias. El nombre de cookie está fijado en `AuthTool`; no existe una clave de configuración para renombrarlo.
 
-Si un proxy termina TLS, configurar de forma confiable la indicación HTTPS hacia PHP y la IP del cliente. La aplicación no incorpora una lista de proxies confiables ni interpreta libremente `X-Forwarded-*`. Verificar Secure y los límites por IP con la topología real.
+Si un proxy termina TLS, configurar de forma confiable la indicación HTTPS hacia PHP y la IP del cliente. La aplicación no incorpora una lista de proxies confiables ni interpreta libremente `X-Forwarded-*`. En producción la cookie siempre lleva Secure, incluso detrás de proxy; el navegador debe usar HTTPS. Verificar los límites por IP con la topología real. La exención de login local no funciona en producción. Ver [validaciones y autenticación](VALIDACIONES-Y-AUTENTICACION.md).
 
 ## 6. Conversión en Linux
 

@@ -19,7 +19,7 @@ final class ContentAgent implements AgentInterface {
             if(!$this->files->visible($file))$this->access->requirePrivateFile($file);
             if($action==='preview.status')return $this->previews->status((int)$file['id']);
             if($action==='thumbnail'||$action==='preview')$this->previews->stream($file,$action==='preview');
-            if($action==='file')$this->files->stream($file,isset($_GET['download']));
+            if($action==='file')$this->files->stream($file,($_GET['download']??'0')==='1');
             return ['name'=>$file['original_name'],'slides'=>json_decode($file['slides_json']?:'[]',true)];
         }
         $actor=$this->auth->requireAdmin();

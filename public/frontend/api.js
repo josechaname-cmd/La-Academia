@@ -2,6 +2,17 @@ import {createReadCache} from './read-cache.js?v=20261030-9';
 const endpoint = new URL('../api/v1/', import.meta.url);
 let sessionData=null,sessionPromise=null,sessionFetchedAt=0;
 const reads=createReadCache();let activityRevision=null;
+const pendingWrites=new Map(),fileIds=new WeakMap();let fileSequence=0;
+function stable(value){return JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item);}
+async function writeOnce(agent,action,data,files,task){
+ if(!sessionData)await session();
+ const attachments=Object.entries(files).filter(([,file])=>file).map(([name,file])=>{if(!fileIds.has(file))fileIds.set(file,++fileSequence);return [name,fileIds.get(file)];}).sort();
+ const key=stable([sessionData.csrf,agent,action,data,attachments]);
+ let pending=pendingWrites.get(key);
+ if(!pending){pending=Promise.resolve().then(task).finally(()=>{if(pendingWrites.get(key)===pending)pendingWrites.delete(key);});pendingWrites.set(key,pending);}
+ // Only simultaneous identical operations are shared. Completed writes are not cached or replayed.
+ return structuredClone(await pending);
+}
 export function invalidateNavigationCache(){reads.clear();}
 export function observeActivity(feed){
  const revision=String(feed.revision??'0'),changed=activityRevision!==null&&activityRevision!==revision;
@@ -92,6 +103,7 @@ export function query(agent,action,params={}){
 export async function command(agent,action,data={}){
  // Refresh CSRF before authenticating. Failed mutations are never automatically replayed.
  if(agent==='admin'&&['login','setup'].includes(action))await session(true);
+ return writeOnce(agent,action,data,{},async()=>{
  // Clear both before and after writes so an older in-flight read cannot refill the cache.
  reads.clear();
  try{
@@ -100,9 +112,10 @@ export async function command(agent,action,data={}){
   if(agent==='admin'&&action==='users.save')sessionFetchedAt=0;
   return result;
  }finally{reads.clear();}
+ });
 }
-export async function upload(agent,action,file,params={},options={}){reads.clear();try{return await request(agent,action,{data:params,file,onProgress:options.onProgress});}finally{reads.clear();}}
-export async function uploadBundle(agent,action,files,params={},options={}){reads.clear();try{return await request(agent,action,{data:params,files,onProgress:options.onProgress});}finally{reads.clear();}}
+export async function upload(agent,action,file,params={},options={}){return writeOnce(agent,action,params,{file},async()=>{reads.clear();try{return await request(agent,action,{data:params,file,onProgress:options.onProgress});}finally{reads.clear();}});}
+export async function uploadBundle(agent,action,files,params={},options={}){return writeOnce(agent,action,params,files,async()=>{reads.clear();try{return await request(agent,action,{data:params,files,onProgress:options.onProgress});}finally{reads.clear();}});}
 
 export function examResultsUrl(id){return new URL(`admin/reports/exams/${encodeURIComponent(id)}/export`,endpoint).href;}
 

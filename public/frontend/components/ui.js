@@ -30,8 +30,10 @@ export function modal(html){
   dialog.addEventListener('close',()=>{if(trigger?.isConnected)trigger.focus({preventScroll:true});},{once:true});
   dialog.showModal();(dialog.querySelector('input:not([disabled]):not([readonly]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]):not([readonly])')||dialog.querySelector('.close'))?.focus();
 }
+const pendingActions=new WeakSet();
 export async function busy(button,task){
-  if(button.disabled)return;
+  if(button.disabled||pendingActions.has(button))return;
+  pendingActions.add(button);
   const nodes=[...button.childNodes],wasBusy=button.getAttribute('aria-busy'),form=button.form||button.closest('form');
   form?.querySelector('[data-action-error]')?.remove();
   const iconOnly=!button.textContent.trim()&&button.querySelector('svg');
@@ -42,7 +44,7 @@ export async function busy(button,task){
     if(form?.closest('dialog[open]')){const feedback=document.createElement('div');feedback.className='ui-alert';feedback.dataset.tone='error';feedback.dataset.actionError='';feedback.setAttribute('role','alert');feedback.textContent=error.message;form.prepend(feedback);}
     else toast(error.message,'error');
   }
-  finally{button.disabled=false;button.replaceChildren(...nodes);if(wasBusy===null)button.removeAttribute('aria-busy');else button.setAttribute('aria-busy',wasBusy);}
+  finally{pendingActions.delete(button);button.disabled=false;button.replaceChildren(...nodes);if(wasBusy===null)button.removeAttribute('aria-busy');else button.setAttribute('aria-busy',wasBusy);}
 }
 export function confirmAction(message,{label='Confirmar',title='Confirmar acción',tone='danger'}={}){
   const existing=document.querySelector('.ui-confirm');if(existing){existing.querySelector('[data-cancel]')?.focus();return Promise.resolve(false);}

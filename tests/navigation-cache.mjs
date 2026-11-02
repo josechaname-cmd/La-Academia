@@ -60,5 +60,19 @@ try{
   observeActivity({revision:'two',items:[]});await query('content','admin.list');
   assert.equal(count('admin/courses'),beforeActivity+1,'Unchanged activity retains the cache');
 
+  const writes=()=>requests.filter(r=>r.method!=='GET').length;
+  let previous=writes();
+  const [savedOne,savedTwo]=await Promise.all([command('content','save',{id:99,title:'Duplicado',description:'Prueba'}),command('content','save',{description:'Prueba',title:'Duplicado',id:99})]);
+  assert.equal(writes(),previous+1,'Identical concurrent writes are sent once regardless of property order');
+  savedOne[0].revision=-1;assert.notEqual(savedTwo[0].revision,-1,'Consumers do not share mutable results');
+  await command('content','save',{id:99,title:'Duplicado',description:'Prueba'});assert.equal(writes(),previous+2,'Later intentional writes are allowed');
+  const attachment=new Blob(['synthetic']);previous=writes();
+  await Promise.all([upload('admin','image.upload',attachment),upload('admin','image.upload',attachment)]);assert.equal(writes(),previous+1,'The same pending attachment is uploaded once');
+  previous=writes();await Promise.all([command('content','save',{id:99,title:'Primero'}),command('content','save',{id:99,title:'Otro'})]);assert.equal(writes(),previous+2,'Distinct payloads remain separate operations');
+  const successfulFetch=globalThis.fetch;let failedCalls=0;
+  globalThis.fetch=async()=>{failedCalls++;throw Error('offline');};
+  const failed=await Promise.allSettled([command('content','save',{id:99}),command('content','save',{id:99})]);assert(failed.every(result=>result.status==='rejected'));assert.equal(failedCalls,1,'Failed mutations are never automatically replayed');
+  globalThis.fetch=successfulFetch;await command('content','save',{id:99});
+
 }finally{globalThis.fetch=realFetch;Date.now=realNow;}
 console.log('OK navigation cache: TTL, deduplication, copy isolation, limits, races, retry, writes, uploads, sessions and live results.');

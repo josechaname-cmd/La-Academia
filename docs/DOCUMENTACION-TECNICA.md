@@ -160,6 +160,7 @@ No hay un lector automático de `.env`. Escribir variables en un archivo `.env` 
 | `max_attempts` | 2 | Respaldo de compatibilidad; manda el límite guardado en cada versión de examen |
 | `local_unlimited_login` | true | Exención local del límite de login; poner false en producción |
 | `session_idle_seconds` | 3600 | Caducidad de la sesión administrativa por inactividad |
+| `session_absolute_seconds` | 43200 | Duración máxima desde el ingreso, aunque haya actividad |
 | `preview_worker_enabled` | true implícito | Permite el disparador automático Windows; en Linux usar el worker CLI programado |
 
 La carga de personal está limitada a 8 MB y admite CSV/XLSX. El servidor web/PHP debe admitir los límites de la aplicación; la configuración local fija `upload_max_filesize=500M`, `post_max_size=512M` y `memory_limit=256M`.
@@ -224,13 +225,13 @@ Las migraciones incluyen compatibilidad histórica: por ejemplo, `OrganizationMi
 
 `CoursePolicy`, `CourseAccess` y `AccessRepository` centralizan la comprobación administrativa por sede, incluida la pertenencia de archivos/exámenes y bloqueos en mutaciones. Los permisos reales los impone el servidor; ocultar un botón no concede ni restringe autorización.
 
-La cookie administrativa se llama `LAACADEMIA`, usa HttpOnly, SameSite Strict y Secure cuando PHP reconoce HTTPS. No se establece Domain compartido. Su path se deriva del punto de entrada: `/la-academia/` en el entorno local y `/` al servir `public` como raíz del dominio. La sesión se regenera al autenticar y usa `auth_version` para detectar revocaciones. El sondeo de notificaciones no prolonga la sesión por sí solo.
+La cookie administrativa se llama `LAACADEMIA`, usa HttpOnly, SameSite Strict y Secure siempre en producción o cuando PHP reconoce HTTPS en otros entornos. No se establece Domain compartido. Su path se deriva del punto de entrada: `/la-academia/` en el entorno local y `/` al servir `public` como raíz del dominio. La sesión se regenera al autenticar y usa `auth_version` para detectar revocaciones. El sondeo de notificaciones no prolonga la sesión por sí solo.
 
-El login limita cinco intentos en quince minutos por la huella de IP, salvo la exención local configurada. La identificación de trabajador tiene su control independiente y una autorización temporal de quince minutos por curso/DNI dentro de la sesión. Esto sigue siendo identificación sin contraseña del trabajador.
+El login limita cinco intentos en quince minutos por la huella de IP, con reserva serializada para solicitudes simultáneas. La exención local solo se aplica en `local`/`test` por loopback; producción siempre limita. La identificación de trabajador tiene su control independiente y una autorización temporal de quince minutos por curso/DNI dentro de la sesión. Esto sigue siendo identificación sin contraseña del trabajador.
 
 Los cambios de API requieren CSRF. La ruta decide rol y método. Los errores incluyen `request_id` y mensajes públicos saneados; los detalles técnicos van al log del servidor. El contrato de éxito normalmente es `data` + `meta`; archivos y exportaciones son respuestas binarias. Cabeceras del kernel: CSP, nosniff, no-store, Referrer-Policy y protección de frames.
 
-La API no usa JWT ni un servicio externo de autenticación. `PLAN-JWT.md` es una propuesta, no una descripción del sistema desplegado.
+La API no usa JWT ni un servicio externo de autenticación. `PLAN-JWT.md` es una propuesta, no una descripción del sistema desplegado. Ver [validaciones y autenticación](VALIDACIONES-Y-AUTENTICACION.md) para reglas por formulario, duplicados, vencimiento absoluto y pruebas.
 
 ## 8. Archivos, conversión y tareas de fondo
 

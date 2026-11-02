@@ -14,7 +14,12 @@ if(in_array('--worker',$argv,true)){
     $deadline=microtime(true)+10;
     while(!is_file($barrier.'.go')){if(microtime(true)>$deadline)throw new RuntimeException('Barrier timeout');usleep(10000);}
     try{
-        if($job['operation']==='submit')$result=$attempts->submit(['token'=>$job['token'],'answers'=>[$job['answer']??1]]);
+        if($job['operation']==='login'){
+            session_save_path(dirname($config['storage']).'/sessions');$_SERVER['REMOTE_ADDR']='198.51.100.23';
+            $result=(new Academia\Services\AuthTool($db,$config))->login(['email'=>'concurrent-absent@example.invalid','password'=>'Wrong synthetic password']);
+        }
+        elseif($job['operation']==='user')$result=(new Academia\Repositories\UserRepository($db))->save(['name'=>'Acceso concurrente','email'=>$job['email'],'role'=>'superadmin','active'=>1,'password'=>'Synthetic concurrent password'],null,$job['actor']);
+        elseif($job['operation']==='submit')$result=$attempts->submit(['token'=>$job['token'],'answers'=>[$job['answer']??1]]);
         elseif($job['operation']==='start')$result=$attempts->start($job['course'],['dni'=>$job['dni']]);
         else $result=(new Academia\Repositories\HomePopupRepository($db))->setActive($job['id'],1);
         echo json_encode(['status'=>200,'score'=>$result['score']??null]);
@@ -68,4 +73,15 @@ for($i=0;$i<5;$i++){
     $result=pair([['operation'=>'popup','id'=>$ids[0]],['operation'=>'popup','id'=>$ids[1]]],$config);
     if(array_column($result,'status')!==[200,200]||(int)$db->run('SELECT COUNT(*) FROM home_popup WHERE active=1')->fetchColumn()!==1)throw new RuntimeException('Exclusive popup failed');$checks++;
 }
-echo 'OK '.$checks." verificaciones concurrentes: 26 pares de procesos, idempotencia, inicio/envío y popup exclusivo.\n";
+$ip=hash('sha256','198.51.100.23');
+for($i=0;$i<5;$i++){
+    $db->run('DELETE FROM auth_attempts WHERE ip_hash=?',[$ip]);
+    for($n=0;$n<4;$n++)$db->run('INSERT INTO auth_attempts(ip_hash) VALUES(?)',[$ip]);
+    $result=pair([['operation'=>'login'],['operation'=>'login']],$config);$statuses=array_column($result,'status');sort($statuses);
+    if($statuses!==[401,429]||(int)$db->run('SELECT COUNT(*) FROM auth_attempts WHERE ip_hash=?',[$ip])->fetchColumn()!==5)throw new RuntimeException('Concurrent login exceeded its limit');$checks++;
+}
+$db->run("INSERT INTO admins(name,email,password_hash,role) VALUES('Actor concurrente','concurrent-actor@example.invalid',?,'superadmin')",[password_hash('Synthetic actor password',PASSWORD_DEFAULT)]);$actor=(int)$db->pdo->lastInsertId();
+$job=['operation'=>'user','email'=>'concurrent-unique@example.invalid','actor'=>$actor];
+$result=pair([$job,$job],$config);$statuses=array_column($result,'status');sort($statuses);
+if($statuses!==[200,409]||(int)$db->run('SELECT COUNT(*) FROM admins WHERE email=?',[$job['email']])->fetchColumn()!==1)throw new RuntimeException('Concurrent duplicate account');$checks++;
+echo 'OK '.$checks." verificaciones concurrentes: 32 pares de procesos, idempotencia, inicio/envío, popup, acceso limitado y correo único.\n";

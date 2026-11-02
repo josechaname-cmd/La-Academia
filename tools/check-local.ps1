@@ -64,7 +64,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la validación de actividad.' }
     & 'C:\xampp\php\php.exe' tests/cache.php
     if ($LASTEXITCODE -ne 0) { throw 'Falló la validación de caché.' }
-    & 'C:\xampp\php\php.exe' tests/isolated.php run.php backend-regression.php personnel-import.php concurrency.php http-isolated.php exam-policy.php course-management.php database-integrity.php
+    & 'C:\xampp\php\php.exe' tests/isolated.php run.php backend-regression.php personnel-import.php concurrency.php http-isolated.php exam-policy.php course-management.php database-integrity.php validation-security.php
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron las pruebas aisladas del backend.' }
     python tests/report_xlsx.py
     if ($LASTEXITCODE -ne 0) { throw 'Falló la exportación XLSX sintética.' }

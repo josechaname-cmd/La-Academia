@@ -144,6 +144,25 @@ guest.call('session', 'POST', {}, 422)
 guest.call('courses', 'PATCH', {}, 405)
 guest.call('missing', expected=404)
 
+# Query ambiguity and method/media contracts are rejected before any operation.
+assert len({(route[0], route[1]) for route in fixture['routes']}) == len(fixture['routes'])
+for template in {route[1] for route in fixture['routes']}:
+    path = re.sub(r'\{[a-z_]+\}', '1', template).lstrip('/')
+    _, headers = guest.call(path, 'OPTIONS', expected=405)
+    assert headers.get('Allow'), path
+for path in ['categories?scope=event&scope=course', 'categories?scope[]=course', 'categories?scope=course&%73cope=event', 'courses?unused=1&unused=2', 'courses?bad%00key=1']:
+    guest.call(path, expected=400)
+guest.call('courses?download=yes', expected=422)
+guest.call('session', 'POST', expected=415, raw=b'{}', content='text/plainapplication/json')
+a.call(f'admin/courses/{own}', 'PATCH', expected=415, raw=b'x', content='multipart/form-data; boundary=Synthetic')
+guest.call('session', 'POST', {'email': 'not-an-email', 'password': fixture['password']}, 422)
+guest.call('session', 'POST', {'email': 'http0@example.invalid', 'password': fixture['password']+'\0'}, 422)
+a.call(f'admin/courses/{own}', 'PATCH', {'title': 'Mal\0formado', 'category': 'Pruebas', 'description': 'Descripción de prueba'}, 422)
+a.call(f'admin/courses/{identified_course}/exam', 'PUT', {**policy_input, 'opens_at': '0001-01-01T00:00'}, 422)
+a.call(f'admin/courses/{identified_course}/exam', 'PUT', {**policy_input, 'max_attempts': True}, 422)
+same_exam, _ = a.call(f'admin/courses/{identified_course}/exam', 'PUT', policy_input)
+assert same_exam['id'] == saved_exam['id'], 'Saving an unchanged exam does not create duplicate versions'
+
 # Personnel writes exercise the real router, CSRF and restricted SQL account.
 superadmin = Client()
 superadmin.login(2)

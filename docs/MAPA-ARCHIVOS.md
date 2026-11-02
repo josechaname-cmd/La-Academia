@@ -358,6 +358,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [event-gallery.mjs](../tests/event-gallery.mjs) | Álbumes, fechas, navegación por miniaturas/teclado/táctil, errores de imagen, foco y limpieza sin vistas adicionales. |
 | [course-related.mjs](../tests/course-related.mjs) | Sugerencias por sede/categoría, límite, portadas, reintento, respuestas tardías y ausencia de vistas automáticas. |
 | [database-integrity.php](../tests/database-integrity.php) | Instalación desde cero, migraciones repetidas, índices omitidos, duplicados, diagnóstico y planes EXPLAIN. |
+| [validation-security.php](../tests/validation-security.php) | Datos inválidos de formularios, duplicados, campos de examen, sesiones, CSRF y configuración segura de producción; solo en base aislada. |
 | [home-course-shelf.mjs](../tests/home-course-shelf.mjs) | Límite de tres filas, navegación lateral, teclado, adaptación y limpieza del catálogo de Inicio. |
 | [policies-http.py](../tests/policies-http.py) | API de políticas con PDF/portada reales de prueba, permisos, privacidad, reemplazo y eliminación. |
 | [policies.mjs](../tests/policies.mjs) | Interfaz de políticas: búsqueda, visor, descarga, editor, portadas y confirmaciones. |

@@ -1,5 +1,7 @@
 # Plan de migración de sesiones a JWT
 
+**Estado: propuesta no implementada.** La aplicación actual usa sesiones PHP y CSRF. Consulta [Validaciones y autenticación](VALIDACIONES-Y-AUTENTICACION.md) para el comportamiento vigente y la configuración de producción.
+
 ## Objetivo
 
 Reemplazar gradualmente la sesión PHP del panel administrativo por tokens JWT sin perder las protecciones actuales: cierre de sesión, expiración por inactividad, revocación al cambiar contraseña, control por rol y sede, y CSRF.

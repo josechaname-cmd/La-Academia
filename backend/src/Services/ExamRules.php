@@ -7,14 +7,24 @@ final class ExamRules {
     public function validate(mixed $questions): array {
         if(!is_array($questions)||!array_is_list($questions)||count($questions)<1)Http::fail(422,'El examen debe tener al menos una pregunta.');
         $valid=[];$prompts=[];
-        foreach($questions as $question){
+        foreach($questions as $index=>$question){
             if(!is_array($question))Http::fail(422,'Pregunta no válida.');
-            $prompt=Validation::text($question,'prompt',8,500);$key=mb_strtolower($prompt);if(isset($prompts[$key]))Http::fail(422,'Las preguntas no pueden repetirse.');$prompts[$key]=true;
+            try{
+            $prompt=Validation::text($question,'prompt',8,500);$key=mb_strtolower(preg_replace('/\s+/u',' ',$prompt));if(isset($prompts[$key]))Http::fail(422,'Las preguntas no pueden repetirse.',['prompt'=>'Esta pregunta ya está en el examen.']);$prompts[$key]=true;
             $choices=$question['choices']??null;if(!is_array($choices)||!array_is_list($choices)||count($choices)!==3)Http::fail(422,'Cada pregunta necesita tres alternativas.');
-            $choices=array_map(fn($choice)=>Validation::text(['choice'=>$choice],'choice',1,300),$choices);
-            if(count(array_unique(array_map('mb_strtolower',$choices)))!==3)Http::fail(422,'Las alternativas deben ser diferentes.');
+            $seen=[];
+            foreach($choices as $option=>$choice){
+                $choices[$option]=Validation::text(['choices.'.$option=>$choice],'choices.'.$option,1,300);
+                $key=mb_strtolower(preg_replace('/\s+/u',' ',$choices[$option]));
+                if(isset($seen[$key]))Http::fail(422,'Las alternativas deben ser diferentes.',['choices.'.$option=>'Esta alternativa está repetida.']);
+                $seen[$key]=true;
+            }
             $correct=Validation::number($question,'correct',0,2);$explanation=isset($question['explanation'])?Validation::text($question,'explanation',0,1000):'';
             $valid[]=['prompt'=>$prompt,'choices'=>$choices,'correct'=>$correct,'explanation'=>$explanation];
+            }catch(\Academia\Http\ApiException $error){
+                $fields=[];foreach($error->fields as $field=>$message)$fields[$field==='correct'?'correct-'.$index:'questions.'.$index.'.'.$field]=$message;
+                throw new \Academia\Http\ApiException($error->getCode(),$error->getMessage(),$fields,$error->errorCode);
+            }
         }return $valid;
     }
     public function publicQuestions(array $questions): array { return array_map(fn($q)=>['prompt'=>$q['prompt'],'choices'=>$q['choices']],$questions); }

@@ -10,8 +10,7 @@ final class CategoryRepository {
         return Validation::choice(['scope'=>$scope],'scope',['course','event']);
     }
     private function name(array $data,string $scope): string {
-        $name=Validation::text($data,'name',2,$scope==='course'?40:80);
-        return preg_replace('/\s+/u',' ',$name);
+        return Validation::name($data,'name',2,$scope==='course'?40:80);
     }
     public function list(string $scope): array {
         return $this->db->run('SELECT name FROM categories WHERE scope=? ORDER BY id',[$this->scope($scope)])->fetchAll(\PDO::FETCH_COLUMN);
@@ -25,7 +24,7 @@ final class CategoryRepository {
         $scope=Validation::choice($data,'scope',['course','event']);$name=$this->name($data,$scope);
         if(mb_strlen($name)<2)Http::fail(422,'Escribe al menos 2 caracteres para la categoría.');
         try{$this->db->run('INSERT INTO categories(scope,name) VALUES(?,?)',[$scope,$name]);}
-        catch(\PDOException $error){if(($error->errorInfo[1]??null)===1062)Http::fail(409,'Esta categoría ya existe. Selecciónala en la lista.');throw $error;}
+        catch(\PDOException $error){if(($error->errorInfo[1]??null)===1062)Http::fail(409,'Esta categoría ya existe. Selecciónala en la lista.',['name'=>'Ya existe una categoría con este nombre.']);throw $error;}
         return ['id'=>(int)$this->db->pdo->lastInsertId(),'scope'=>$scope,'name'=>$name];
     }
 }

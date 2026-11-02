@@ -5,7 +5,7 @@ $private=getenv('ACADEMIA_CONFIG')?:$project.'/storage/config.php';
 $local=is_file($private)?require $private:[];
 return array_replace([
     'app_name'=>'La Academia',
-    'environment'=>'local',
+    'environment'=>getenv('ACADEMIA_ENV')?:'local',
     'support_email'=>getenv('ACADEMIA_SUPPORT_EMAIL')?:'soporte@example.com',
     'db_host'=>getenv('ACADEMIA_DB_HOST')?:'127.0.0.1',
     'db_name'=>getenv('ACADEMIA_DB_NAME')?:'la_academia',
@@ -23,4 +23,5 @@ return array_replace([
     'cache_directory'=>getenv('ACADEMIA_CACHE')?:$project.'/storage/cache',
     'cache_ttl'=>60,
     'session_idle_seconds'=>3600,
+    'session_absolute_seconds'=>43200,
 ],$local);

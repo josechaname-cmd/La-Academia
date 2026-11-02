@@ -27,6 +27,24 @@ assert.equal(form.elements.email.getAttribute('aria-invalid'),'true','External s
 assert.match(form.textContent,/Este correo ya existe/);
 form.reset();assert.equal(form.elements.email.validity.customError,false);assert.equal(form.querySelector('[data-field-error]'),null);assert(form.querySelector('.validation-summary').hidden);assert.equal(form.elements.password.type,'password');
 
+root.innerHTML=`<form>${field('Texto','title','Bien','minlength="3" maxlength="5"')}${field('Entero','count','2','type="number" min="1" max="10" step="1"')}${field('Clave','password','Synthetic password','type="password" minlength="12"')}<input type="file" name="images" multiple accept=".png,.jpg" data-max-mb="8"><textarea name="questions.0.prompt"></textarea><input type="radio" name="correct-0" value="0"><input type="radio" name="correct-0" value="1"></form>`;
+const strict=root.querySelector('form'),check=attachValidation(strict),message=(control,value,pattern)=>{control.value=value;assert.equal(check(),false);assert.match(strict.textContent,pattern);};
+message(strict.elements.title,'Demasiado largo',/como máximo 5/);strict.elements.title.value='Bien';
+message(strict.elements.count,'1e1',/sin decimales ni exponentes/);strict.elements.count.value='2';
+message(strict.elements.password,'á'.repeat(37),/72 bytes/);strict.querySelector('[data-password-toggle]').click();assert.equal(check(),false,'Password byte limits survive visibility toggle');strict.elements.password.value='Valid password 123';
+message(strict.elements.title,'Ab\u0001c',/caracteres no válidos/);strict.elements.title.value='Bien';
+const files=strict.elements.images,setFiles=items=>Object.defineProperty(files,'files',{configurable:true,value:items});
+setFiles([new window.File(['ok'],'first.png'),new window.File(['bad'],'second.exe')]);assert.equal(check(),false,'Every selected file is validated');
+setFiles([new window.File(['ok'],'first.png'),new window.File([],'empty.png')]);assert.equal(check(),false);assert.match(strict.textContent,/está vacío/);
+setFiles([{name:'first.png',size:1},{name:'large.jpg',size:8*1024*1024+1}]);assert.equal(check(),false);assert.match(strict.textContent,/máximo 8 MB/);
+setFiles([new window.File(['ok'],'valid.PNG')]);assert.equal(check(),true);
+strict.dispatchEvent(new CustomEvent('api-validation',{detail:{'questions.0.prompt':'Enunciado repetido.','correct-0':'Selecciona una respuesta.'}}));
+assert.equal(strict.elements.namedItem('questions.0.prompt').getAttribute('aria-invalid'),'true');
+strict.elements.namedItem('questions.0.prompt').dispatchEvent(new Event('input',{bubbles:true}));strict.elements.namedItem('correct-0')[1].checked=true;strict.elements.namedItem('correct-0')[1].dispatchEvent(new Event('change',{bubbles:true}));assert.equal(check(),true,'Changing another radio clears the server error for its group');
+const action=document.createElement('button');strict.append(action);let finishAction,actionCalls=0;
+const activeAction=busy(action,async()=>{actionCalls++;await new Promise(resolve=>finishAction=resolve);});action.disabled=false;
+await busy(action,async()=>actionCalls++);assert.equal(actionCalls,1,'A UI refresh cannot re-enable duplicate work');finishAction();await activeAction;
+
 let loginCalls=0,releaseLogin,failLogin=true,reloads=0,previewMode='fail',releasePreview;
 globalThis.fetch=async(url,options={})=>{
   const path=new URL(url).pathname.split('/api/v1/')[1];

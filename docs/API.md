@@ -2,9 +2,11 @@
 
 Base local: `http://localhost/la-academia/api/v1`. La única entrada pública es `public/index.php`; Apache reescribe `/api/v1` hacia ella. El contrato vive en `backend/routes/api.php` y se ejecuta en `backend/src/Http/ApiKernel.php`. Diagnóstico: `api/v1/health`. La antigua entrada `api.php` se bloquea. La interfaz usa rutas v1, ya no selecciona agentes por parámetros públicos.
 
+Ver [validaciones y autenticación](VALIDACIONES-Y-AUTENTICACION.md) para la sesión PHP, CSRF y protección contra duplicados.
+
 ## Contrato
 
-Solicitud JSON con `Content-Type: application/json`. Cargas con `multipart/form-data`, campo `file`. Las peticiones con modificación requieren la cookie de sesión y `X-CSRF-Token`, incluso al comenzar una evaluación pública o iniciar sesión. Primero se obtiene `GET /session`.
+Solicitud JSON con `Content-Type: application/json`. Cargas con `multipart/form-data` mediante POST, campo `file`. Los parámetros de consulta deben ser simples y no repetirse; `download` y `background` admiten `0` o `1`. Las peticiones con modificación requieren la cookie de sesión y `X-CSRF-Token`, incluso al comenzar una evaluación pública o iniciar sesión. Primero se obtiene `GET /session`.
 
 Respuesta correcta:
 
@@ -24,7 +26,7 @@ Error:
 |---|---|
 | 200 | Consulta, actualización, borrado lógico o respuesta de sesión correcta |
 | 201 | Creación correcta |
-| 400 | JSON o ruta inválidos |
+| 400 | JSON inválido o consulta ambigua/repetida |
 | 401 | Sin sesión válida o credenciales incorrectas |
 | 403 | Rol insuficiente o CSRF inválido |
 | 404 | Ruta o registro no disponible |
@@ -34,7 +36,7 @@ Error:
 | 413 | JSON mayor de 1 MB |
 | 415 | Tipo de contenido no admitido |
 | 422 | Validación de datos |
-| 429 | Límite de login para conexión no local |
+| 429 | Límite de login o identificación; producción también limita loopback |
 | 500/503 | Error interno o servicio no disponible |
 
 Los IDs de ruta son enteros positivos y tienen prioridad sobre el cuerpo. Un POST de creación con `id` es rechazado para evitar que se interprete como edición. DELETE no implica siempre borrado físico: la ruta estándar de cursos archiva y `/admin/courses/{id}/permanent` elimina definitivamente con confirmación; los eventos sí se eliminan de su tabla, conservando su registro de actividad.

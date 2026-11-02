@@ -11,6 +11,7 @@ final class ApiKernel {
         try{
             $method=$_SERVER['REQUEST_METHOD']??'GET';
             $route=(new Router(require dirname(__DIR__,2).'/routes/api.php'))->resolve($method,rtrim($path,'/')?:'/');
+            RequestContext::validateQuery();
             $db=new Database($config);
             if($route['action']==='health'){
                 foreach(['admins','auth_attempts','sites','employees','categories','courses','files','announcements','events','event_images','exams','enrollments','attempts','activity_log','file_previews','home_popup','home_slides','policies'] as $table)$db->run("SELECT 1 FROM $table LIMIT 1");
