@@ -8,7 +8,6 @@
   padding-block:var(--ds-space-16)}
 :where(.academy-ui) .eyebrow {
   display:block;
-  font-size:var(--ds-text-xs);
   font-weight:var(--ds-font-bold);
   letter-spacing:1.5px;
   color:var(--ds-color-muted)}
@@ -20,16 +19,13 @@
 :where(.academy-ui) .back, :where(.academy-ui) .text-link {
   display:inline-flex;
   color:var(--ds-color-muted);
-  font-size:var(--ds-text-xs);
-  font-weight:var(--ds-font-strong)}
+  font-size:var(--ds-text-xs)}
 :where(.academy-ui) .text-link {
   margin-top:var(--ds-space-5)}
 :where(.academy-ui) .link-button {
-  border:0;
   background:none;
   color:var(--ds-color-muted);
-  font-size:var(--ds-text-xs);
-  padding:var(--ds-space-2)}
+  font-size:var(--ds-text-xs)}
 :where(.academy-ui) .heading {
   display:flex;
   flex-wrap:wrap;
@@ -38,7 +34,7 @@
   gap:var(--ds-space-8);
   margin:var(--ds-space-6) 0 var(--ds-space-8)}
 :where(.academy-ui) .heading>div { min-width:0; max-width:100%; }
-:where(.academy-ui) .heading h1,:where(.academy-ui) .course-body h3,:where(.academy-ui) .training-card h2,:where(.academy-ui) .event-body h3 { overflow-wrap:anywhere; }
+:where(.academy-ui) .heading h1,:where(.academy-ui) .course-body h3,:where(.academy-ui) .training-card h2 { overflow-wrap:anywhere; }
 :where(.academy-ui) .heading h1 {
   margin:var(--ds-space-3) 0}
 :where(.academy-ui) .heading p {
@@ -80,8 +76,9 @@
   align-items:center;
   gap:var(--ds-space-3);
   font-size:var(--ds-text-xs);
-  color:var(--muted)}
-:where(.academy-ui) .toolbar>label { min-width:0; max-width:100%; }
+  color:var(--muted);
+  min-width:0;
+  max-width:100%}
 :where(.academy-ui) .toolbar input, :where(.academy-ui) .toolbar select {
   border:1px solid var(--line);
   border-radius:var(--ds-radius-md);
@@ -92,8 +89,7 @@
   font-size:var(--ds-text-xs);
   min-width:0}
 :where(.academy-ui) .toolbar .search {
-  min-width:180px;
-  flex:1 1 240px}
+  min-width:180px}
 :where(.academy-ui) .toolbar input {
   width:100%}
 :where(.academy-ui) .course-grid {
@@ -107,22 +103,6 @@
 :where(.academy-ui) .course-card:hover {
   transform:translateY(-4px);
   box-shadow:var(--ds-shadow-sm)}
-:where(.academy-ui) .card-art {
-  height:130px;
-  padding:var(--ds-space-6);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  color:var(--ds-color-muted)}
-:where(.academy-ui) .card-art>span {
-  font-size:var(--ds-text-4xl);
-  font-weight:var(--ds-font-regular)}
-:where(.academy-ui) .card-art small {
-  font-size:var(--ds-text-xs);
-  letter-spacing:1px;
-  max-width:110px;
-  line-height:1.8;
-  color:var(--ds-color-muted)}
 :where(.academy-ui) .course-body {
   padding:var(--ds-space-6);
   display:flex;
@@ -135,7 +115,6 @@
 :where(.academy-ui) .course-body p {
   font-size:var(--ds-text-xs);
   line-height:1.9;
-  margin-bottom:var(--ds-space-6);
   overflow-wrap:anywhere}
 :where(.academy-ui) .card-bottom {
   display:flex;
@@ -145,17 +124,11 @@
   border-top:1px solid var(--line);
   padding-top:var(--ds-space-4);
   margin-top:auto}
-:where(.academy-ui) .card-bottom small {
-  font-size:var(--ds-text-xs)}
 :where(.academy-ui) .card-bottom a {
   font-size:var(--ds-text-xs);
   color:var(--ds-color-focus);
   font-weight:var(--ds-font-strong);
   white-space:nowrap}
-:where(.academy-ui) .banner-list {
-  display:grid;
-  gap:var(--ds-space-5);
-  margin-top:var(--ds-space-8)}
 :where(.academy-ui) .learning-layout {
   display:grid;
   grid-template-columns:minmax(0,1fr) 310px;
@@ -224,20 +197,6 @@
   margin-bottom:var(--ds-space-3);
   overflow-wrap:anywhere;
   white-space:pre-line}
-:where(.academy-ui) .slide-number {
-  position:absolute;
-  top:15px;
-  right:25px;
-  color:var(--ds-color-surface-hover);
-  font-size:var(--ds-text-4xl);
-  line-height:1;
-  font-weight:var(--ds-font-bold);
-  pointer-events:none}
-:where(.academy-ui) .viewer-note {
-  font-size:var(--ds-text-xs);
-  margin-top:var(--ds-space-4);
-  text-align:center;
-  line-height:1.8}
 :where(.academy-ui) .learning-aside {
   padding:var(--ds-space-8)}
 :where(.academy-ui) .learning-aside h2 {
@@ -304,23 +263,6 @@
   white-space:nowrap}
 :where(.academy-ui) .workspace .toolbar {
   padding:var(--ds-space-5) var(--ds-space-6)}
-:where(.academy-ui) .list-row {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:var(--ds-space-5);
-  border-top:1px solid var(--line);
-  padding:var(--ds-space-5) 0}
-:where(.academy-ui) .list-row small {
-  font-size:var(--ds-text-xs);
-  display:block;
-  margin-bottom:var(--ds-space-1)}
-:where(.academy-ui) .list-row strong {
-  font-size:var(--ds-text-xs);
-  line-height:1.8}
-:where(.academy-ui) .list-row>span:last-child {
-  font-size:var(--ds-text-xl);
-  color:var(--ds-color-muted)}
 :where(.academy-ui) .editor-layout {
   display:grid;
   grid-template-columns:minmax(0,1fr) 280px;
@@ -419,12 +361,10 @@
 :where(.academy-ui) .option-row input[type=radio] {
   accent-color:var(--ds-color-warning-border)}
 :where(.academy-ui) .option-row>input {
-  width:100%;
   border:0;
   background:none;
   outline:none;
   font-size:var(--ds-text-sm);
-  min-width:0;
   color:var(--navy)}
 :where(.academy-ui) .option-row:has(input:checked) {
   background:var(--ds-color-success-bg);
@@ -449,10 +389,6 @@
 :where(.academy-ui) .save-bar>span {
   font-size:var(--ds-text-xs);
   color:var(--ds-color-muted)}
-:where(.academy-ui) .announcement-grid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:var(--ds-space-6)}
 :where(.academy-ui) .event-publication-viewer::backdrop, :where(.academy-ui) .evaluation-dialog::backdrop {
   background:color-mix(in srgb, var(--ds-color-ink) 45.88%, transparent);
   backdrop-filter:blur(6px)}
@@ -513,8 +449,6 @@
   max-width:270px}
 :where(.academy-ui) .editor-layout .form-grid {
   grid-template-columns:1fr}
-:where(.academy-ui) .announcement-grid {
-  grid-template-columns:1fr}
 :where(.academy-ui) .heading h1 {
   font-size:var(--ds-text-3xl)}
 :where(.academy-ui) .table-scroll table {
@@ -529,10 +463,7 @@
 :where(.academy-ui) .section>.eyebrow {
   font-size:var(--ds-text-xs)}
 :where(.academy-ui) .course-grid {
-  grid-template-columns:1fr;
   gap:var(--ds-space-5)}
-:where(.academy-ui) .card-art {
-  height:145px}
 :where(.academy-ui) .course-body {
   padding:var(--ds-space-6)}
 :where(.academy-ui) .course-body h3 {
@@ -557,15 +488,12 @@
   font-size:var(--ds-text-sm);
   padding:var(--ds-space-3) var(--ds-space-3);
   width:100%}
-:where(.academy-ui) .banner-list {
-  margin-top:var(--ds-space-6)}
 :where(.academy-ui) .heading {
   margin:var(--ds-space-6) 0;
   gap:var(--ds-space-5);
   align-items:flex-start;
   flex-direction:column}
 :where(.academy-ui) .heading h1 {
-  font-size:var(--ds-text-2xl);
   line-height:1.3;
   letter-spacing:-.9px}
 :where(.academy-ui) .heading p {
@@ -607,16 +535,11 @@
 :where(.academy-ui) .slide p {
   font-size:var(--ds-text-xs);
   line-height:1.85}
-:where(.academy-ui) .slide-number {
-  font-size:var(--ds-text-4xl);
-  right:18px}
 :where(.academy-ui) .material-footer {
   padding:var(--ds-space-4) var(--ds-space-5);
   gap:var(--ds-space-3);
   font-size:var(--ds-text-xs)}
 :where(.academy-ui) .material-footer a {
-  font-size:var(--ds-text-xs)}
-:where(.academy-ui) .viewer-note {
   font-size:var(--ds-text-xs)}
 :where(.academy-ui) .learning-aside {
   padding:var(--ds-space-6)}
@@ -640,14 +563,6 @@
   margin:0 0 var(--ds-space-6)}
 :where(.academy-ui) .workspace>.back {
   margin-bottom:var(--ds-space-6)}
-:where(.academy-ui) .workspace h1 {
-  font-size:var(--ds-text-2xl)}
-:where(.academy-ui) .list-row {
-  padding:var(--ds-space-4) 0}
-:where(.academy-ui) .list-row strong {
-  font-size:var(--ds-text-xs)}
-:where(.academy-ui) .list-row small {
-  font-size:var(--ds-text-xs)}
 :where(.academy-ui) .workspace .toolbar {
   padding:var(--ds-space-5);
   gap:var(--ds-space-4)}
@@ -738,7 +653,6 @@
   flex-basis:100%}
 }
 
-
 /* Formularios y validación contextual */
 
 :where(.academy-ui) .option-row {
@@ -800,34 +714,6 @@
   flex-shrink:0;
   margin-top:var(--ds-space-2)}
 
-:where(.academy-ui) .managed-notice {
-  display:flex;
-  align-items:flex-start;
-  gap:var(--ds-space-5);
-  padding:var(--ds-space-6) var(--ds-space-8);
-  border-bottom:1px solid var(--line)}
-:where(.academy-ui) .managed-notice:last-child {
-  border-bottom:0}
-:where(.academy-ui) .managed-notice-copy {
-  flex:1;
-  min-width:0}
-:where(.academy-ui) .managed-notice h3 {
-  font-size:var(--ds-text-lg);
-  margin:var(--ds-space-3) 0 var(--ds-space-2);
-  overflow-wrap:anywhere}
-:where(.academy-ui) .managed-notice p {
-  font-size:var(--ds-text-xs);
-  white-space:pre-line;
-  overflow-wrap:anywhere;
-  max-width:700px}
-:where(.academy-ui) .managed-notice .actions {
-  align-self:center;
-  flex-shrink:0}
-:where(.academy-ui) .notice-meta {
-  display:flex;
-  align-items:center;
-  gap:var(--ds-space-3)}
-
 /* Eventos institucionales */
 :where(.academy-ui) .event-grid {
   display:grid;
@@ -835,18 +721,6 @@
   gap:var(--ds-space-6)}
 :where(.academy-ui) .workspace .event-grid {
   grid-template-columns:repeat(2,minmax(0,1fr))}
-:where(.academy-ui) .event-card {
-  display:flex;
-  flex-direction:column;
-  scroll-margin-top:110px;
-  transition:transform .2s,box-shadow .2s}
-:where(.academy-ui) .event-card:hover {
-  transform:translateY(-3px);
-  box-shadow:var(--ds-shadow-sm)}
-:where(.academy-ui) .event-cover {
-  width:100%;
-  height:220px;
-  object-fit:cover}
 :where(.academy-ui) .event-placeholder {
   padding:var(--ds-space-8);
   background:radial-gradient(ellipse at 95% 10%,var(--ds-color-line),transparent 70%),linear-gradient(135deg,var(--ds-color-surface-selected),var(--ds-color-success-bg));
@@ -862,29 +736,6 @@
   color:var(--ds-color-muted);
   margin-top:var(--ds-space-6);
   letter-spacing:-1px}
-:where(.academy-ui) .event-body {
-  padding:var(--ds-space-6);
-  display:flex;
-  flex-direction:column;
-  flex:1;
-  min-width:0}
-:where(.academy-ui) .event-body h3 {
-  margin:var(--ds-space-3) 0;
-  overflow-wrap:anywhere}
-:where(.academy-ui) .event-meta {
-  display:flex;
-  flex-direction:column;
-  gap:var(--ds-space-1);
-  color:var(--ds-color-muted);
-  font-size:var(--ds-text-xs);
-  border-bottom:1px solid var(--line);
-  padding-bottom:var(--ds-space-4)}
-:where(.academy-ui) .event-body>p {
-  font-size:var(--ds-text-xs);
-  line-height:1.8;
-  white-space:pre-line;
-  overflow-wrap:anywhere;
-  margin:var(--ds-space-4) 0 var(--ds-space-5)}
 :where(.academy-ui) .event-actions {
   display:flex;
   gap:var(--ds-space-2);
@@ -900,29 +751,11 @@
 @media(max-width: 1100px) {
 :where(.academy-ui) .event-grid {
   grid-template-columns:repeat(2,minmax(0,1fr))}
-:where(.academy-ui) .managed-notice {
-  flex-wrap:wrap}
-:where(.academy-ui) .managed-notice>.actions {
-  margin-left:var(--ds-space-16);
-  flex-basis:100%}
 }
 
 @media(max-width: 680px) {
 :where(.academy-ui) .event-grid, :where(.academy-ui) .workspace .event-grid {
   grid-template-columns:1fr}
-:where(.academy-ui) .event-cover {
-  height:210px}
-:where(.academy-ui) .event-body {
-  padding:var(--ds-space-6)}
-:where(.academy-ui) .managed-notice {
-  padding:var(--ds-space-6) var(--ds-space-5);
-  gap:var(--ds-space-3)}
-:where(.academy-ui) .managed-notice-copy {
-  flex-basis:calc(100% - 49px)}
-:where(.academy-ui) .managed-notice>.actions {
-  margin-left:var(--ds-space-12)}
-:where(.academy-ui) .managed-notice h3 {
-  font-size:var(--ds-text-lg)}
 :where(.academy-ui) .initial-material {
   padding:var(--ds-space-4)}
 :where(.academy-ui) .initial-material input {
@@ -930,7 +763,6 @@
 :where(.academy-ui) .answer-choices[data-invalid] {
   padding-left:var(--ds-space-2)}
 }
-
 
 :where(.academy-ui) .category-picker {
   min-width:0}
@@ -957,52 +789,9 @@
 :where(.academy-ui) .category-create .link-button {
   font-size:var(--ds-text-xs)}
 
-
 /* Contenido breve y destinos claros */
-:where(.academy-ui) .banner-controls {
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:var(--ds-space-5);
-  font-size:var(--ds-text-xs);
-  color:var(--muted)}
-:where(.academy-ui) .banner-controls {
-  margin-top:0}
-:where(.academy-ui) .banner-message {
-  margin-top:var(--ds-space-3);
-  font-size:var(--ds-text-xs)}
-:where(.academy-ui) .banner-message summary {
-  cursor:pointer;
-  color:var(--ds-color-surface-selected)}
-:where(.academy-ui) .banner-message p {
-  margin-top:var(--ds-space-3)}
-:where(.academy-ui) .publication-map {
-  margin-top:var(--ds-space-6);
-  display:grid;
-  gap:var(--ds-space-5)}
-:where(.academy-ui) .publication-map a {
-  display:grid;
-  gap:var(--ds-space-1);
-  border-top:1px solid color-mix(in srgb, var(--ds-color-on-brand) 19.61%, transparent);
-  padding-top:var(--ds-space-4)}
-:where(.academy-ui) .publication-map strong {
-  font-size:var(--ds-text-sm)}
-:where(.academy-ui) .publication-map span {
-  font-size:var(--ds-text-xs);
-  opacity:.8}
-:where(.academy-ui) .public-event-details {
-  margin-top:var(--ds-space-4);
-  font-size:var(--ds-text-xs)}
-:where(.academy-ui) .public-event-details summary {
-  cursor:pointer;
-  color:var(--blue)}
-:where(.academy-ui) .public-event-details p {
-  white-space:pre-line;
-  overflow-wrap:anywhere;
-  margin-top:var(--ds-space-3)}
 :where(.academy-ui) #catalog-results {
   scroll-margin-top:110px}
-
 
 /* El footer completa el alto de la pantalla sin quedar fijo sobre el contenido. */
 :where(.academy-ui) #app {
@@ -1079,38 +868,10 @@
   margin:var(--ds-space-3) 0}
 :where(.academy-ui) .event-photo-picker>.field-error {
   margin-block:var(--ds-space-3)}
-:where(.academy-ui) .gallery-heading {
-  display:flex;
-  gap:var(--ds-space-5);
-  align-items:flex-start;
-  justify-content:space-between}
-:where(.academy-ui) .gallery-heading h2 {
-  font-size:var(--ds-text-xl);
-  margin:var(--ds-space-1) 0 0;
-  overflow-wrap:anywhere}
-:where(.academy-ui) .gallery-close {
-  border:1px solid var(--line);
-  border-radius:50%;
-  width:38px;
-  height:38px;
-  background:var(--ds-color-on-brand);
-  flex-shrink:0;
-  font-size:var(--ds-text-2xl);
-  color:var(--navy)}
-:where(.academy-ui) .gallery-controls {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:var(--ds-space-5);
-  margin:var(--ds-space-3) 0;
-  font-size:var(--ds-text-xs)}
 
 @media(max-width: 680px) {
   :where(.academy-ui) #app {
   min-height:calc(100dvh - 72px)}
 :where(.academy-ui) .photo-preview-grid {
   grid-template-columns:repeat(2,minmax(0,1fr))}
-:where(.academy-ui) .gallery-controls {
-  gap:var(--ds-space-3);
-  font-size:var(--ds-text-xs)}
 }

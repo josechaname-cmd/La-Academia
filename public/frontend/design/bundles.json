@@ -1,0 +1,5 @@
+[
+  {"output":"public/assets/styles.css","sources":["layouts/base.css"]},
+  {"output":"public/assets/learning.css","sources":["layouts/learning.css","pages/admin-dashboard.css"]},
+  {"output":"public/assets/design-system.css","tokens":true,"sources":["foundation.css","navigation.css","components.css","carousel.css","home-popup.css","public-shell.css"]}
+]

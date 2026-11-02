@@ -260,6 +260,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 
 | Archivo | Responsabilidad |
 |---|---|
+| [bundles.json](../public/frontend/design/bundles.json) | Orden de las nueve fuentes CSS y de las tres hojas que carga la aplicación. |
 | [carousel.css](../public/frontend/design/carousel.css) | Presentación de carrusel e indicadores. |
 | [components.css](../public/frontend/design/components.css) | Botones, campos, tablas, diálogos, alertas y componentes compartidos. |
 | [foundation.css](../public/frontend/design/foundation.css) | Fundación visual y reglas base del sistema de diseño. |
@@ -375,6 +376,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | Archivo | Responsabilidad |
 |---|---|
 | [audit-backend.py](../tools/audit-backend.py) | Herramienta de inventario y análisis de código/backend para auditoría. |
+| [audit-design.mjs](../tools/audit-design.mjs) | Comprueba las hojas cargadas y localiza declaraciones CSS redundantes por selector y condición. |
 | [build-design.mjs](../tools/build-design.mjs) | Compila fuentes/tokens a CSS público y runtime JS; soporta --check. |
 | [check-local.ps1](../tools/check-local.ps1) | Suite integrada local; usa bases temporales para pruebas de negocio. |
 | [configure-database-user.php](../tools/configure-database-user.php) | Procedimiento local de privilegios mínimos; modifica cuenta/configuración solo con --apply. |

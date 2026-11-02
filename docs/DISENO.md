@@ -1,10 +1,10 @@
 # Sistema de diseño de La Academia
 
-Fuente activa: `C:\xampp\htdocs\la-academia`. Actualizado el 27 de octubre de 2026.
+Actualizado el 2 de noviembre de 2026.
 
 ## Inventario y criterio
 
-La interfaz existente utiliza JavaScript modular, plantillas HTML, diálogos nativos y dos hojas CSS acumulativas (`styles.css` y `learning.css`). Ya había componentes de tarjetas, galería, examen, formularios, sidebar y notificaciones, pero repetían colores, tamaños, botones y reglas de navegación.
+El navegador carga tres hojas, en este orden. `styles.css` contiene la composición base, `learning.css` reúne los estilos de las pantallas y el panel, y `design-system.css` aplica los estilos compartidos de componentes y navegación. Las nueve hojas de trabajo de `public/frontend/design/` son las fuentes de esas tres salidas. El orden exacto figura en [bundles.json](../public/frontend/design/bundles.json).
 
 Se conserva la identidad azul, blanco y verde azulado, el logotipo institucional, los botones redondeados y las composiciones de cursos, eventos y evaluaciones. Se centralizan los elementos compartidos y se mantienen las geometrías particulares de cada módulo en sus composiciones. Los controles tienen un mínimo común de 44 px, los textos usan una escala y los colores semánticos cuentan con contraste comprobado.
 
@@ -17,10 +17,13 @@ Se conserva la identidad azul, blanco y verde azulado, el logotipo institucional
 | `public/frontend/design/components.css` | Contratos visuales de controles, formularios, tablas, tarjetas, badges, alertas, diálogos, toast, carga, vacíos y paginación. |
 | `public/frontend/design/navigation.css` | Header, sidebar, menú adaptable y campana. |
 | `public/frontend/design/carousel.css` | Slider de imágenes e indicadores de progreso. |
+| `public/frontend/design/home-popup.css` | Anuncio de Inicio y editor de imágenes. |
+| `public/frontend/design/public-shell.css` | Cabecera y pie de la interfaz pública. |
 | `public/frontend/design/layouts/` | Composiciones particulares: visor, evaluaciones, publicaciones, panel y catálogo. |
 | `public/frontend/design/pages/` | Estilos exclusivos de una pantalla; comienza con el dashboard administrativo. |
 | `public/frontend/components/ui.js` | Iconos SVG, breadcrumbs, paginación, mensajes, diálogos, confirmaciones, carga de botones y mejoras accesibles. |
 | `tools/build-design.mjs` | Genera y limita las reglas al contenedor de la aplicación; también genera breakpoints/tiempos para JavaScript. |
+| `tools/audit-design.mjs` | Comprueba que cada fuente se compile una sola vez, que el shell cargue las salidas en orden y que las hojas estén libres de declaraciones redundantes detectables. |
 
 No editar directamente `public/assets/design-system.css`, `styles.css`, `learning.css` ni `public/frontend/design/runtime.js`: son generados y están marcados como tales. Se entregan compilados; Apache no necesita Node para servir la aplicación.
 
@@ -38,6 +41,7 @@ Desde la carpeta del proyecto:
 npm ci --prefix tests --ignore-scripts
 node tools/build-design.mjs
 node tools/build-design.mjs --check
+node tools/audit-design.mjs
 & './tools/check-local.ps1'
 ```
 
@@ -80,7 +84,7 @@ if (await confirmAction('¿Eliminar este evento?', {label:'Eliminar'})) {
 `public/frontend/components/carousel-indicators.js` es el componente reutilizable. Recibe etiquetas y un intervalo opcional; expone `select`, `setPaused`, `focus` y `dispose`. Su callback `onSelect(index,manual)` permite sincronizar cualquier carrusel con los puntos. La geometría vive en `carousel.css`.
 
 
-Las imágenes siguen en `public/assets/slider/`, descubiertas automáticamente por la API y ordenadas por nombre. No hay que declarar cada ruta en JavaScript.
+En el panel se cargan las imágenes y se arrastran para elegir su orden. La API lee las diapositivas activas de `home_slides`, ordenadas por posición. Cada una puede tener un título, estilo de texto y enlace propios.
 
 Un indicador inferior por imagen, sin flechas laterales ni contador textual. El punto activo se expande suavemente en una cápsula; durante los 5 segundos de exposición, su barra se llena linealmente; después cambia automáticamente la imagen y comienza el siguiente punto. También permite elegir una imagen con clic o teclado. Sin imágenes no se muestra; con una imagen se ocultan indicadores y no se programa rotación.
 
@@ -102,6 +106,8 @@ El anuncio utiliza `home-popup.css` y `components/home-popup.js`, con tokens, di
 - Confirmar acciones destructivas antes de llamar a la API. Los permisos y validaciones siguen en backend.
 
 ## Comprobación
+
+La auditoría compara tanto las fuentes como el CSS generado. Marca una declaración cuando todos sus selectores reciben después la misma propiedad y valor, con la misma prioridad y bajo las mismas condiciones. Por ejemplo, una regla de escritorio y una variante para móvil pueden compartir selector. Para retirar una clase por desuso, se revisa además el HTML que generan PHP y JavaScript, incluidos los estados que se activan al interactuar.
 
 `tests/design-system.mjs` verifica delimitación de selectores, resolución de variables, paleta central, contraste semántico, confirmaciones, cancelación, foco de formularios, carga/recuperación de botones y tablas accesibles. `tests/slider.mjs` cubre indicadores, avance automático, navegación, pausas y desmontaje. La suite general conserva pruebas de sesiones, exámenes, edición, filtros, caché, negocio y HTTP.
 

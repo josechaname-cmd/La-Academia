@@ -4,6 +4,8 @@ Push-Location -LiteralPath $project
 try {
     node tools/build-design.mjs --check
     if ($LASTEXITCODE -ne 0) { throw 'Design build is out of date.' }
+    node tools/audit-design.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Revisa el orden de carga y las declaraciones CSS repetidas.' }
     node tests/frontend-ux.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron formularios, acceso y visor.' }
     node tests/list-controls.mjs

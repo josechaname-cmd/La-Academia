@@ -3,10 +3,33 @@ import fs from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
 import {JSDOM} from 'jsdom';
+import {duplicateDeclarations} from '../tools/audit-design.mjs';
 import {busy,modal,confirmAction,toast,enhanceUI,icon,breadcrumbs,pagination} from '../public/frontend/components/ui.js';
 const root=path.resolve(import.meta.dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const tokens=JSON.parse(read('public/frontend/design/tokens.json'));
-const sheets=['design-system','styles','learning'].map(name=>postcss.parse(read(`public/assets/${name}.css`)));
+const bundles = JSON.parse(read('public/frontend/design/bundles.json'));
+const sheets = bundles.map(bundle => postcss.parse(read(bundle.output)));
+// A shared rule is redundant only when all its branches remain covered.
+const previous = postcss.parse(`
+  .a, .b { padding:0; color:red }
+  .c { display:block; display:flex; color:blue !important }
+  .a:hover { padding:0 }
+  @media (max-width:600px) { .c { margin:0 } }
+  @layer theme { .c { margin:0 } }
+  @keyframes pulse { from { opacity:0 } to { opacity:0 } }
+`);
+const subsequent = postcss.parse(`
+  .a { padding:0; color:red }
+  .b { padding:0 }
+  .c { color:blue }
+  @media (min-width:600px) { .c { margin:0 } }
+  @layer overrides { .c { margin:0 } }
+  @keyframes fade { from { opacity:0 } to { opacity:0 } }
+`);
+const redundant = duplicateDeclarations([previous, subsequent]);
+assert.deepEqual(redundant.map(item => item.declaration.toString()), ['padding:0']);
+assert.equal(redundant[0].declaration.parent.selector, '.a, .b');
+assert.deepEqual(redundant[0].coveredBy.map(node => node.parent.selector).sort(), ['.a', '.b']);
 const defined=new Set();sheets.forEach(css=>css.walkDecls(d=>{if(d.prop.startsWith('--'))defined.add(d.prop);}));
 let rules=0;
 for(const css of sheets){
@@ -22,7 +45,7 @@ function luminance(hex){const c=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/
 function contrast(a,b){const x=luminance(tokens.color[a]),y=luminance(tokens.color[b]);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
 for(const [a,b]of [['brand','on-brand'],['muted','surface'],['ink','canvas'],...['success','error','warning','info'].map(c=>[c,`${c}-bg`])])assert(contrast(a,b)>=4.5,`${a}/${b} contrast`);
 assert(contrast('control-border','surface')>=3,'Control boundary contrast');
-for(const name of ['components.css','navigation.css','carousel.css','home-popup.css','layouts/base.css','layouts/learning.css','pages/admin-dashboard.css']){
+for(const name of bundles.flatMap(bundle => bundle.sources)){
  const css=postcss.parse(read(`public/frontend/design/${name}`));css.walkDecls(d=>assert(!/#[\da-f]{3,8}\b/i.test(d.value),`Literal palette in ${name}`));
 }
 const dom=new JSDOM(`<!doctype html><html class="academy-ui"><body><button id="trigger">Open</button><dialog id="dialog"><button class="close">Close</button><div id="dialog-body"></div></dialog><form><button id="save">${icon('check')} Save</button></form><div id="toast" hidden></div><div class="table-scroll"><table><thead><tr><th>Name</th></tr></thead></table></div></body></html>`,{url:'http://localhost/la-academia/'});
