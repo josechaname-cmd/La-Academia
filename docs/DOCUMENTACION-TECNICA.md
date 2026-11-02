@@ -1,6 +1,6 @@
 # La Academia · Documentación técnica
 
-**Versión documental:** 1.1 · **Actualización:** 2 de noviembre de 2026, America/Lima.
+**Versión documental:** 1.2 · **Actualización:** 2 de noviembre de 2026, America/Lima.
 **Código revisado:** `C:\xampp\htdocs\la-academia`.
 **Destinatarios:** desarrollo, soporte, administración del servidor y responsables de capacitación.
 
@@ -27,12 +27,13 @@ La Academia es una aplicación de capacitación con catálogo público y panel a
 | Capacitaciones | Material PDF/PPT/PPTX y MP4/WebM, portada elegida, borrador, publicación, edición, archivado y eliminación definitiva confirmada |
 | Políticas | Documentos generales con PDF, portada, descripción, visor ampliable y descarga |
 | Evaluaciones | Preguntas versionadas, apertura/cierre, duración, identificación previa por DNI, intentos y calificación sobre 20 |
-| Resultados | Participantes por versión de examen, estados de entrega y exportación XLSX |
-| Inicio administrativo | Vistas, promedios y participación; comparación de cinco elementos por página, detalle lateral y Top 3/5/10 |
+| Resultados | Últimos envíos por capacitación, participantes por versión del examen y exportación XLSX de la versión elegida |
+| Inicio administrativo | Acceso al borrador reciente y al próximo cierre. Gráficos de aperturas, promedios y personas evaluadas con detalle por capacitación |
 | Colaboradores | Buscar, crear, editar, desactivar y reactivar; validación y confirmación de carga CSV/XLSX |
-| Usuarios | Accesos de capacitador y superadmin, contraseñas, estado y sede |
+| Accesos al panel | Cuentas de capacitador y superadmin, contraseñas, estado y sede |
 | Sedes | Registro de sedes y asociación con trabajadores, capacitadores y capacitaciones |
-| Eventos y medios | Álbumes con portada y vistas previas, fecha visible y visor amplio con miniaturas; administración del carrusel y de popups |
+| Eventos | Álbumes con portada, fecha y visor con miniaturas |
+| Portada | Carrusel con orden manual y avisos emergentes de Inicio. Solo un aviso puede estar activo |
 | Actividad | Campana con resultados, cierres de examen e hitos de vistas |
 
 La gestión manual de avisos está retirada de la interfaz; subsisten rutas/tablas de compatibilidad. Los objetos llamados `Agents` son controladores deterministas que coordinan servicios: no son agentes de IA ni llaman a modelos externos.
@@ -220,8 +221,8 @@ Las migraciones incluyen compatibilidad histórica: por ejemplo, `OrganizationMi
 | Actor | Acceso actual |
 |---|---|
 | Visitante/trabajador | Catálogo y medios publicados; identificación del padrón antes de evaluar |
-| Capacitador | Gestión de capacitaciones/exámenes/reportes de su sede; no administra padrón ni cuentas; eventos mantienen alcance compartido |
-| Superadmin | Gestión global, colaboradores, cuentas, sedes, slider y popups |
+| Capacitador | Capacitaciones, exámenes y reportes de su sede. Puede gestionar eventos y políticas generales |
+| Superadmin | Gestión global, colaboradores, accesos al panel, sedes y contenidos de Portada |
 
 `CoursePolicy`, `CourseAccess` y `AccessRepository` centralizan la comprobación administrativa por sede, incluida la pertenencia de archivos/exámenes y bloqueos en mutaciones. Los permisos reales los impone el servidor; ocultar un botón no concede ni restringe autorización.
 
@@ -255,16 +256,43 @@ El detalle de capacitación muestra las vistas y el tiempo desde la publicación
 
 La [revisión de frontend y UX del 29 de octubre](REVISION-FRONTEND-UX-2026-10-29.md) incorpora paginación local de seis tarjetas o veinte registros, filtros sin tildes, formularios con mensajes específicos, controles de contraseña y navegación por teclado del visor. Los resultados conservan el límite de consulta de 1 000 registros; Excel sigue exportando todos los participantes del examen seleccionado.
 
-`app.js` mantiene navegación y sesión; cada pantalla devuelve HTML y una función de montaje/limpieza. El panel conserva su shell, menú y campana entre cambios de pantalla. Los componentes compartidos manejan formularios, confirmaciones, modales y estados de carga.
+### Navegación del panel
 
-Las fuentes CSS están en `public/frontend/design`. `tokens.json` centraliza colores, tamaños y breakpoints. `tools/build-design.mjs` genera las hojas de `public/assets` y `design/runtime.js`. No editar directamente las hojas generadas.
+«Ver portal» abre la vista pública. «Mi panel» (`#admin/volver`) vuelve a consultar la sesión y abre la última ruta administrativa válida de esa pestaña. «Inicio» en el menú lateral (`#admin`) abre el resumen. Si se eliminó el recurso, el panel vuelve al listado correspondiente.
+
+`app.js` coordina las rutas y el montaje de pantallas. `components/panel-navigation.js` vincula la ruta en `sessionStorage` con la cuenta, el rol, la sede y el identificador de navegación de la sesión. Las búsquedas, la página y el desplazamiento de los listados compatibles se mantienen en memoria al ir al portal y volver. Una recarga puede recuperar la ruta, pero no esos filtros ni el contenido de formularios sin guardar. Cerrar sesión limpia ese estado.
+
+El panel indica la sede de trabajo y muestra «General» en Políticas. Superadministración abre «Accesos al panel» para gestionar cuentas y «Colaboradores» para gestionar el padrón. En «Portada» están «Carrusel» y «Aviso emergente».
+
+### Textos y componentes
+
+Las páginas usan `heading(title, {description, actions})` de `public/frontend/components/common.js`. Solo el título es obligatorio. Las ayudas van junto al campo o la acción que las necesita. Por ejemplo, el editor de examen explica el umbral de reintento junto al número de intentos y la carga masiva indica qué sedes admite el archivo. Los nombres accesibles de los iconos, los errores asociados a cada campo y las confirmaciones siguen en sus componentes. [Guía de diseño](DISENO.md).
+
+### Construcción del CSS
+
+Las nueve fuentes CSS se editan en `public/frontend/design`. `bundles.json` fija el contenido y el orden de las tres hojas que carga `shell.php`: `styles.css`, `learning.css` y `design-system.css`. `tokens.json` centraliza colores, tamaños y puntos de corte. El generador también actualiza `design/runtime.js`.
 
 ```powershell
 node tools/build-design.mjs
 node tools/build-design.mjs --check
+node tools/audit-design.mjs
 ```
 
-Las dimensiones dinámicas de gráficos se aplican mediante propiedades DOM y atributos numéricos `data-chart-*`; las plantillas no insertan estilos inline bloqueados por CSP. Vistas/participación usan barras horizontales, notas usan rango y punto de promedio. La interfaz se adapta al ancho del contenedor y mantiene acceso a todos los registros con paginación.
+### Inicio y resultados
+
+Inicio propone como máximo dos tareas: continuar el borrador de actualización más reciente y consultar los resultados del examen publicado y abierto cuyo cierre sea el más próximo dentro de los próximos siete días. Para el cierre se considera la versión vigente del examen.
+
+| Indicador | Qué representa |
+|---|---|
+| Aperturas | Una por publicación y sesión pública. Entrar a la capacitación cuenta aunque no se reproduzca el video ni se rinda el examen. |
+| Personas evaluadas | DNI distintos con un envío completado en la capacitación. Una persona que rindió dos versiones cuenta una vez. |
+| Promedio | Notas sobre 20. Se usa el último envío completado de cada participante en cada versión. |
+
+Los gráficos muestran cinco elementos por página y permiten elegir Top 3, 5 o 10 en el detalle. Promedios y Personas evaluadas enlazan a `#admin/capacitaciones/resultados/curso/{id}`. La API aplica el filtro de capacitación y los permisos de sede antes del límite de 1 000 filas. Seleccionar una versión habilita el Excel de todos sus participantes. [Filtros de la API](API.md).
+
+Las barras, los rangos y el punto de promedio usan propiedades DOM a partir de atributos `data-chart-*`, compatibles con la política CSP del sitio.
+
+### Cachés y estado
 
 | Caché/estado | Alcance actual |
 |---|---|

@@ -35,7 +35,7 @@ Inicio muestra hasta dos accesos de trabajo cuando corresponden: el borrador mod
 
 ### Geometría de los gráficos de Inicio
 
-Inicio aprovecha todo el ancho disponible con comparación y detalle lado a lado. Vistas y Participación usan barras horizontales desde cero; Promedios muestra el rango mínimo–máximo y un punto para la media sobre 0–20. Cada página contiene hasta cinco capacitaciones; cambiar de página conserva la escala y los totales del conjunto filtrado. Los rankings Top 3/5/10 son gráficos compactos: notas en columnas de escala 0–20 y conteos en dos columnas de barras. Pulsar un conteo del ranking abre su página y detalle. Evaluaciones y accesos ocupan una franja inferior. En espacios estrechos, la comparación y el detalle se apilan sin ocultar registros ni bloquear el desplazamiento.
+Inicio aprovecha todo el ancho disponible con comparación y detalle lado a lado. Aperturas y Personas evaluadas usan barras horizontales desde cero; Promedios muestra el rango mínimo–máximo y un punto para la media sobre 0–20. Cada página contiene hasta cinco capacitaciones; cambiar de página conserva la escala y los totales del conjunto filtrado. Los rankings Top 3/5/10 son gráficos compactos: notas en columnas de escala 0–20 y conteos en dos columnas de barras. Pulsar un conteo del ranking abre su página y detalle. Evaluaciones y accesos ocupan una franja inferior. En espacios estrechos, la comparación y el detalle se apilan sin ocultar registros ni bloquear el desplazamiento.
 
 Las anchuras de barras, posiciones de rangos y alturas de notas se aplican con propiedades DOM (`element.style.height`, `left`, `width`) después de cada renderizado, filtro, selección y actualización. Las plantillas contienen valores numéricos en atributos `data-chart-*`; no contienen atributos `style`, que la política CSP de producción bloquea al interpretar HTML. Se conserva `style-src 'self'`. [Comportamiento documentado por MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/style-src-attr).
 
@@ -53,10 +53,15 @@ node tools/audit-design.mjs
 
 PostCSS y jsdom son dependencias de desarrollo dentro de `tests`. Para cambiar una dimensión compartida, editar el token y regenerar. El shell versiona automáticamente los cuatro recursos de entrada con `filemtime`; los imports internos conservan versiones explícitas hasta su migración controlada.
 
+## Texto de interfaz
+
+Usa el nombre de la sección como título. Añade una descripción solo si explica una condición que afecta la tarea. En un campo, prioriza el límite, el formato o la consecuencia de la selección. En una confirmación, identifica el elemento y qué ocurrirá al continuar. Mantén los nombres accesibles de iconos y controles aunque no necesiten una etiqueta visible.
+
 ## Contratos reutilizables
 
 | Función | Contrato |
 | --- | --- |
+| Encabezados | `heading(title, {description, actions})` genera un `h1`. Omite las opciones que no necesites. |
 | Botones | `.button.primary`, `.button.white`, `.button.danger`; `.link-button` para acción de texto. Usar `type="button"` fuera de envíos. |
 | Inputs, selectores y calendarios | `.field` con etiqueta que envuelve su control; fechas nativas `date`/`datetime-local`, conservando accesibilidad y validación del navegador. No se añade otro calendario con comportamiento distinto. |
 | Formularios | `.form-grid`, `.full`, `field()` y `attachValidation()`; errores asociados al control, `aria-invalid`, resumen y mensajes existentes. |

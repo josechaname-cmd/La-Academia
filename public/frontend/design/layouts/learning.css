@@ -27,7 +27,6 @@
 .home-learning > .heading { margin-top:0; margin-bottom:var(--ds-space-5); gap:var(--ds-space-5); align-items:center; }
 .home-learning-intro { min-width:0; }
 .home-learning-intro h2 { margin:0; font-weight:var(--ds-font-bold); line-height:var(--ds-line-tight); }
-.home-learning-intro p { margin:var(--ds-space-2) 0 0; color:var(--ds-color-muted); line-height:var(--ds-line-body); }
 .home-course-shelf { min-width:0; }
 .home-course-navigation { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--ds-space-3); margin-bottom:var(--ds-space-3); }
 .home-course-navigation p { margin:0; }
@@ -564,8 +563,8 @@ dialog.evaluation-dialog.evaluation-wide { width:min(900px,calc(100% - 32px)); }
 .training-card-actions{display:flex;gap:var(--ds-space-2);flex-wrap:wrap}
 .training-card-actions .button{flex:1;white-space:nowrap}
 .course-action-dock{position:sticky;top:84px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:var(--ds-space-5);margin-bottom:var(--ds-space-6);padding:var(--ds-space-4) var(--ds-space-5);border:var(--ds-border-width) solid var(--ds-color-line);border-radius:var(--ds-radius-lg);background:color-mix(in srgb,var(--ds-color-surface) 96%,transparent);box-shadow:var(--ds-shadow-popover);backdrop-filter:blur(12px)}
-.course-action-copy{min-width:180px}.course-action-copy>strong{font-size:var(--ds-text-sm);color:var(--ds-color-ink)}.course-action-copy>.hint{margin:var(--ds-space-1) 0 0;font-size:var(--ds-text-xs)}
-.course-action-buttons{display:flex;align-items:center;justify-content:flex-end;gap:var(--ds-space-2);flex-wrap:wrap}
+.course-action-copy{min-width:180px}.course-action-copy>.hint{margin:var(--ds-space-1) 0 0;font-size:var(--ds-text-xs)}
+.course-action-buttons{margin-inline-start:auto;display:flex;align-items:center;justify-content:flex-end;gap:var(--ds-space-2);flex-wrap:wrap}
 .course-action-buttons>.button{margin:0;white-space:nowrap}
 .course-more-actions{position:relative}.course-more-actions>summary{list-style:none;cursor:pointer}.course-more-actions>summary::-webkit-details-marker{display:none}
 .course-more-actions>[type=button]{position:absolute;right:0;top:calc(100% + var(--ds-space-2));z-index:2;min-width:190px;padding:var(--ds-space-3);border:var(--ds-border-width) solid var(--ds-color-line);border-radius:var(--ds-radius-md);background:var(--ds-color-surface);box-shadow:var(--ds-shadow-popover);color:var(--ds-color-error);text-align:left}
@@ -623,7 +622,7 @@ dialog.evaluation-dialog.evaluation-wide { width:min(900px,calc(100% - 32px)); }
 #report-loading{position:absolute;top:24px;left:50%;transform:translateX(-50%);z-index:1;margin:0;padding:var(--ds-space-3) var(--ds-space-5);border:1px solid var(--line);border-radius:var(--ds-radius-xl);background:var(--ds-color-on-brand);box-shadow:var(--ds-shadow-sm);white-space:nowrap}
 @media(--screen-desktop){.workspace .report-controls{grid-template-columns:1fr 1fr}.report-controls .report-exam{grid-column:1/-1}}
 @media(--screen-tablet){.course-progress{grid-template-columns:1fr 1fr;gap:var(--ds-space-5);padding:var(--ds-space-5)}.course-progress li::after{display:none}}
-@media(--screen-mobile){.course-action-dock{top:72px;padding:var(--ds-space-3);align-items:stretch}.course-action-copy{display:none}.course-action-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.course-action-buttons>.button,.course-action-buttons>details>.button{width:100%;justify-content:center}.course-more-actions>[type=button]{left:0;right:auto}.training-editor{grid-template-columns:minmax(0,1fr)}}
+@media(--screen-mobile){.course-action-dock{top:72px;padding:var(--ds-space-3);align-items:stretch;flex-direction:column;gap:var(--ds-space-2)}.course-action-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.course-action-buttons>.button,.course-action-buttons>details>.button{width:100%;justify-content:center}.course-more-actions>[type=button]{left:0;right:auto}.training-editor{grid-template-columns:minmax(0,1fr)}}
 @media(--screen-phone){.workspace .report-controls{grid-template-columns:minmax(0,1fr);gap:var(--ds-space-3)}.report-controls .report-exam{grid-column:auto}.report-controls .button{width:100%}}
 @media(prefers-reduced-motion:reduce){#report-table{transition:none}}
 

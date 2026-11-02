@@ -17,7 +17,7 @@ La sede relaciona colaboradores, capacitadores y capacitaciones. El trabajador n
 3. El servidor comprueba usuario activo y hash. Regenera el ID de sesión y el CSRF.
 4. La identidad se vuelve a consultar en la BD en las peticiones protegidas: cambios de rol, desactivaciones y cambios de contraseña tienen efecto.
 5. La sesión vence tras una hora de inactividad. La campana solo se monta si hay identidad autenticada.
-6. Al cerrar sesión se limpia la vista privada y se abre Inicio del portal. Cada login correcto abre Inicio del panel (`#admin`), sin restaurar la sección de la cuenta anterior. Una ruta de Usuarios/Sedes sin permiso vuelve al Inicio del panel antes de solicitar datos restringidos.
+6. Al cerrar sesión se limpia la vista privada y se abre Inicio del portal. Cada login correcto abre Inicio del panel (`#admin`), sin restaurar la sección de la cuenta anterior. Dentro de esa misma sesión, «Mi panel» retoma la última vista al regresar del portal. Una ruta de Accesos al panel o Sedes sin permiso vuelve al Inicio antes de solicitar los datos.
 7. En desarrollo, 127.0.0.1 y ::1 no tienen bloqueo de intentos. Las demás direcciones conservan el límite. Apache restringe esta instalación al equipo local.
 
 Las credenciales existentes se copian; no se inventan cuentas ni se restablecen contraseñas durante el cambio de nombre. El usuario administrador creado anteriormente con contraseña corta se conserva como excepción histórica. El formulario para nuevas contraseñas sigue exigiendo 12 caracteres y un máximo de 72 bytes.
@@ -98,7 +98,7 @@ El evento aparece en **Eventos**, no como listado completo en Inicio. La portada
 | Categorías | Selectores y filtros | Categoría registrada |
 | Exámenes | Botón Empezar evaluación | Curso publicado con examen |
 | Resultados | Solo administración | Intento completado |
-| Usuarios y sedes | Solo superadministración | Permiso verificado por servidor |
+| Accesos al panel y Sedes | Solo superadministración | Permiso verificado por servidor |
 
 ## Visitas y eventos del panel
 

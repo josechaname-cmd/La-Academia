@@ -16,7 +16,7 @@ globalThis.fetch=async(url,options={})=>{
   if(path==='notifications'&&failNotifications){failNotifications=false;return {ok:false,status:503,json:async()=>({error:{message:'Notificaciones temporalmente no disponibles'}})};}
   if(path==='session'){
     if(options.method==='DELETE'){user=null;csrf='guest';}
-    if(options.method==='POST'){user={id:2,name:'Capacitador prueba',role:'capacitador'};csrf='second';}
+    if(options.method==='POST'){user={id:2,name:'Capacitador prueba',role:'capacitador',site_id:2,site_name:'Sede de prueba'};csrf='second';}
     data={user,csrf,navigation_id:user?'nav-'+user.id:null,setup_required:false};
   }else if(path==='admin/policies/17'){
     if(removedPolicy)return {ok:false,status:404,json:async()=>({error:{message:'Política eliminada'}})};
@@ -39,7 +39,7 @@ assert.ok(document.querySelector('.sidebar a[href="#admin/colaboradores"]'));
 assert.match(document.querySelector('.sidebar a[href="#admin/usuarios"]').textContent,/Accesos al panel/);
 assert.equal(document.querySelector('#user-submenu').hidden,true,'Usuarios opens on the trainers page and keeps collaborators as a submenu');
 assert.ok(document.querySelector('#new-user'),'superadmin may initially open users');
-document.querySelector('.skip').click();await flush();assert.equal(location.hash,'#admin/usuarios','Skip link must focus the current view without routing to the portal');assert.equal(document.activeElement,document.querySelector('.workspace'));assert.match(document.title,/Capacitadores y accesos/);
+document.querySelector('.skip').click();await flush();assert.equal(location.hash,'#admin/usuarios','Skip link must focus the current view without routing to the portal');assert.equal(document.activeElement,document.querySelector('.workspace'));assert.match(document.title,/Accesos al panel/);
 assert.match(document.querySelector('.notification-sync').textContent,/No se pudo cargar/,'Notification failure does not block the page');
 document.querySelector('.notification-toggle').click();await flush();assert.match(document.querySelector('.notification-sync').textContent,/Actualizado/);assert.match(document.querySelector('.notification-items').textContent,/Estás al día/);document.querySelector('.notification-toggle').click();
 const accessSearch=document.querySelector('[data-table-search]');
@@ -89,6 +89,7 @@ const form=document.querySelector('#auth-form');form.elements.email.value='admin
 form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await flush();
 await waitFor('.workspace h1');assert.equal(location.hash,'#admin');assert.equal(document.querySelector('.workspace h1').textContent,'Inicio');
 assert.equal(document.querySelector('.sidebar a[href="#admin/usuarios"]'),null);
+assert.equal(document.querySelector('[data-panel-scope]').textContent,'Sede de prueba','La sede sigue visible en el panel sin repetirla en el encabezado de Inicio');
 assert.equal(requests.filter(r=>r.path==='admin/users').length,initialUsers,'never requests previous restricted page under new account');
 assert.equal(document.querySelector('.sidebar a[href="#admin/eventos/popup"]'),null);await go('#admin/eventos/popup');assert.equal(location.hash,'#admin');assert.equal(requests.filter(r=>r.path==='admin/home-popup').length,initialPopupRequests,'Restricted popup never fetched by admin');
 assert.equal(document.querySelector('.sidebar a[href="#admin/eventos/slider"]'),null);await go('#admin/slider');assert.equal(location.hash,'#admin');assert.equal(requests.filter(r=>r.path==='admin/slider').length,initialSliderRequests);

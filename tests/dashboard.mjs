@@ -101,7 +101,7 @@ largeCleanup();invalidateNavigationCache();
 let eventReads=0;
 globalThis.fetch=async url=>{const path=new URL(url).pathname.split('/api/v1/')[1];if(path==='admin/events')eventReads++;return {ok:true,json:async()=>({data:path==='admin/reports/summary'?structuredClone(summary):path==='admin/courses'?structuredClone(courses):[]})};};
 const trainerPage=await overviewPage({role:'capacitador',site_name:'Sede sintética'});root.innerHTML=trainerPage.html;const trainerCleanup=trainerPage.mount(root);
-assert.equal(eventReads,0);assert(root.textContent.includes('Sede sintética'));assert(root.textContent.includes('Borradores'));assert(![...root.querySelectorAll('.dashboard-metric-label')].some(label=>label.textContent==='Eventos'));
+assert.equal(eventReads,0);assert.equal(root.querySelector('.heading h1').textContent,'Inicio');assert(!root.querySelector('.heading p'),'El encabezado no repite el alcance que ya muestra el panel');assert(root.textContent.includes('Borradores'));assert(![...root.querySelectorAll('.dashboard-metric-label')].some(label=>label.textContent==='Eventos'));
 assert(root.querySelector('a[href="#admin/eventos"]'));assert(!root.querySelector('a[href="#admin/usuarios"]'));
 root.querySelector('[data-dashboard-chart="views"]').click();assert(root.querySelector('#home-chart-toolbar').hidden);trainerCleanup();
 dom.window.close();

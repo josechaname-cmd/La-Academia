@@ -7,7 +7,7 @@ export async function portalPage() {
   const [courses,slides]=await Promise.all([query('content','list'),query('content','slider')]);
   const carousel=homeCarousel(slides),shelf=homeCourseShelf(courses);
   return {
-    html:`<h1 class="sr-only">La Academia · Capacitación interna</h1>${carousel.html}<div class="home-learning-backdrop"><div class="home-learning-texture" aria-hidden="true" hidden></div><section class="container section home-learning" aria-labelledby="home-learning-title"><div class="heading"><div class="home-learning-intro"><h2 id="home-learning-title">Tu próximo aprendizaje</h2><p>Selecciona una imagen para acceder al material a tu ritmo.</p></div><a class="button primary catalog-link" href="#capacitaciones"><span>Ver catálogo</span>${nextIcon}</a></div>${shelf.html}</section></div>`,
+    html:`<h1 class="sr-only">La Academia · Capacitación interna</h1>${carousel.html}<div class="home-learning-backdrop"><div class="home-learning-texture" aria-hidden="true" hidden></div><section class="container section home-learning" aria-labelledby="home-learning-title"><div class="heading"><div class="home-learning-intro"><h2 id="home-learning-title">Tu próximo aprendizaje</h2></div><a class="button primary catalog-link" href="#capacitaciones"><span>Ver catálogo</span>${nextIcon}</a></div>${shelf.html}</section></div>`,
     mount(root) {
       const texture=root.querySelector('.home-learning-texture');
       const images=[...root.querySelectorAll('.hero-carousel .carousel-media img[src]')];
