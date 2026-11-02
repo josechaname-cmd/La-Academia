@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 const calls=[];
 globalThis.fetch=async url=>{
  calls.push(String(url));
- const data=String(url).includes('/categories')?['Seguridad','Salud']:Array.from({length:8},(_,i)=>({id:i+1,title:`Curso ${i}`,description:'Material de capacitación',category:i===0?'Salud':'Seguridad',created_at:'2026-10-23 09:00:00'}));
+ const data=String(url).includes('/categories')?['Seguridad','Salud']:Array.from({length:8},(_,i)=>({id:i+1,title:`Curso ${i}`,description:'Material de capacitación',category:i===0?'Salud':'Seguridad',created_at:'2026-10-23 09:00:00',starts_at:'2026-10-23 09:00:00',location:'Lima',images:[]}));
  return {ok:true,json:async()=>({data})};
 };
 let reduce=false,animations=0,cancelled=0;
@@ -12,19 +12,20 @@ const {catalogPage}=await import('../public/frontend/pages/catalog.js');
 const page=await catalogPage();
 assert(page.html.includes('course-catalog'));
 function element(){return {value:'',innerHTML:'',textContent:'',disabled:false,hidden:false,handlers:{},addEventListener(type,fn){this.handlers[type]=fn;},scrollIntoView(){},animate(frames,options){animations++;assert.deepEqual(frames,[{opacity:.5},{opacity:1}]);assert.equal(options.duration,160);return {cancel(){cancelled++;}};}};}
-const nodes=Object.fromEntries(['#catalog-category','#catalog-search','#catalog-results','#catalog-total','#catalog-page','#catalog-prev','#catalog-next','.catalog-pagination'].map(key=>[key,element()]));
+const nodes=Object.fromEntries(['#catalog-category','#catalog-search','#catalog-results','#catalog-page','#catalog-prev','#catalog-next','.catalog-pagination'].map(key=>[key,element()]));
 const root={querySelector:s=>nodes[s]??null,querySelectorAll:()=>[]};
 const dispose=page.mount(root);
-assert.equal(nodes['#catalog-total'].textContent,'8 capacitaciones');
+assert(!page.html.includes('catalog-total'),'Course catalog does not display the total');
 assert.equal(animations,0,'No initial animation');
 nodes['#catalog-next'].handlers.click();assert.equal(nodes['#catalog-page'].textContent,'2 / 2');
 nodes['#catalog-category'].value='Salud';nodes['#catalog-category'].handlers.change();
-assert.equal(nodes['#catalog-total'].textContent,'1 capacitación');assert.equal(nodes['#catalog-page'].textContent,'1 / 1');assert.equal(animations,1);
+assert.equal(nodes['#catalog-page'].textContent,'1 / 1');assert.equal(animations,1);
 nodes['#catalog-search'].value='sin coincidencias';nodes['#catalog-search'].handlers.input();
 assert(nodes['#catalog-results'].innerHTML.includes('No hay resultados'));assert.equal(cancelled,1);
 reduce=true;nodes['#catalog-search'].value='';nodes['#catalog-search'].handlers.input();assert.equal(animations,2,'Reduced motion does not animate');
 assert.equal(calls.length,2,'Filtering never refetches or navigates');
 dispose();
+const eventsPage=await catalogPage(true);assert(!eventsPage.html.includes('catalog-total'),'Event catalog does not display the total');const disposeEvents=eventsPage.mount(root);assert.equal(nodes['#catalog-page'].textContent,'1 / 2');assert(nodes['#catalog-results'].innerHTML.includes('event-post--album'));disposeEvents();
 const {JSDOM}=await import('jsdom');
 const {courseCards,publishedTime}=await import('../public/frontend/components/course-cards.js?v=20261030-9');
 const now=new Date('2026-10-29T05:15:00Z'); // Just after midnight in Peru, regardless of the machine's zone.

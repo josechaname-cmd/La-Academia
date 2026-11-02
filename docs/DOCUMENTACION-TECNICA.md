@@ -32,7 +32,7 @@ La Academia es una aplicación de capacitación con catálogo público y panel a
 | Colaboradores | Buscar, crear, editar, desactivar y reactivar; validación y confirmación de carga CSV/XLSX |
 | Usuarios | Accesos de capacitador y superadmin, contraseñas, estado y sede |
 | Sedes | Registro de sedes y asociación con trabajadores, capacitadores y capacitaciones |
-| Eventos y medios | Publicaciones con galería, administración del carrusel y de popups |
+| Eventos y medios | Álbumes con portada y vistas previas, fecha visible y visor amplio con miniaturas; administración del carrusel y de popups |
 | Actividad | Campana con resultados, cierres de examen e hitos de vistas |
 
 La gestión manual de avisos está retirada de la interfaz; subsisten rutas/tablas de compatibilidad. Los objetos llamados `Agents` son controladores deterministas que coordinan servicios: no son agentes de IA ni llaman a modelos externos.

@@ -30,6 +30,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falló el flujo del examen.' }
     node tests/content-views.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Falló el registro de visitas.' }
+    node tests/event-gallery.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Falló la galería de eventos.' }
     node tests/course-related.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Fallaron las capacitaciones relacionadas.' }
     node tests/video-materials.mjs
