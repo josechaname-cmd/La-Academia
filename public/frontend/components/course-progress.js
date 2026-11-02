@@ -1,4 +1,4 @@
-import {escape,icon} from './common.js?v=20261030-8';
+import {escape,icon} from './common.js?v=20261030-9';
 
 export function courseProgress({information,material,exam,withoutExam,published,dirty=false}) {
   const steps=[

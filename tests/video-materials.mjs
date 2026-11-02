@@ -12,6 +12,7 @@ globalThis.fetch=async(url,options={})=>{
  const path=new URL(url).pathname.split('/api/v1/')[1],data=options.body instanceof FormData?Object.fromEntries(options.body):options.body?JSON.parse(options.body):null;calls.push({path,data,method:options.method});
  let result;if(path==='session')result={user:null,csrf:'synthetic'};
  else if(path==='courses/42'||path==='admin/courses/42')result=structuredClone(course);
+ else if(path==='courses')result=[];
  else if(path==='admin/materials/options')result=limits;
  else if(path.startsWith('categories'))result=['Prueba'];
  else if(path==='courses/42/view'){if(failView){failView=false;throw Error('temporary');}assert(materials.some(file=>file.id===data.file_id));result={recorded:views++===0,view_count:1};}
@@ -22,7 +23,7 @@ globalThis.fetch=async(url,options={})=>{
 const {coursePage}=await import('../public/frontend/pages/course.js');
 const {courseEditor}=await import('../public/frontend/pages/admin-courses.js');
 const {materialUploadFields,mountMaterialUpload}=await import('../public/frontend/components/material-upload.js');
-const {upload}=await import('../public/frontend/api.js?v=20261030-8');
+const {upload}=await import('../public/frontend/api.js?v=20261030-9');
 const root=document.querySelector('main'),flush=async()=>{for(let i=0;i<100;i++)await Promise.resolve();};
 let page=await coursePage(42);root.innerHTML=page.html;let cleanup=page.mount(root);const first=root.querySelector('video');
 assert.match(first.poster,/files\/88$/,'The player uses the image chosen by the author');
@@ -30,7 +31,7 @@ assert.equal(root.querySelector('.course-detail-cover img').src,first.poster,'De
 assert(first.controls&&first.playsInline);assert.equal(first.preload,'metadata');assert(!first.autoplay);assert(root.querySelector('[data-expand-material]').hidden);assert.match(root.querySelector('.material-video-info').textContent,/2:05/);assert.equal(root.querySelector('seguro'),null);
 for(const type of ['loadstart','loadedmetadata','canplay','play','seeking','seeked'])first.dispatchEvent(new Event(type));root.querySelector('#material-download').click();await flush();assert.equal(views,0,'Preload, attempted play, seeking and video download do not register playback');
 first.dispatchEvent(new Event('error'));assert(!root.querySelector('.material-video-error').hidden);root.querySelector('[data-retry-video]').click();assert(root.querySelector('.material-video-error').hidden);assert.equal(views,0);
-failView=true;first.dispatchEvent(new Event('playing'));await flush();assert.equal(views,0);first.dispatchEvent(new Event('playing'));first.dispatchEvent(new Event('playing'));await flush();assert.equal(views,1,'Retry a failed view once without overlapping requests');assert.equal(root.querySelector('[data-course-view-count]').textContent,'1 vista');
+failView=true;first.dispatchEvent(new Event('playing'));await flush();assert.equal(views,0);first.dispatchEvent(new Event('playing'));first.dispatchEvent(new Event('playing'));await flush();assert.equal(views,1,'Retry a failed view once without overlapping requests');assert.equal(root.querySelector('[data-course-view-count]').textContent,'1');
 first.dispatchEvent(new Event('pause'));first.dispatchEvent(new Event('playing'));root.querySelector('[data-material="12"]').click();assert(pauses>0&&loads>0);root.querySelector('video').dispatchEvent(new Event('playing'));await flush();assert.equal(views,1,'Multiple videos and replay share one course view');
 root.querySelector('[data-material="13"]').click();assert(!root.querySelector('video'));root.querySelector('iframe').dispatchEvent(new Event('load'));await flush();assert.equal(views,1,'Video and PDF share the same view');assert(!root.querySelector('[data-expand-material]').hidden);cleanup();
 page=await coursePage(42);root.innerHTML=page.html;cleanup=page.mount(root);const stale=root.querySelector('video');root.querySelector('[data-material="12"]').click();stale.dispatchEvent(new Event('playing'));await flush();assert.equal(views,1,'A detached video cannot report a view');const active=root.querySelector('video');cleanup();active.dispatchEvent(new Event('playing'));await flush();assert.equal(views,1,'Unmount stops playback and late view events');

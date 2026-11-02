@@ -90,9 +90,11 @@ try {
     $publication=$db->run("SELECT MAX(created_at) FROM activity_log WHERE entity_type='course' AND entity_id=? AND event_type='course.published'",[$courseIds[1]])->fetchColumn();
     verify($published['published_at']===$publication&&$published['published_at']!==$published['created_at'],'Inicio usa la publicación real aunque el borrador sea antiguo');
     $courses->publish($courseIds[1]);verify($courses->list()[0]['published_at']===$publication,'Publicar de nuevo un curso activo conserva su fecha');
+    verify($courses->get($courseIds[1])['published_at']===$publication,'Detalle y catálogo comparten fecha real de publicación');
     $db->run('SAVEPOINT publication_dates');
     $db->run("DELETE FROM activity_log WHERE entity_type='course' AND entity_id=? AND event_type='course.published'",[$courseIds[1]]);
     verify($courses->list()[0]['published_at']==='2020-01-01 08:00:00','Cursos históricos sin evento de publicación conservan su fecha disponible');
+    verify($courses->get($courseIds[1])['published_at']==='2020-01-01 08:00:00','Detalle conserva fecha disponible de cursos históricos');
     $db->run('ROLLBACK TO SAVEPOINT publication_dates');$db->run('RELEASE SAVEPOINT publication_dates');
     verify(count($call('content','slides',['id'=>$fileIds[1]],'GET')['slides'])===0,'Material publicado permanece público entre sedes');
     $courses->archive($courseIds[1]);

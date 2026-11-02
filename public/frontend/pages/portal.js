@@ -1,8 +1,8 @@
-import {showHomePopup} from '../components/home-popup.js?v=20261030-8';
-import {nextIcon} from '../components/gallery-icons.js?v=20261030-8';
-import {query} from '../api.js?v=20261030-8';
-import {homeCarousel} from '../components/home-carousel.js?v=20261030-8';
-import {homeCourseShelf} from '../components/home-course-shelf.js?v=20261030-8';
+import {showHomePopup} from '../components/home-popup.js?v=20261030-9';
+import {nextIcon} from '../components/gallery-icons.js?v=20261030-9';
+import {query} from '../api.js?v=20261030-9';
+import {homeCarousel} from '../components/home-carousel.js?v=20261030-9';
+import {homeCourseShelf} from '../components/home-course-shelf.js?v=20261030-9';
 export async function portalPage() {
   const [courses,slides]=await Promise.all([query('content','list'),query('content','slider')]);
   const carousel=homeCarousel(slides),shelf=homeCourseShelf(courses);

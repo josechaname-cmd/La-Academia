@@ -11,7 +11,7 @@ final class CourseRepository {
         return $rows;
     }
     public function get(int $id,bool $admin=false): array {
-        $course=$this->db->run("SELECT c.*,s.name site_name,cover.id cover_file_id,pv.status cover_status,pv.source_hash cover_version FROM courses c LEFT JOIN sites s ON s.id=c.site_id LEFT JOIN files cover ON cover.id=COALESCE(c.cover_file_id,(SELECT MIN(f0.id) FROM files f0 WHERE f0.course_id=c.id AND f0.extension IN ('pdf','ppt','pptx'))) LEFT JOIN file_previews pv ON pv.file_id=cover.id WHERE c.id=? AND ".($admin?"c.status<>'archived'":"c.status='published'"),[$id])->fetch();
+        $course=$this->db->run("SELECT c.*,s.name site_name,COALESCE((SELECT MAX(l.created_at) FROM activity_log l WHERE l.entity_type='course' AND l.entity_id=c.id AND l.event_type='course.published'),c.created_at) published_at,cover.id cover_file_id,pv.status cover_status,pv.source_hash cover_version FROM courses c LEFT JOIN sites s ON s.id=c.site_id LEFT JOIN files cover ON cover.id=COALESCE(c.cover_file_id,(SELECT MIN(f0.id) FROM files f0 WHERE f0.course_id=c.id AND f0.extension IN ('pdf','ppt','pptx'))) LEFT JOIN file_previews pv ON pv.file_id=cover.id WHERE c.id=? AND ".($admin?"c.status<>'archived'":"c.status='published'"),[$id])->fetch();
         if(!$course)Http::fail(404,'Capacitación no disponible.');
         $course['materials']=$this->db->run('SELECT f.id,f.original_name,f.extension,f.size,f.mime,f.duration_seconds,f.video_width,f.video_height,f.video_codec,f.audio_codec,p.status preview_status,p.source_hash preview_version,p.error_message preview_error FROM files f LEFT JOIN file_previews p ON p.file_id=f.id WHERE f.course_id=? ORDER BY f.id',[$id])->fetchAll();
         foreach($course['materials'] as &$material){

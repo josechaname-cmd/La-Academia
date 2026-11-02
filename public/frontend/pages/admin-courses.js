@@ -1,12 +1,12 @@
-import {isVideo,materialDuration,materialUploadFields,mountMaterialUpload} from '../components/material-upload.js?v=20261030-8';
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-8';
-import {breadcrumbs} from '../components/ui.js?v=20261030-8';
-import {courseProgress} from '../components/course-progress.js?v=20261030-8';
-import {courseCover,courseCoverUrl,mountCourseCovers} from '../components/course-cover.js?v=20261030-8';
-import {query,command,upload,fileUrl} from '../api.js?v=20261030-8';
-import {heading,escape,empty,status,field,busy,toast,confirmAction,icon,categoryBadge} from '../components/common.js?v=20261030-8';
-import {attachValidation} from '../components/form-validation.js?v=20261030-8';
-import {categoryPicker,mountCategoryPicker} from '../components/category-picker.js?v=20261030-8';
+import {isVideo,materialDuration,materialUploadFields,mountMaterialUpload} from '../components/material-upload.js?v=20261030-9';
+import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-9';
+import {breadcrumbs} from '../components/ui.js?v=20261030-9';
+import {courseProgress} from '../components/course-progress.js?v=20261030-9';
+import {courseCover,courseCoverUrl,mountCourseCovers} from '../components/course-cover.js?v=20261030-9';
+import {query,command,upload,fileUrl} from '../api.js?v=20261030-9';
+import {heading,escape,empty,status,field,busy,toast,confirmAction,icon,categoryBadge} from '../components/common.js?v=20261030-9';
+import {attachValidation} from '../components/form-validation.js?v=20261030-9';
+import {categoryPicker,mountCategoryPicker} from '../components/category-picker.js?v=20261030-9';
 function examLabel(exam) {
   if(!exam)return 'Examen pendiente';
   if(!Number(exam.enabled))return 'Examen desactivado';

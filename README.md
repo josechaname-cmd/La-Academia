@@ -100,6 +100,7 @@ Soporte: **Área de TI**, con el correo autorizado en `support_email` dentro de 
 - [Auditoría técnica y plan de arquitectura · 27-10-2026](docs/AUDITORIA-ARQUITECTURA-2026-10-27.md).
 - [Procesos](docs/PROCESOS.md).
 - [Datos y migraciones](docs/DATOS-Y-MIGRACION.md).
+- [Base de datos: relaciones, índices y diagnóstico](docs/BASE-DE-DATOS.md).
 - [Materiales y portadas](docs/MATERIALES.md).
 
 

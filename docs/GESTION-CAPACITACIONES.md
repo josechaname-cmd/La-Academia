@@ -46,6 +46,27 @@ el editor cuando el servidor devuelve un error.
 **Archivar** sigue siendo otra opción: retira la publicación y conserva su
 historial. La eliminación definitiva también acepta cursos archivados por API.
 
+## Vista pública y otras capacitaciones
+
+El detalle distribuye el material a la izquierda y hasta cuatro tarjetas en el
+lateral derecho. Se ofrecen otras capacitaciones publicadas de la misma sede,
+priorizando la categoría actual. Las tarjetas muestran la portada completa,
+título, descripción breve, vistas y tiempo desde la publicación. En pantallas
+pequeñas pasan debajo del contenido; en móvil se desplazan horizontalmente.
+Si no hay alternativas, el contenido ocupa el ancho disponible. Un fallo al
+cargar sugerencias ofrece Reintentar sin bloquear el material ni el examen.
+
+Junto al título principal aparecen el ojo con el contador y «Hoy», «Hace un día»
+o los días transcurridos, calculados en horario de Perú. La fecha corresponde
+a la publicación registrada; los cursos históricos sin ese registro usan su
+fecha de creación. Mostrar portadas o sugerencias no registra vistas: se mantiene
+el conteo al abrir el documento o comenzar la reproducción del video.
+
+[related-courses.js](../public/frontend/components/related-courses.js) utiliza
+el catálogo público y limpia las cargas pendientes al salir de la página.
+[course-related.mjs](../tests/course-related.mjs) verifica filtros, orden, límite,
+portadas, errores, reintento y respuestas tardías.
+
 ## Archivos responsables y despliegue
 
 - [CourseRepository.php](../backend/src/Repositories/CourseRepository.php):

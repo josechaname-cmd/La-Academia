@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+const dom=new JSDOM('<main></main>',{url:'http://localhost/la-academia/#curso/1'});
+for(const key of ['window','document','location','Event'])globalThis[key]=dom.window[key];
+const calls=[],root=document.querySelector('main');
+const flush=async()=>{for(let i=0;i<60;i++)await Promise.resolve();};
+const course={id:1,site_id:2,category:'SSOMA'};
+const item=(id,overrides={})=>({id,site_id:2,category:'General',title:`Curso ${id}`,description:'Información de la capacitación',status:'published',view_count:8,published_at:'2026-10-30 08:00:00',custom_cover_id:80+id,...overrides});
+let rows=[item(1),item(2),item(3,{category:'SSOMA'}),item(4,{site_id:3}),item(5,{status:'draft'}),item(6,{category:'ssoma',title:'Título <script> "seguro"',description:'Descripción <img onerror="alert(1)">'}),item(7),item(8)],failed=false,resolvePending=null,pending=false;
+globalThis.fetch=async(url,options={})=>{
+ const path=new URL(url).pathname.split('/api/v1/')[1];calls.push({path,method:options.method});
+ assert.equal(path,'courses');assert.equal(options.method,'GET');
+ if(failed)throw Error('Synthetic offline');
+ if(pending)await new Promise(resolve=>{resolvePending=resolve;});
+ return {ok:true,json:async()=>({data:rows})};
+};
+const {relatedCourses}=await import('../public/frontend/components/related-courses.js');
+const {invalidateNavigationCache}=await import('../public/frontend/api.js?v=20261030-9');
+function mount(){invalidateNavigationCache();const component=relatedCourses(course);root.innerHTML=`<div class="course-detail-grid"><div class="course-detail-main">Material</div>${component.html}</div>`;return component.mount(root);}
+let cleanup=mount();await flush();
+assert.deepEqual([...root.querySelectorAll('.related-course a')].map(a=>a.getAttribute('href')),['#curso/3','#curso/6','#curso/2','#curso/7'],'Four public courses from this site, same category first');
+assert.equal(root.querySelectorAll('.related-course img').length,4,'Uses chosen covers');
+assert.equal(root.querySelectorAll('.related-course time').length,4);
+assert.equal(root.querySelector('[data-related-courses]').getAttribute('aria-busy'),'false');
+assert(!root.querySelector('script'));assert.equal(root.querySelectorAll('.related-course-copy img').length,0);
+assert.equal(root.querySelectorAll('.course-view-count[aria-label="8 vistas"]').length,4);
+assert(calls.every(call=>call.method==='GET'),'Suggestions never record views');cleanup();
+rows=[];cleanup=mount();await flush();assert(root.querySelector('.course-related').hidden);assert(root.querySelector('.course-detail-grid--single'),'No empty column');cleanup();
+failed=true;cleanup=mount();await flush();assert(root.querySelector('[data-related-retry]'));assert.equal(root.querySelector('.course-detail-main').textContent,'Material');
+failed=false;rows=[item(9)];root.querySelector('[data-related-retry]').click();await flush();assert.equal(root.querySelector('.related-course a').getAttribute('href'),'#curso/9');cleanup();
+pending=true;cleanup=mount();await flush();assert(resolvePending);cleanup();root.innerHTML='<p>Nueva página</p>';resolvePending();await flush();assert.equal(root.textContent,'Nueva página','Late responses cannot repaint a departed route');
+dom.window.close();console.log('OK recomendaciones: sede, categoría, límite, portadas, escape, sin vistas, vacío, reintento y salida durante carga.');

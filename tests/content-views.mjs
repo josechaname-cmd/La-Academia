@@ -8,7 +8,8 @@ const calls=[];let fail=false;
 globalThis.fetch=async(url,options={})=>{
   const path=new URL(url).pathname.split('/api/v1/')[1];calls.push({path,method:options.method,headers:options.headers});
   if(path==='session')return {ok:true,json:async()=>({data:{user:null,csrf:'test'}})};
-  if(/^courses\/[24]$/.test(path))return {ok:true,json:async()=>({data:{id:Number(path.split('/')[1]),title:'Curso prueba',category:'SSOMA',description:'Descripción',view_count:24,materials:path==='courses/2'?[{id:20,extension:'pdf',original_name:'Documento.pdf'},{id:21,extension:'pdf',original_name:'Otro.pdf'}]:[],exam:null}})};
+  if(path==='courses')return {ok:true,json:async()=>({data:[]})};
+  if(/^courses\/[24]$/.test(path))return {ok:true,json:async()=>({data:{id:Number(path.split('/')[1]),title:'Curso prueba',category:'SSOMA',description:'Descripción',view_count:24,published_at:'2026-10-30 08:00:00',materials:path==='courses/2'?[{id:20,extension:'pdf',original_name:'Documento.pdf'},{id:21,extension:'pdf',original_name:'Otro.pdf'}]:[],exam:null}})};
   if(fail)throw Error('offline');
   return {ok:true,json:async()=>({data:{recorded:true,view_count:25}})};
 };
@@ -48,12 +49,15 @@ const page=await coursePage(2);assert.ok(!calls.some(c=>c.path==='courses/2/view
 const root=document.querySelector('main');root.innerHTML=page.html;let cleanup=page.mount(root);await flush();
 const courseViews=()=>calls.filter(c=>c.path==='courses/2/view');
 assert.equal(courseViews().length,0,'Entering the page does not count until the material opens');
-assert.equal(root.querySelector('[data-course-view-count]').textContent,'24 vistas');
+assert.equal(root.querySelector('[data-course-view-count]').textContent,'24');
 root.querySelector('[data-expand-material]').click();const lightbox=document.querySelector('.material-lightbox'),largeFrame=lightbox.querySelector('iframe');lightbox.close();largeFrame.dispatchEvent(new Event('load'));await flush();
 assert.equal(courseViews().length,0,'Closing a pending enlarged viewer does not count its blank page');
 const firstFrame=root.querySelector('#material-stage iframe');firstFrame.dispatchEvent(new Event('load'));await flush();
 assert.equal(courseViews().length,1);assert.equal(courseViews()[0].headers['X-CSRF-Token'],'test');
-assert.equal(root.querySelector('[data-course-view-count]').textContent,'25 vistas','The viewer displays the server total');
+assert.equal(root.querySelector('[data-course-view-count]').textContent,'25','The title displays the server total');
+assert.equal(root.querySelector('[data-course-view-status]').getAttribute('aria-label'),'25 vistas');
+assert.equal(root.querySelectorAll('[data-course-view-count]').length,1);
+assert.equal(root.querySelector('.course-detail-meta time').dateTime,'2026-10-30T13:00:00.000Z');
 root.querySelector('[data-material="21"]').click();root.querySelector('#material-stage iframe').dispatchEvent(new Event('load'));firstFrame.dispatchEvent(new Event('load'));await flush();
 assert.equal(courseViews().length,1,'Changing documents and repeated loads do not inflate the same opening');cleanup();
 const empty=await coursePage(4);root.innerHTML=empty.html;cleanup=empty.mount(root);await flush();assert.ok(!calls.some(c=>c.path==='courses/4/view'),'An empty course never records material views');cleanup();

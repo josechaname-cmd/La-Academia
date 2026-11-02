@@ -1,7 +1,7 @@
-import {courseCards} from './course-cards.js?v=20261030-8';
-import {mountCourseCovers} from './course-cover.js?v=20261030-8';
-import {previousIcon,nextIcon} from './gallery-icons.js?v=20261030-8';
-import {screens} from '../design/runtime.js?v=20261030-8';
+import {courseCards} from './course-cards.js?v=20261030-9';
+import {mountCourseCovers} from './course-cover.js?v=20261030-9';
+import {previousIcon,nextIcon} from './gallery-icons.js?v=20261030-9';
+import {screens} from '../design/runtime.js?v=20261030-9';
 
 // Each horizontal page contains at most three rows at every supported breakpoint.
 export function homeCourseShelf(courses){

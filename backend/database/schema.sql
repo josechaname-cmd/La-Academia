@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS admins (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL, dni CHAR(8) NULL,
  job_title VARCHAR(160) NOT NULL DEFAULT '',
  email VARCHAR(190) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL,
+ UNIQUE KEY uq_admin_dni (dni),
  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS auth_attempts (
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS courses (
  first_published_at DATETIME NULL,
  status ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
- INDEX idx_course_status (status,category)
+ INDEX idx_course_status (status,category), INDEX idx_course_site (site_id,status,created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS files (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, course_id BIGINT UNSIGNED NULL,
@@ -75,7 +76,7 @@ CREATE TABLE IF NOT EXISTS exams (
 CREATE TABLE IF NOT EXISTS employees (
  dni CHAR(8) PRIMARY KEY, full_name VARCHAR(120) NOT NULL, job_title VARCHAR(160) NOT NULL, site_id BIGINT UNSIGNED NULL,
  active TINYINT(1) NOT NULL DEFAULT 1, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
- INDEX idx_employee_active (active,full_name)
+ INDEX idx_employee_active (active,full_name), INDEX idx_employee_site (site_id,active,full_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS enrollments (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, exam_id BIGINT UNSIGNED NOT NULL,
