@@ -8,16 +8,16 @@ const options=values=>values.map(([value,label])=>`<option value="${value}">${la
 const payload=item=>Object.fromEntries(['title','subtitle','alt','active','position','fit','focal','link_url',...Object.keys(slideStyleDefaults)].map(key=>[key,item[key]]));
 const snapshot=item=>JSON.stringify(payload(item));
 const targetKind=url=>url?.startsWith('#curso/')?'course':/^#eventos\//.test(url)?'event':isExternalLink(url||'')?'external':url?'page':'info';
-export async function sliderPage(id=''){
-  if(id&&id!=='nuevo'&&!/^[1-9][0-9]*$/.test(String(id)))throw new Error('Imagen no disponible.');
+export async function sliderPage(id='',state={}){
+  if(id&&id!=='nuevo'&&!/^[1-9][0-9]*$/.test(String(id)))throw Object.assign(new Error('Imagen no disponible.'),{status:404});
   const [saved,courses,events]=await Promise.all([query('slider','list'),query('content','admin.list'),query('admin','events.list')]);
-  if(id&&id!=='nuevo'&&!saved.some(item=>String(item.id)===String(id)))throw new Error('Imagen no disponible.');
+  if(id&&id!=='nuevo'&&!saved.some(item=>String(item.id)===String(id)))throw Object.assign(new Error('Imagen no disponible.'),{status:404});
   const destinations={
     course:courses.filter(item=>item.status==='published').map(item=>({url:`#curso/${item.id}`,title:item.title})),
     event:events.filter(item=>Number(item.active)).map(item=>({url:`#eventos/${item.id}`,title:item.title})),
     page:[{url:'#inicio',title:'Inicio'},{url:'#capacitaciones',title:'Catálogo de capacitaciones'},{url:'#eventos',title:'Eventos'}]
   };
-  return {html:`${breadcrumbs([{label:'Eventos',href:'#admin/eventos'},{label:'Slider de Inicio'}])}${heading('PORTAL PÚBLICO','Slider de Inicio','Carga varias imágenes, ordénalas y edita su contenido aquí. Los cambios se aplican al guardar.')}
+  return {html:`${breadcrumbs([{label:'Panel',href:'#admin'},{label:'Portada'},{label:'Carrusel'}])}${heading('PORTADA','Carrusel','Carga varias imágenes, ordénalas y edita su contenido aquí. Los cambios se aplican al guardar.')}
     <div class="slider-workspace">
       <section class="panel padded slider-library"><h2>1. Imágenes y orden</h2><label class="button primary slider-add">${icon('upload')} Agregar imágenes<input id="slider-files" type="file" multiple accept=".jpg,.jpeg,.png,.webp" aria-label="Agregar varias imágenes al slider"></label><p class="hint">Puedes elegir varios archivos a la vez. JPG, PNG o WEBP · hasta 8 MB por imagen. Recomendado: 1920 × 600 px.</p><p class="hint" id="slider-sort-help">Arrastra desde los seis puntos para subir o bajar una imagen. Con teclado, enfoca los puntos y usa ↑ o ↓.</p><div id="slider-list" class="slider-thumbnails" role="list" aria-label="Imágenes en orden de aparición"></div><p id="slider-sort-status" class="sr-only" role="status"></p></section>
       <section class="panel padded slider-edit"><div id="slider-empty">${empty('Agrega imágenes para preparar el slider.')}</div><form id="slider-form" hidden><div class="heading"><h2>2. Contenido de la imagen</h2><span id="slider-selected-number" class="hint"></span></div><div class="form-grid">
@@ -32,7 +32,7 @@ export async function sliderPage(id=''){
         <div class="slider-order-actions"><button type="button" class="button white" id="slider-remove">${icon('trash')} Quitar imagen</button></div>
       </form><div class="slider-live-preview"><div class="media-preview-heading"><h2>3. Vista previa</h2><label class="field">Pantalla<select id="slider-device"><option value="desktop">Escritorio</option><option value="mobile">Móvil</option></select></label></div><div class="media-preview-stage slider-preview-stage" data-device="desktop" id="slider-stage"><div id="slider-preview"></div></div><p id="slider-image-size" class="hint" role="status"></p><p id="slider-image-warning" class="notice" hidden></p><button class="button white" type="button" id="slider-preview-all">${icon('eye')} Ver secuencia completa</button></div></section>
     </div><div class="slider-savebar"><p id="slider-save-state" role="status"></p><button class="button primary" type="submit" form="slider-form" id="slider-save">${icon('check')} Guardar cambios</button></div><div id="slider-error" class="error" role="alert" hidden></div>`,mount(root){
-    let serial=0,items=saved.map(item=>{const row={title:'',subtitle:'',link_url:'',...slideStyleDefaults,...item,active:Number(item.active),position:Number(item.position),title_size:Number(item.title_size??36),text_size:Number(item.text_size??17),_key:`stored-${item.id}`};row._saved=snapshot(row);return row;}),removed=[],selected=items.find(item=>String(item.id)===String(id))?._key||items[0]?._key||'',saving=false,disposed=false,confirming=false,closePreview=()=>{};
+    let serial=0,items=saved.map(item=>{const row={title:'',subtitle:'',link_url:'',...slideStyleDefaults,...item,active:Number(item.active),position:Number(item.position),title_size:Number(item.title_size??36),text_size:Number(item.text_size??17),_key:`stored-${item.id}`};row._saved=snapshot(row);return row;}),removed=[],selected=items.find(item=>String(item.id)===String(state.slideId||id))?._key||items[0]?._key||'',saving=false,disposed=false,confirming=false,closePreview=()=>{};
     const form=root.querySelector('#slider-form'),list=root.querySelector('#slider-list'),save=root.querySelector('#slider-save'),error=root.querySelector('#slider-error'),add=root.querySelector('#slider-files');
     const current=()=>items.find(item=>item._key===selected),changed=item=>!!item._file||!!(item._targetKind&&item._targetKind!=='info'&&!item.link_url)||snapshot(item)!==item._saved,dirty=()=>removed.length>0||items.some(changed);
     const source=item=>item?._local||item?.image||'';
@@ -63,7 +63,7 @@ export async function sliderPage(id=''){
       const image=preview.querySelector('img');image.addEventListener('load',()=>{if(disposed||!image.isConnected)return;item._dimensions={width:image.naturalWidth,height:image.naturalHeight};advice();},{once:true});advice();
     }
     function select(key){
-      selected=key;const item=current();form.querySelectorAll('input,textarea,select,button').forEach(control=>control.disabled=!item||saving);form.hidden=!item;root.querySelector('#slider-empty').hidden=!!item;root.querySelector('.slider-live-preview').hidden=!item;
+      selected=key;const item=current();state.slideId=item?.id||null;form.querySelectorAll('input,textarea,select,button').forEach(control=>control.disabled=!item||saving);form.hidden=!item;root.querySelector('#slider-empty').hidden=!!item;root.querySelector('.slider-live-preview').hidden=!item;
       if(item){fields.forEach(key=>form.elements[key].value=item[key]??'');form.elements.active.checked=!!item.active;form.elements.image.value='';form.elements.target_kind.value=item._targetKind||targetKind(item.link_url);form.elements.external_url.value=isExternalLink(item.link_url)?item.link_url:'';syncDestination(item.link_url);root.querySelector('#slider-selected-number').textContent=`${items.indexOf(item)+1} de ${items.length}`;}
       renderList();renderPreview();
     }

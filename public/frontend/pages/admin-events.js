@@ -1,4 +1,4 @@
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-9';
+import {paginationControls,mountPagination,rememberFilters,searchText} from '../components/list-controls.js?v=20261030-9';
 import {query,command} from '../api.js?v=20261030-9';
 import {heading,field,escape,optionList,formData,modal,busy,toast,confirmAction,icon} from '../components/common.js?v=20261030-9';
 import {eventCards} from '../components/events.js?v=20261102-3';
@@ -7,11 +7,12 @@ import {photoPickerHtml,mountPhotoPicker} from '../components/event-photo-picker
 import {attachValidation} from '../components/form-validation.js?v=20261030-9';
 import {categoryPicker,mountCategoryPicker} from '../components/category-picker.js?v=20261030-9';
 import {listRefresh} from '../components/list-refresh.js?v=20261102-4';
-export async function eventsPage(reload,selectedId=''){
+export async function eventsPage(reload,selectedId='',state={}){
   const [events,eventCategories]=await Promise.all([query('admin','events.list'),query('content','categories.list',{scope:'event'})]);
   return {html:`${heading('COMUNICACIÓN INTERNA','Eventos','Los eventos publicados aparecen en Eventos. Agrega una galería de al menos 3 imágenes.','<button class="button primary" id="new-event">+ Crear evento</button>')}<div class="toolbar"><label class="search"><span class="sr-only">Buscar eventos</span><input id="event-search" type="search" placeholder="Buscar por título o lugar"></label><label>Categoría<select id="event-filter"><option value="">Todos los eventos</option>${optionList(eventCategories)}</select></label></div><div class="event-grid event-feed admin-event-grid" id="admin-events"></div>${paginationControls('eventos')}`,mount(root){
     const cleanupGallery=mountEventGallery(root,events,{admin:true});
-    const pager=mountPagination(root.querySelector('[data-list-pagination]'),{size:6,onChange:render});
+    rememberFilters(root,state,['#event-search','#event-filter']);
+    const pager=mountPagination(root.querySelector('[data-list-pagination]'),{size:6,onChange:render,state});
     function render(){const term=searchText(root.querySelector('#event-search').value),category=root.querySelector('#event-filter').value;const rows=events.filter(item=>(!category||item.category===category)&&searchText(`${item.title} ${item.location}`).includes(term));root.querySelector('#admin-events').innerHTML=eventCards(pager.slice(rows),true);}
     const updates=listRefresh(root,()=>query('admin','events.list'),latest=>{events.splice(0,events.length,...latest);render();});
     pager.reveal(events.findIndex(item=>String(item.id)===selectedId));render();

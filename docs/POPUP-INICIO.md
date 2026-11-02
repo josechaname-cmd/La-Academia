@@ -1,6 +1,6 @@
 # Popups de Inicio
 
-Gestión exclusiva para superadmin en **Panel → Eventos → Popup de Inicio** (`#admin/eventos/popup`). Abre una lista de anuncios guardados, con vista previa, edición, activación/desactivación y eliminación con confirmación. **Solo uno puede estar activo**; al activar otro, el anterior se desactiva en la misma transacción. Eliminar el activo deja Inicio sin popup y conserva los demás.
+Gestión exclusiva para superadmin en **Panel → Portada → Aviso emergente** (`#admin/eventos/popup`). Abre una lista de anuncios guardados, con vista previa, edición, activación/desactivación y eliminación con confirmación. **Solo uno puede estar activo**; al activar otro, el anterior se desactiva en la misma transacción. Eliminar el activo deja Inicio sin popup y conserva los demás.
 
 ## Preparar y previsualizar
 

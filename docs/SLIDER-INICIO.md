@@ -1,6 +1,6 @@
 # Slider de Inicio
 
-Desde **Panel → Eventos → Slider de Inicio**, exclusivamente como superadmin, puedes agregar, editar, ocultar/mostrar y eliminar imágenes. Ruta: `#admin/eventos/slider`; las rutas anteriores `#admin/slider` y sus editores redirigen conservando el destino. Ya no hace falta editar código ni colocar archivos en una carpeta.
+Desde **Panel → Portada → Carrusel**, exclusivamente como superadmin, puedes agregar, editar, ocultar/mostrar y eliminar imágenes. Ruta: `#admin/eventos/slider`; las rutas anteriores `#admin/slider` y sus editores redirigen conservando el destino. Ya no hace falta editar código ni colocar archivos en una carpeta.
 
 ## Uso: una sola pantalla
 

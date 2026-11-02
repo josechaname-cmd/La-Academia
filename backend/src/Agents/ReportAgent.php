@@ -18,7 +18,7 @@ final class ReportAgent implements AgentInterface
         $context->requireMethod('GET');
 
         return match ($action) {
-            'results' => $this->reports->results(isset($_GET['exam_id']) ? $context->id('exam_id') : null, $siteId),
+            'results' => $this->reports->results(isset($_GET['exam_id']) ? $context->id('exam_id') : null, $siteId, isset($_GET['course_id']) ? $context->id('course_id') : null),
             'exams' => $this->reports->exams($siteId),
             'export' => (new \Academia\Services\ReportExport($this->reports))->export($context->id(), $siteId),
             'summary' => $this->reports->summary($siteId),

@@ -34,7 +34,7 @@ export function adminLayout(){
     try{localStorage.setItem(preference,String(collapsed));}catch{}
   }
   toggle.addEventListener('click',()=>opened?close(true):open());
-  document.addEventListener('click',event=>{if(event.target.closest('[data-sidebar-collapse]'))toggleCollapsed();const courseToggle=event.target.closest('[data-course-menu]');if(courseToggle)setCourseMenuExpanded(document,courseToggle.getAttribute('aria-expanded')!=='true');const eventToggle=event.target.closest('[data-event-menu]');if(eventToggle)setEventMenuExpanded(document,eventToggle.getAttribute('aria-expanded')!=='true');const userToggle=event.target.closest('[data-user-menu]');if(userToggle)setUserMenuExpanded(document,userToggle.getAttribute('aria-expanded')!=='true');if(event.target.closest('.sidebar-close,.admin-backdrop'))close(true);});
+  document.addEventListener('click',event=>{if(event.target.closest('[data-sidebar-collapse]'))toggleCollapsed();const courseToggle=event.target.closest('[data-course-menu]');if(courseToggle)setCourseMenuExpanded(document,courseToggle.getAttribute('aria-expanded')!=='true');const eventToggle=event.target.closest('[data-event-menu]');if(eventToggle){if(collapsed&&!mobile.matches){toggleCollapsed();setEventMenuExpanded(document,true);}else setEventMenuExpanded(document,eventToggle.getAttribute('aria-expanded')!=='true');}const userToggle=event.target.closest('[data-user-menu]');if(userToggle)setUserMenuExpanded(document,userToggle.getAttribute('aria-expanded')!=='true');if(event.target.closest('.sidebar-close,.admin-backdrop'))close(true);});
   document.addEventListener('keydown',event=>{
     if(!opened)return;
     if(event.key==='Escape'){event.preventDefault();close(true);}

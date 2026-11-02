@@ -7,6 +7,7 @@ const paths={
   expand:'M9 3H3v6 M15 3h6v6 M21 15v6h-6 M3 15v6h6',download:'M12 3v13 M6 10l6 6 6-6 M4 17v4h16v-4',upload:'M12 16V3 M6 9 12 3 18 9 M4 16v5h16v-5',previous:'M15 6 9 12 15 18',next:'M9 6 15 12 9 18',close:'M6 6 18 18 M18 6 6 18',grip:'M8 5h.01 M16 5h.01 M8 12h.01 M16 12h.01 M8 19h.01 M16 19h.01',
   home:'M3 11 12 3 21 11 M5 10v11h14V10 M9 21v-7h6v7',book:'M3 4h7l2 2 2-2h7v16h-7l-2 1-2-1H3Z M12 6v15',
   users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M18 4a4 4 0 0 1 0 7 M22 21v-2a4 4 0 0 0-3-4',
+  logout:'M9 4H4v16h5 M11 12h10 M16 7l5 5-5 5',
   building:'M4 21V3h16v18 M9 21v-5h6v5 M8 7h2 M14 7h2 M8 11h2 M14 11h2',
   calendar:'M4 5h16v16H4Z M8 3v4 M16 3v4 M4 10h16',check:'M5 12 10 17 20 6',
   results:'M4 3h16v18H4Z M8 8h8 M8 12h8 M8 16h5',menu:'M4 6h16 M4 12h16 M4 18h16',

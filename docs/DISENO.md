@@ -27,6 +27,12 @@ Se conserva la identidad azul, blanco y verde azulado, el logotipo institucional
 
 No editar directamente `public/assets/design-system.css`, `styles.css`, `learning.css` ni `public/frontend/design/runtime.js`: son generados y están marcados como tales. Se entregan compilados; Apache no necesita Node para servir la aplicación.
 
+### Navegación del panel
+
+«Ver portal» abre la vista pública y «Mi panel» retoma la última sección administrativa de la pestaña. «Inicio» en el menú lateral abre el resumen. La ruta se vincula a la sesión, la cuenta y la sede. Los términos buscados y la página de los listados se conservan en memoria durante la navegación. Volver al editor abre el contenido guardado.
+
+Inicio muestra hasta dos accesos de trabajo cuando corresponden: el borrador modificado más recientemente y el examen abierto que cierra antes en los próximos siete días. Desde Promedios y Personas evaluadas se consultan los resultados de todas las versiones del curso seleccionado. El conteo de personas distingue los DNI por curso y el promedio considera el último envío de cada persona en cada versión.
+
 ### Geometría de los gráficos de Inicio
 
 Inicio aprovecha todo el ancho disponible con comparación y detalle lado a lado. Vistas y Participación usan barras horizontales desde cero; Promedios muestra el rango mínimo–máximo y un punto para la media sobre 0–20. Cada página contiene hasta cinco capacitaciones; cambiar de página conserva la escala y los totales del conjunto filtrado. Los rankings Top 3/5/10 son gráficos compactos: notas en columnas de escala 0–20 y conteos en dos columnas de barras. Pulsar un conteo del ranking abre su página y detalle. Evaluaciones y accesos ocupan una franja inferior. En espacios estrechos, la comparación y el detalle se apilan sin ocultar registros ni bloquear el desplazamiento.

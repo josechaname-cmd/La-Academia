@@ -3,11 +3,22 @@ import {motion} from '../design/runtime.js?v=20261030-9';
 import {query,examResultsUrl} from '../api.js?v=20261030-9';
 import {heading,escape,empty,date,optionList,busy,errorBox} from '../components/common.js?v=20261030-9';
 const examState=exam=>exam.course_status==='archived'?'Archivado':({scheduled:'Programado',open:'En curso',closed:'Finalizado',disabled:'Desactivado',not_required:'No requerido'}[exam.state]);
-export async function reportsPage(examId='') {
+export async function reportsPage(examId='',courseId='',onRouteChange=()=>{}) {
   if(examId&&!/^[1-9][0-9]*$/.test(examId))throw new Error('Examen no válido.');
-  let [initial,exams]=await Promise.all([query('report','results',examId?{exam_id:examId}:{}),query('report','exams')]);
-  return {html:`${heading('SEGUIMIENTO INTERNO','Resultados de las evaluaciones','Última nota por colaborador y versión. Descarga resultados durante el examen o después del cierre.')}<section class="panel"><div class="toolbar report-controls"><label class="field report-exam">Examen<select id="report-exam"><option value="">Todos los resultados recientes</option>${exams.map(exam=>`<option value="${exam.id}" ${String(exam.id)===examId?'selected':''}>${escape(exam.title)} · v${exam.version} · ${examState(exam)}</option>`).join('')}</select></label><a id="export-results" class="button primary" aria-disabled="true" tabindex="-1" download>Exportar Excel</a><button id="refresh-results" class="button white">Actualizar resultados</button></div><p id="report-period" class="report-period hint">Selecciona un examen para exportar todos sus participantes.</p><div class="toolbar"><label class="search"><span class="sr-only">Buscar resultados</span><input id="report-search" type="search" placeholder="Nombre, DNI, cargo o capacitación"></label><label>Cargo<select id="report-job-title"><option value="">Todos</option></select></label></div><div class="report-results"><p id="report-loading" role="status" hidden>Actualizando resultados…</p><div id="report-table"></div></div>${paginationControls('resultados')}</section><p class="hint">Vista: hasta 1 000 registros. Excel: todos los participantes del examen seleccionado, sin aplicar los filtros de búsqueda o cargo. Notas en blanco: todavía no hay un envío válido.</p>`,mount(root){
+  if(courseId&&!/^[1-9][0-9]*$/.test(courseId))throw new Error('Capacitación no válida.');
+  const selection=examId||(courseId?'curso/'+courseId:'');
+  const params=value=>value.startsWith('curso/')?{course_id:value.slice(6)}:value?{exam_id:value}:{};
+  const options=(items,value)=>{
+    const courses=new Map(items.map(exam=>[String(exam.course_id),exam.title]));
+    const course=value.startsWith('curso/')?value.slice(6):courseId;
+    const group=course?`<option value="curso/${escape(course)}">Todas las versiones · ${escape(courses.get(course)||'Capacitación')}</option>`:'';
+    const versions=(course?items.filter(exam=>String(exam.course_id)===course):items).map(exam=>`<option value="${Number(exam.id)}"${String(exam.id)===value?' selected':''}>${escape(exam.title)} · v${Number(exam.version)} · ${examState(exam)}</option>`).join('');
+    return '<option value="">Todos los resultados recientes</option>'+group+versions;
+  };
+  let [initial,exams]=await Promise.all([query('report','results',params(selection)),query('report','exams')]);
+  return {html:`${heading('SEGUIMIENTO INTERNO','Resultados de las evaluaciones','Última nota por colaborador y versión. Descarga resultados durante el examen o después del cierre.')}<section class="panel"><div class="toolbar report-controls"><label class="field report-exam">Examen<select id="report-exam">${options(exams,selection)}</select></label><a id="export-results" class="button primary" aria-disabled="true" tabindex="-1" download>Exportar Excel</a><button id="refresh-results" class="button white">Actualizar resultados</button></div><p id="report-period" class="report-period hint">Selecciona un examen para exportar todos sus participantes.</p><div class="toolbar"><label class="search"><span class="sr-only">Buscar resultados</span><input id="report-search" type="search" placeholder="Nombre, DNI, cargo o capacitación"></label><label>Cargo<select id="report-job-title"><option value="">Todos</option></select></label></div><div class="report-results"><p id="report-loading" role="status" hidden>Actualizando resultados…</p><div id="report-table"></div></div>${paginationControls('resultados')}</section><p class="hint">Vista: hasta 1 000 registros. Excel: todos los participantes del examen seleccionado, sin aplicar los filtros de búsqueda o cargo. Notas en blanco: todavía no hay un envío válido.</p>`,mount(root){
     let results=initial,generation=0,loading=false,ready=true,transition=null;const selected=root.querySelector('#report-exam'),exportButton=root.querySelector('#export-results'),jobTitle=root.querySelector('#report-job-title'),table=root.querySelector('#report-table');
+    selected.value=selection;
     const pagerHost=root.querySelector('[data-list-pagination]'),pager=mountPagination(pagerHost,{onChange:render});
     function render(){
       pagerHost.hidden=false;
@@ -18,10 +29,10 @@ export async function reportsPage(examId='') {
     }
     function jobTitles(){const previous=jobTitle.value;jobTitle.innerHTML='<option value="">Todos</option>'+optionList([...new Set(results.map(row=>row.job_title))],previous);}
     function controls(){
-      const id=selected.value,available=!!id&&!loading&&ready;
+      const id=selected.value,available=/^\d+$/.test(id)&&!loading&&ready;
       exportButton.setAttribute('aria-disabled',String(!available));exportButton.tabIndex=available?0:-1;if(available)exportButton.href=examResultsUrl(id);else exportButton.removeAttribute('href');
       const exam=exams.find(exam=>String(exam.id)===id),format=value=>value?`${value.slice(0,16)} (Perú)`:'Sin fecha';
-      root.querySelector('#report-period').textContent=exam?`Apertura: ${format(exam.opens_at)} · Cierre: ${format(exam.closes_at)}. La descarga incluye los datos disponibles en ese momento.`:'Selecciona un examen para exportar todos sus participantes.';
+      root.querySelector('#report-period').textContent=id.startsWith('curso/')?'Todas las versiones de esta capacitación. Elige un examen para exportar sus participantes.':exam?`Apertura: ${format(exam.opens_at)} · Cierre: ${format(exam.closes_at)}. La descarga incluye los datos disponibles en ese momento.`:'Selecciona un examen para exportar todos sus participantes.';
     }
     async function load(){
       const current=++generation,id=selected.value;
@@ -30,11 +41,11 @@ export async function reportsPage(examId='') {
       root.querySelector('#report-search').disabled=true;jobTitle.disabled=true;
       table.classList.add('is-loading');
       try{
-        const [fresh,updatedExams]=await Promise.all([query('report','results',id?{exam_id:id}:{}),query('report','exams')]);
+        const [fresh,updatedExams]=await Promise.all([query('report','results',params(id)),query('report','exams')]);
         if(current!==generation)return;
         results=fresh;exams=updatedExams;
-        selected.innerHTML='<option value="">Todos los resultados recientes</option>'+exams.map(exam=>`<option value="${exam.id}">${escape(exam.title)} · v${exam.version} · ${examState(exam)}</option>`).join('');
-        selected.value=id;jobTitles();render();ready=true;
+        selected.innerHTML=options(exams,id);
+        selected.value=id;jobTitles();render();ready=true;onRouteChange('#admin/capacitaciones/resultados'+(id?'/'+id:''));
       }catch(error){if(current===generation){results=[];pagerHost.hidden=true;table.innerHTML=errorBox(error);}}
       finally{if(current===generation){
         loading=false;controls();table.setAttribute('aria-busy','false');table.inert=false;pagerHost.inert=false;table.classList.remove('is-loading');
@@ -43,6 +54,7 @@ export async function reportsPage(examId='') {
       }}
     }
     selected.addEventListener('change',()=>{
+      if(!selected.value)courseId='';
       history.replaceState(null,'','#admin/capacitaciones/resultados'+(selected.value?'/'+selected.value:''));
       root.querySelector('#report-search').value='';jobTitle.value='';pager.reset();load();
     });

@@ -244,6 +244,7 @@ El inventario incluye código, configuración, diseño, herramientas y pruebas; 
 | [home-carousel.js](../public/frontend/components/home-carousel.js) | Carrusel del portal, imágenes y conexión de indicadores. |
 | [public-link.js](../public/frontend/components/public-link.js) | Comprueba enlaces públicos antes de renderizar sliders y popups. |
 | [home-popup.js](../public/frontend/components/home-popup.js) | Popup público y vista previa usando la misma composición. |
+| [panel-navigation.js](../public/frontend/components/panel-navigation.js) | Recupera la última sección autorizada de la pestaña y conserva en memoria el contexto de los listados durante la sesión. |
 | [list-controls.js](../public/frontend/components/list-controls.js) | Paginación local, búsqueda sin tildes y filtrado de tablas administrativas. |
 | [list-refresh.js](../public/frontend/components/list-refresh.js) | Actualización parcial tras guardar; conserva la pantalla y permite reconsultar sin repetir una escritura. |
 | [material-viewer.js](../public/frontend/components/material-viewer.js) | Visor de materiales, vista previa y descargas autorizadas. |

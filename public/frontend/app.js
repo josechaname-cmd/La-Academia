@@ -3,9 +3,10 @@ import {sliderPage} from './pages/admin-slider.js?v=20261030-9';
 import {homePopupPage} from './pages/admin-home-popup.js?v=20261030-9';
 import {observeUI} from './components/ui.js?v=20261030-9';
 import {overviewPage} from './pages/admin-home.js?v=20261030-9';
+import {panelNavigation} from './components/panel-navigation.js?v=20261102-5';
 import {adminLayout} from './components/admin-layout.js?v=20261030-9';
 import {session,command,query} from './api.js?v=20261030-9';
-import {escape,errorBox,busy} from './components/common.js?v=20261030-9';
+import {escape,errorBox,busy,icon,toast} from './components/common.js?v=20261030-9';
 import {adminShell,setCourseMenuExpanded,setEventMenuExpanded,setUserMenuExpanded} from './components/admin-shell.js?v=20261030-9';
 import {authPage} from './pages/auth.js?v=20261030-9';
 import {portalPage} from './pages/portal.js?v=20261030-9';
@@ -21,11 +22,14 @@ import {policiesPage,policyPage,policyEditor} from './pages/policies.js?v=202610
 observeUI(document.body);
 mountPublicHeader();
 const layout=adminLayout();
+const panel=panelNavigation();
+let activeView=null;
 const root=document.querySelector('#app'),navigation=document.querySelector('#navigation');
 let cleanupNotifications=null,cleanupPage=null,generation=0,navigationKey=null,shellKey=null;
 const userKey=user=>user?JSON.stringify(user):'guest';
 function clearPage(){cleanupPage?.();cleanupPage=null;}
 function resetPrivateView(){
+  activeView=null;
   clearPage();cleanupNotifications?.();cleanupNotifications=null;
   navigation.replaceChildren();navigationKey=null;shellKey=null;
   document.querySelector('#dialog-body')?.replaceChildren();
@@ -35,10 +39,10 @@ function updateNavigation(admin,identity,parts,announcements){
   const key=JSON.stringify([admin,userKey(identity.user)]);
   if(navigationKey!==key){
     cleanupNotifications?.();cleanupNotifications=null;
-    navigation.innerHTML=admin?(identity.user?'<a href="#inicio">Volver al portal</a><button id="logout" class="link-button">Cerrar sesión</button>':''):'<a href="#inicio">Inicio</a><a href="#capacitaciones">Capacitaciones</a><a href="#politicas">Políticas</a><a href="#eventos">Eventos</a><a class="admin-link" href="#admin">'+(identity.user?'Mi panel':'Iniciar sesión')+'</a>';
+    navigation.innerHTML=admin?(identity.user?`<span class="panel-scope" data-panel-scope></span><a href="#inicio" aria-label="Ver portal" title="Ver portal">${icon('home')}<span>Ver portal</span></a><button id="logout" class="link-button" aria-label="Cerrar sesión" title="Cerrar sesión">${icon('logout')}<span>Cerrar sesión</span></button>`:''):'<a href="#inicio">Inicio</a><a href="#capacitaciones">Capacitaciones</a><a href="#politicas">Políticas</a><a href="#eventos">Eventos</a><a class="admin-link" href="'+(identity.user?'#admin/volver':'#admin')+'">'+(identity.user?'Mi panel':'Iniciar sesión')+'</a>';
     if(identity.user){const notices=notificationCenter(announcements,identity.user.id);navigation.insertAdjacentHTML('beforeend',notices.html);cleanupNotifications=notices.mount(navigation);}
     navigation.querySelector('#logout')?.addEventListener('click',event=>busy(event.target,async()=>{
-      await command('admin','logout');++generation;resetPrivateView();history.replaceState(null,'','#inicio');await route();
+      await command('admin','logout');panel.clear();++generation;resetPrivateView();history.replaceState(null,'','#inicio');await route();
     }));
     navigationKey=key;
   }
@@ -47,7 +51,7 @@ function updateNavigation(admin,identity,parts,announcements){
     else link.removeAttribute('aria-current');
   });
 }
-function commit(page,admin,user,section,preserveScroll=false){
+function commit(page,admin,user,section,preserveScroll=false,view=null){
   const position=preserveScroll?{top:window.scrollY,left:window.scrollX}:null,focusedId=preserveScroll?document.activeElement?.id:null;
   const focusedName=preserveScroll&&document.activeElement?.closest('#course-form')?document.activeElement.name:null;
   // Refreshing a cover or material must not discard information still being edited.
@@ -70,12 +74,23 @@ function commit(page,admin,user,section,preserveScroll=false){
       link.classList.toggle('selected',active);
       if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
     });
+    const scope=section==='politicas'?'General':page.scope||(user.role==='superadmin'?'Todas las sedes':user.site_name||'Mi sede');
+    const label=navigation.querySelector('[data-panel-scope]');
+    const profile=root.querySelector('[data-profile-scope]');
+    const showScope=value=>{
+      if(label){label.textContent=value;label.title=value;}
+      if(profile)profile.textContent=value;
+    };
+    showScope(scope);
+    const picker=target.querySelector('#course-form select[name="site_id"]');
+    picker?.addEventListener('change',()=>showScope(picker.value?picker.selectedOptions[0].textContent:'Selecciona una sede'));
     layout.sync();
   }else{shellKey=null;root.innerHTML=page.html;}
   root.setAttribute('aria-busy','false');root.classList.remove('route-pending');
   target.tabIndex=-1;
   if(!preserveScroll){window.scrollTo({top:0,behavior:'instant'});target.focus({preventScroll:true});}
   cleanupPage=page.mount?.(target)??null;
+  if(!preserveScroll&&view?.scroll)window.scrollTo({top:view.scroll,behavior:'instant'});
   if(preserveScroll){
     const form=target.querySelector('#course-form');
     for(const value of draft){const control=form?.elements.namedItem(value.name);if(control&&!control.readOnly&&!control.disabled){if(control.type==='checkbox')control.checked=value.checked;else control.value=value.value;}}
@@ -83,31 +98,33 @@ function commit(page,admin,user,section,preserveScroll=false){
     const focused=focusedId?document.getElementById(focusedId):focusedName?form?.elements.namedItem(focusedName):null;(focused&&target.contains(focused)?focused:target).focus({preventScroll:true});window.scrollTo({...position,behavior:'instant'});
   }
 }
-async function pageFor(parts,identity,refresh){
+async function pageFor(parts,identity,refresh,view,onReportChange){
   if(parts[0]==='admin'){
     if(!identity.user)return authPage(identity,route);
     const section=parts[1]||'';
     if(section==='capacitaciones'){
-      if(parts[2]==='resultados')return reportsPage(parts[3]||'');
-      return parts[2]?courseEditor(parts[2],refresh,parts[3]==='publicar',identity.user):coursesPage(refresh);
+      if(parts[2]==='resultados')return parts[3]==='curso'?reportsPage('',parts[4],onReportChange):reportsPage(parts[3]||'','',onReportChange);
+      return parts[2]?courseEditor(parts[2],refresh,parts[3]==='publicar',identity.user):coursesPage(view);
     }
     if(section==='examen'&&/^\d+$/.test(parts[2]||''))return examEditor(parts[2],route);
-    if(section==='eventos'&&parts[2]==='slider')return sliderPage(parts[3]||'');
+    if(section==='eventos'&&parts[2]==='slider')return sliderPage(parts[3]||'',view);
     if(section==='eventos'&&parts[2]==='popup')return homePopupPage(parts[3]||'');
-    if(section==='eventos')return eventsPage(refresh,parts[2]||'');
-    if(section==='politicas')return parts[2]?policyEditor(parts[2]):policiesPage(true);
+    if(section==='eventos')return eventsPage(refresh,parts[2]||'',view);
+    if(section==='politicas')return parts[2]?policyEditor(parts[2]):policiesPage(true,view);
     if(['usuarios','sedes','colaboradores'].includes(section)){
       if(identity.user.role!=='superadmin')throw new Error('Solo superadministración puede gestionar colaboradores, accesos y sedes.');
-      return section==='usuarios'?usersPage(refresh,identity.user):section==='sedes'?sitesPage(refresh):personnelPage(refresh);
+      return section==='usuarios'?usersPage(refresh,identity.user,view):section==='sedes'?sitesPage(refresh,view):personnelPage(refresh);
     }
-    return overviewPage(identity.user);
+    return overviewPage(identity.user,view);
   }
   if(parts[0]==='curso'&&/^\d+$/.test(parts[1]||''))return coursePage(parts[1]);
   if(parts[0]==='politicas')return /^\d+$/.test(parts[1]||'')?policyPage(parts[1]):policiesPage();
   if(parts[0]==='capacitaciones'||parts[0]==='eventos')return catalogPage(parts[0]==='eventos',parts[0]==='eventos'?parts[1]||'':'');
   return portalPage();
 }
-async function route({preserveScroll=false}={}){
+async function route({preserveScroll=false,returning=false}={}){
+  if(activeView)activeView.scroll=window.scrollY;
+  activeView=null;
   if(/^#admin\/slider(?:\/|$)/.test(location.hash))history.replaceState(null,'',location.hash.replace('#admin/slider','#admin/eventos/slider'));
   if(location.hash==='#admin/popup')history.replaceState(null,'','#admin/eventos/popup');
   layout.close();document.querySelectorAll('.ui-confirm').forEach(dialog=>dialog.close());
@@ -121,15 +138,20 @@ async function route({preserveScroll=false}={}){
   root.setAttribute('aria-busy','true');root.classList.add('route-pending');
   let identity;
   try{
-    identity=await session();if(current!==generation)return;
+    const resume=source==='#admin/volver';
+    identity=await session(resume);if(current!==generation)return;
+    panel.bind(identity);
+    if(resume){history.replaceState(null,'',identity.user?panel.last:'#admin');return route({returning:!!identity.user});}
     if(admin&&parts[1]&&(!identity.user||((['usuarios','sedes','colaboradores'].includes(parts[1])||(parts[1]==='eventos'&&['popup','slider'].includes(parts[2])))&&identity.user.role!=='superadmin'))){
       history.replaceState(null,'','#admin');return route();
     }
     if(shellKey&&(!admin||shellKey!==userKey(identity.user)))resetPrivateView();
     document.body.classList.toggle('admin-mode',admin);layout.set(admin&&!!identity.user);
     const needsNavigation=navigationKey!==JSON.stringify([admin,userKey(identity.user)]);
+    const view=admin&&identity.user?panel.view(source):null;
+    const onReportChange=hash=>{if(current===generation&&location.hash===hash){activeView=panel.view(hash);panel.remember(hash);}};
     const [page,announcements]=await Promise.all([
-      pageFor(parts,identity,refresh),
+      pageFor(parts,identity,refresh,view,onReportChange),
       needsNavigation&&identity.user?query('admin','notifications.list').catch(error=>{
         if(error.status===401||error.status===403)throw error;
         return {items:[],unavailable:true};
@@ -137,17 +159,23 @@ async function route({preserveScroll=false}={}){
     ]);
     if(current!==generation)return;
     updateNavigation(admin,identity,parts,announcements);
-    commit(page,admin,identity.user,section,preserveScroll);
+    commit(page,admin,identity.user,section,preserveScroll,view);
+    if(view){activeView=view;panel.remember(source);}
     document.title=(root.querySelector('h1')?.textContent.trim()||(admin?'Administración':'Capacitación interna'))+' · La Academia';
   }catch(error){
     if(current!==generation)return;
+    if(returning&&error.status===404&&parts[1]){
+      history.replaceState(null,'','#admin/'+section);await route();
+      if(location.hash==='#admin/'+section)toast('El contenido que consultabas ya no está disponible.','info');
+      return;
+    }
     if(error.status===403&&admin&&parts[1]){
       try{await session(true);}catch{}
       if(current!==generation)return;
       resetPrivateView();history.replaceState(null,'','#admin');return route();
     }
     if(error.status===401){
-      resetPrivateView();identity=null;
+      panel.clear();resetPrivateView();identity=null;
       try{await session(true);if(current===generation)return route();}catch(refreshError){error=refreshError;}
     }
     if(current!==generation)return;
@@ -161,7 +189,7 @@ document.querySelector('.skip')?.addEventListener('click',event=>{
 });
 document.querySelector('#dialog .close').addEventListener('click',()=>document.querySelector('#dialog').close());
 document.querySelector('#dialog').addEventListener('click',event=>{const dialog=event.currentTarget;if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();});
-window.addEventListener('academia-session-expired',()=>{++generation;resetPrivateView();route();});
+window.addEventListener('academia-session-expired',()=>{++generation;panel.clear();resetPrivateView();route();});
 window.addEventListener('academia-open-activity',event=>{const href=event.detail.href;if(location.hash===href)route();else location.hash=href;});
 window.addEventListener('hashchange',route);
 route();

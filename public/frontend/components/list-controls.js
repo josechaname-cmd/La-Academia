@@ -6,9 +6,24 @@ export function paginationControls(label='registros'){
   return `<div class="list-pagination" data-list-pagination><p data-page-count role="status"></p><nav aria-label="Páginas de ${escape(label)}"><button type="button" class="button white" data-page-prev aria-label="Página anterior" title="Página anterior">${icon('previous')}</button><span data-page-label tabindex="-1"></span><button type="button" class="button white" data-page-next aria-label="Página siguiente" title="Página siguiente">${icon('next')}</button></nav></div>`;
 }
 
-export function mountPagination(host,{size=20,onChange=()=>{}}={}){
+// Each page opts in with its own session-scoped state and read-only filter controls.
+export function rememberFilters(root, state, selectors) {
+  for (const selector of selectors) {
+    const control = root.querySelector(selector);
+    if (!control) continue;
+    if (state[selector] !== undefined) {
+      control.value = state[selector];
+      if (control.selectedIndex === -1) control.selectedIndex = 0;
+    }
+    control.addEventListener(control.tagName === 'SELECT' ? 'change' : 'input', () => {
+      state[selector] = control.value;
+    });
+  }
+}
+
+export function mountPagination(host,{size=20,onChange=()=>{},state={}}={}){
   const previous=host.querySelector('[data-page-prev]'),next=host.querySelector('[data-page-next]'),label=host.querySelector('[data-page-label]');
-  let page=1,pages=1;
+  let page=state.page||1,pages=1;
   for(const [button,direction] of [[previous,-1],[next,1]])button.addEventListener('click',()=>{
     page=Math.max(1,Math.min(pages,page+direction));onChange();
     // The last page disables the button just used; retain an identifiable keyboard position.
@@ -18,7 +33,7 @@ export function mountPagination(host,{size=20,onChange=()=>{}}={}){
     reset(){page=1;},
     reveal(index){page=Math.floor(Math.max(0,index)/size)+1;},
     slice(rows){
-      pages=Math.max(1,Math.ceil(rows.length/size));page=Math.min(page,pages);
+      pages=Math.max(1,Math.ceil(rows.length/size));page=Math.min(page,pages);state.page=page;
       const start=(page-1)*size,end=Math.min(start+size,rows.length);
       host.querySelector('[data-page-count]').textContent=rows.length?`${start+1}–${end} de ${rows.length}`:'0 resultados';
       label.textContent=`Página ${page} de ${pages}`;previous.disabled=page===1;next.disabled=page===pages;
@@ -28,10 +43,11 @@ export function mountPagination(host,{size=20,onChange=()=>{}}={}){
   };
 }
 
-export function mountTableSearch(root){
+export function mountTableSearch(root,state={}){
+  rememberFilters(root,state,['[data-table-search]']);
   const input=root.querySelector('[data-table-search]'),table=root.querySelector('.table-scroll'),empty=root.querySelector('[data-table-empty]');
   let rows=[...root.querySelectorAll('tbody tr')];
-  const pager=mountPagination(root.querySelector('[data-list-pagination]'),{onChange:render});
+  const pager=mountPagination(root.querySelector('[data-list-pagination]'),{onChange:render,state});
   function render(){
     const term=searchText(input.value),matching=rows.filter(row=>searchText(row.textContent).includes(term));
     rows.forEach(row=>row.hidden=true);pager.slice(matching).forEach(row=>row.hidden=false);

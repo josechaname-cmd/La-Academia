@@ -40,7 +40,7 @@ final class AuthTool {
     }
     public function session(): array {
         $user=$this->user();$empty=$user?false:!(bool)$this->db->run('SELECT id FROM admins LIMIT 1')->fetchColumn();
-        return ['user'=>$user,'csrf'=>$_SESSION['csrf'],'setup_required'=>$empty,'setup_allowed'=>$empty&&$this->local()];
+        return ['user'=>$user,'csrf'=>$_SESSION['csrf'],'navigation_id'=>$user?hash('sha256','panel:'.$_SESSION['csrf']):null,'setup_required'=>$empty,'setup_allowed'=>$empty&&$this->local()];
     }
     private function local(): bool { return in_array($this->config['environment']??'local',['local','test'],true)&&in_array($_SERVER['REMOTE_ADDR']??'', ['127.0.0.1','::1'],true); }
     private function rateLimit(): void {

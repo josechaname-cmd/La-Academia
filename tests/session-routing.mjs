@@ -5,11 +5,11 @@ const shell=(await readFile(new URL('../backend/views/shell.php',import.meta.url
 const dom=new JSDOM(shell,{url:'http://localhost/la-academia/#admin/usuarios',pretendToBeVisual:true});
 for(const key of ['window','document','location','history','FormData','Event','CustomEvent','AbortController','localStorage','Node'])globalThis[key]=dom.window[key];
 globalThis.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});
-window.scrollTo=()=>{};dom.window.HTMLElement.prototype.scrollIntoView=function(){};
+window.scrollTo=({top=0})=>Object.defineProperty(window,'scrollY',{value:top,configurable:true});dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 dom.window.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new Event('close'));};
 dom.window.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};
 let user={id:1,name:'Superadmin prueba',role:'superadmin'},csrf='first';
-const requests=[];let failNotifications=true;
+const requests=[];let failNotifications=true,removedPolicy=false;
 globalThis.fetch=async(url,options={})=>{
   const path=new URL(url).pathname.split('/api/v1/')[1];requests.push({path,method:options.method});
   let data;
@@ -17,8 +17,12 @@ globalThis.fetch=async(url,options={})=>{
   if(path==='session'){
     if(options.method==='DELETE'){user=null;csrf='guest';}
     if(options.method==='POST'){user={id:2,name:'Capacitador prueba',role:'capacitador'};csrf='second';}
-    data={user,csrf,setup_required:false};
-  }else if(path==='admin/home-popup')data=[];
+    data={user,csrf,navigation_id:user?'nav-'+user.id:null,setup_required:false};
+  }else if(path==='admin/policies/17'){
+    if(removedPolicy)return {ok:false,status:404,json:async()=>({error:{message:'Política eliminada'}})};
+    data={id:17,title:'Política de prueba',description:'Texto de prueba',file_id:10,cover_image_id:30,original_name:'Ejemplo.pdf',active:1};
+  }else if(path==='admin/users')data=Array.from({length:25},(_,index)=>({id:index+10,name:'Cuenta de prueba '+index,email:'cuenta'+index+'@example.invalid',role:'capacitador',active:1}));
+  else if(path==='admin/home-popup')data=[];
   else if(path==='admin/sites')data=[{id:2,name:'Breña',address:'Lima',active:1,users:1,employees:2}];
   else if(path==='admin/personnel')data=[{dni:'12345678',name:'Persona Uno',job_title:'Conductora',active:1,site_id:2,site_name:'Breña'},{dni:'87654321',name:'Persona Dos',job_title:'Supervisora',active:1,site_id:2,site_name:'Breña'}];
   else if(path==='notifications')data={items:[],revision:'0'};
@@ -32,12 +36,35 @@ const go=async hash=>{history.replaceState(null,'',hash);window.dispatchEvent(ne
 await import('../public/frontend/app.js');await flush();
 assert.ok(document.querySelector('.sidebar a[href="#admin/eventos/popup"]'));
 assert.ok(document.querySelector('.sidebar a[href="#admin/colaboradores"]'));
-assert.match(document.querySelector('.sidebar a[href="#admin/usuarios"]').textContent,/Usuarios/);
+assert.match(document.querySelector('.sidebar a[href="#admin/usuarios"]').textContent,/Accesos al panel/);
 assert.equal(document.querySelector('#user-submenu').hidden,true,'Usuarios opens on the trainers page and keeps collaborators as a submenu');
 assert.ok(document.querySelector('#new-user'),'superadmin may initially open users');
 document.querySelector('.skip').click();await flush();assert.equal(location.hash,'#admin/usuarios','Skip link must focus the current view without routing to the portal');assert.equal(document.activeElement,document.querySelector('.workspace'));assert.match(document.title,/Capacitadores y accesos/);
 assert.match(document.querySelector('.notification-sync').textContent,/No se pudo cargar/,'Notification failure does not block the page');
 document.querySelector('.notification-toggle').click();await flush();assert.match(document.querySelector('.notification-sync').textContent,/Actualizado/);assert.match(document.querySelector('.notification-items').textContent,/Estás al día/);document.querySelector('.notification-toggle').click();
+const accessSearch=document.querySelector('[data-table-search]');
+accessSearch.value='Cuenta de prueba';accessSearch.dispatchEvent(new Event('input',{bubbles:true}));
+document.querySelector('[data-page-next]').click();
+const until=async predicate=>{for(let n=0;n<120&&!predicate();n++)await new Promise(resolve=>setTimeout(resolve,5));assert(predicate());};
+window.scrollTo({top:380});document.querySelector('[aria-label="Ver portal"]').click();
+await until(()=>document.querySelector('.admin-link'));
+const panelLink=document.querySelector('.admin-link');
+assert.equal(panelLink.hash,'#admin/volver');
+assert(!JSON.stringify(window.sessionStorage).includes('Cuenta de prueba'),'Las búsquedas quedan solo en memoria');
+panelLink.click();await until(()=>location.hash==='#admin/usuarios'&&document.querySelector('#new-user'));
+assert.equal(location.hash,'#admin/usuarios');
+assert.equal(document.querySelector('[data-table-search]').value,'Cuenta de prueba');
+assert.match(document.querySelector('[data-page-label]').textContent,/Página 2/);
+assert.equal(window.scrollY,380);
+assert.equal(document.querySelector('[data-panel-scope]').textContent,'Todas las sedes');
+const {panelNavigation}=await import('../public/frontend/components/panel-navigation.js');
+const reloaded=panelNavigation();
+reloaded.bind({user,csrf,navigation_id:'nav-1'});assert.equal(reloaded.last,'#admin/usuarios','Reabrir el portal en la pestaña recuerda la ruta de esa misma sesión');
+const other=panelNavigation();other.bind({user:{...user,id:8},csrf:'other',navigation_id:'nav-8'});assert.equal(other.last,'#admin','Una cuenta distinta descarta la ruta anterior');
+await go('#admin/politicas');assert.equal(document.querySelector('[data-panel-scope]').textContent,'General');
+await go('#admin/politicas/17');assert(document.querySelector('#policy-form'));
+await go('#inicio');removedPolicy=true;await go('#admin/volver');
+assert.equal(location.hash,'#admin/politicas','Si el documento desapareció, retoma su listado');
 const initialUsers=requests.filter(r=>r.path==='admin/users').length;
 await go('#admin/popup');assert.equal(location.hash,'#admin/eventos/popup');assert(document.querySelector('#popup-list'));assert.equal(document.querySelector('#event-submenu').hidden,false);document.querySelector('[data-event-menu]').click();assert.equal(document.querySelector('#event-submenu').hidden,true);assert.equal(location.hash,'#admin/eventos/popup');document.querySelector('[data-event-menu]').click();assert.equal(document.querySelector('#event-submenu').hidden,false);
 await go('#admin/slider');assert.equal(location.hash,'#admin/eventos/slider');assert(document.querySelector('#slider-list'));assert(document.querySelector('#event-submenu a[href="#admin/eventos/slider"].selected'));assert.equal(document.querySelector('.sidebar nav>a[href="#admin/slider"]'),null);await go('#admin/slider/nuevo');assert(document.querySelector('#slider-form'));

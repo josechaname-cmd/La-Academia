@@ -7,10 +7,10 @@ const visibility=active=>`<span class="badge ${Number(active)?'green':''}">${Num
 const stateField=active=>`<label class="field">Estado<select name="active"><option value="1" ${Number(active)?'selected':''}>Activo</option><option value="0" ${!Number(active)?'selected':''}>Inactivo</option></select></label>`;
 const userRows=(users,current)=>users.map(user=>`<tr><td><strong>${escape(user.name)}${Number(user.id)===Number(current.id)?' · Tú':''}</strong><small>${escape(user.email)}${user.dni?` · DNI ${escape(user.dni)}`:''}</small></td><td>${user.role==='superadmin'?'Superadministrador':'Capacitador'}<small>${escape(user.job_title||'Cargo por completar')}</small></td><td>${escape(user.site_name||'Sin sede asignada')}</td><td>${visibility(user.active)}</td><td><button class="button white small" data-edit-user="${user.id}">Editar acceso</button></td></tr>`).join('');
 const siteRows=(sites)=>sites.map(site=>`<tr><td><strong>${escape(site.name)}</strong></td><td>${escape(site.address||'—')}</td><td>${site.users}</td><td>${site.employees}</td><td>${visibility(site.active)}</td><td><button class="button white small" data-edit-site="${site.id}">Editar sede</button></td></tr>`).join('');
-export async function usersPage(reload,current){
+export async function usersPage(reload,current,state={}){
   let [users,sites,personnel]=await Promise.all([query('admin','users.list'),query('admin','sites.list'),query('admin','personnel.list')]);
   return {html:`${heading('SUPERADMINISTRACIÓN','Capacitadores y accesos','Vincula cada capacitador con un colaborador y su sede antes de permitirle crear capacitaciones.','<button id="new-user" class="button primary">+ Crear acceso</button>')}${!sites.some(site=>Number(site.active))?'<div class="notice">Crea una sede antes de asignar capacitadores. <a href="#admin/sedes">Gestionar sedes</a></div>':''}<section class="panel"><div class="toolbar"><label class="search">Buscar acceso<input data-table-search type="search" placeholder="Nombre, correo, DNI o sede"></label></div><p class="padded" data-table-empty hidden>No se encontraron accesos para esta búsqueda.</p><div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Rol y cargo</th><th>Sede</th><th>Estado</th><th></th></tr></thead><tbody>${userRows(users,current)}</tbody></table></div>${paginationControls('accesos')}</section>`,mount(root){
-    const table=mountTableSearch(root);
+    const table=mountTableSearch(root,state);
     const updates=listRefresh(root,()=>Promise.all([query('admin','users.list'),query('admin','sites.list'),query('admin','personnel.list')]),latest=>{[users,sites,personnel]=latest;root.querySelector('tbody').innerHTML=userRows(users,current);table.refresh();});
     function edit(user={name:'',dni:'',job_title:'',email:'',role:'capacitador',active:1,site_id:null}){
       const self=Number(user.id)===Number(current.id);
@@ -30,10 +30,10 @@ export async function usersPage(reload,current){
 
 export {personnelPage} from './admin-personnel.js?v=20261030-9';
 
-export async function sitesPage(reload){
+export async function sitesPage(reload,state={}){
   let sites=await query('admin','sites.list');
   return {html:`${heading('SUPERADMINISTRACIÓN','Sedes de La Academia','Registra las sedes y relaciónalas con colaboradores y capacitadores.','<button class="button primary" id="new-site">+ Crear sede</button>')}<section class="panel"><div class="toolbar"><label class="search">Buscar sede<input data-table-search type="search" placeholder="Nombre o ubicación"></label></div><p class="padded" data-table-empty hidden>No se encontraron sedes para esta búsqueda.</p><div class="table-scroll"><table><thead><tr><th>Sede</th><th>Ubicación</th><th>Capacitadores</th><th>Colaboradores</th><th>Estado</th><th></th></tr></thead><tbody>${siteRows(sites)}</tbody></table></div>${paginationControls('sedes')}</section>`,mount(root){
-    const table=mountTableSearch(root);
+    const table=mountTableSearch(root,state);
     const updates=listRefresh(root,()=>query('admin','sites.list'),latest=>{sites=latest;root.querySelector('tbody').innerHTML=siteRows(sites);table.refresh();});
     function edit(site={name:'',address:'',active:1}){
       modal(`<span class="eyebrow">SEDES La Academia</span><h2>${site.id?'Editar sede':'Crear sede'}</h2><form id="site-form">${field('Nombre de la sede','name',site.name,'required minlength="2" maxlength="100"')}${field('Dirección o ubicación (opcional)','address',site.address,'maxlength="250"')}${stateField(site.active)}<p class="hint">Para desactivar una sede, primero reasigna o desactiva a sus usuarios.</p><button class="button primary" type="submit">Guardar sede ${icon('next')}</button></form>`);

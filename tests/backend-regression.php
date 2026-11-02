@@ -65,6 +65,13 @@ try {
     $list=$call('content','admin.list',[],'GET');verify(count($list)===3,'Lista administrativa filtrada');
     verify(count($call('report','exams',[],'GET'))===3,'Exámenes filtrados');
     verify(count($call('report','results',[],'GET'))===15,'Resultados filtrados antes del límite');
+    $_GET=['course_id'=>(string)$courseIds[0]];
+    $filtered=$call('report','results',[],'GET');
+    verify(count($filtered)===5&&count(array_unique(array_column($filtered,'course_id')))===1&&(int)$filtered[0]['course_id']===$courseIds[0],'El enlace del gráfico consulta únicamente su capacitación');
+    $_GET['exam_id']=(string)$examIds[0];
+    rejects(fn()=>$call('report','results',[],'GET'),400,'Filtro ambiguo de examen y capacitación');
+    $_GET=[];
+    rejects(fn()=>$reports->results(null,$siteA,$courseIds[1]),404,'El filtro de capacitación respeta la sede');
     $feed=$call('admin','notifications.list',[],'GET');verify(!in_array($courseIds[1],array_map('intval',array_column($feed['items'],'course_id')),true),'Campana sin otra sede');
     verify((int)$call('content','admin.get',['id'=>$courseIds[0]],'GET')['id']===$courseIds[0],'Lee su borrador');
     $summary=$call('report','summary',[],'GET');verify($summary['courses']===3&&$summary['evaluations']===30,'Contadores limitados por sede');
@@ -79,6 +86,12 @@ try {
     verify($byCourse[$courseIds[0]]['top_scores']===[20.0,19.0,18.0,17.0,16.0,15.0,14.0,13.0,12.0,12.0],'Top diez real, descendente, con empates y solo la última entrega completada');
     verify($byCourse[$courseIds[0]]['participant_count']===17&&$byCourse[$courseIds[0]]['minimum_score']===0.0,'El límite del ranking no recorta los datos del promedio');
     verify(count($byCourse[$courseIds[2]]['top_scores'])===5&&!isset($byCourse[$courseIds[1]]),'Ranking separado por capacitación y sede');
+    $newVersion=$exams->save($courseIds[0],['questions'=>[['prompt'=>'Pregunta de otra versión','choices'=>['Uno','Dos','Tres'],'correct'=>0]],'opens_at'=>date('Y-m-d H:i:s',time()-60),'closes_at'=>null,'duration_minutes'=>10,'max_attempts'=>2,'passing_score'=>14]);
+    $db->run("INSERT INTO enrollments(exam_id,dni,name,job_title,phone,area) VALUES(?,'80000000','Misma persona','Pruebas','','')",[$newVersion['id']]);$repeat=(int)$db->pdo->lastInsertId();
+    $db->run("INSERT INTO attempts(enrollment_id,token_hash,status,score,answers_json,submitted_at) VALUES(?,?,'completed',18,'[0]',NOW())",[$repeat,hash('sha256',random_bytes(32))]);
+    $versions=array_column($reports->summary($siteA)['score_averages'],null,'course_id')[$courseIds[0]];
+    verify($versions['people_count']===17&&$versions['participant_count']===18,'Un DNI en dos versiones cuenta una persona, con ambas notas en el promedio');
+    verify(count($reports->results(null,$siteA,$courseIds[0]))===18,'El detalle incluye ambas versiones del curso seleccionado');
     $db->run("UPDATE courses SET status='archived' WHERE id=?",[$courseIds[0]]);
     verify(!in_array($courseIds[0],array_column($reports->summary($siteA)['score_averages'],'course_id'),true),'Ranking excluye capacitaciones archivadas');
     $db->run('ROLLBACK TO SAVEPOINT dashboard_top');$db->run('RELEASE SAVEPOINT dashboard_top');

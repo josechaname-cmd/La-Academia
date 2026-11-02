@@ -1,6 +1,6 @@
 import {query,command,uploadBundle,fileUrl} from '../api.js?v=20261030-9';
 import {heading,breadcrumbs,escape,empty,field,busy,toast,confirmAction,icon} from '../components/common.js?v=20261030-9';
-import {paginationControls,mountPagination,searchText} from '../components/list-controls.js?v=20261030-9';
+import {paginationControls,mountPagination,rememberFilters,searchText} from '../components/list-controls.js?v=20261030-9';
 import {attachValidation} from '../components/form-validation.js?v=20261030-9';
 import {policyDocument} from '../components/policy-document.js?v=20261030-9';
 const sizeLabel=bytes=>Number(bytes)<1024*1024?`${Math.max(1,Math.ceil(Number(bytes)/1024))} KB`:`${(Number(bytes)/1024/1024).toFixed(1)} MB`;
@@ -11,11 +11,12 @@ function cardContent(policy,{preview=false,admin=false}={}){
  return `<div class="policy-card-image" ${preview?'data-policy-cover-preview':''}>${coverImage(policy,{preview})}</div><div class="policy-card-labels"><span class="policy-cover-badge">PDF</span>${admin?`<span class="badge" data-tone="${Number(policy.active)?'success':'neutral'}">${Number(policy.active)?'Publicado':'Borrador'}</span>`:''}</div><div class="policy-card-body"><${titleTag} ${preview?'data-policy-title-preview':''}>${escape(policy.title||(preview?'Título de tu política':''))}</${titleTag}><p class="policy-description" ${preview?'data-policy-description-preview':''}>${escape(policy.description||(preview?'Una descripción breve ayudará a encontrar el documento.':''))}</p></div>`;
 }
 
-export async function policiesPage(admin=false){
+export async function policiesPage(admin=false,state={}){
  const policies=await query('policy',admin?'admin.list':'list');
  return {html:`<div class="${admin?'':'container section '}policies-page">${heading('DOCUMENTOS INSTITUCIONALES','Políticas',admin?'Administra los documentos que pueden consultar y descargar los trabajadores.':'Consulta los lineamientos vigentes y descarga el documento que necesitas.',admin?'<a class="button primary" href="#admin/politicas/nueva">+ Nueva política</a>':'')}<div class="toolbar"><label class="search"><span class="sr-only">Buscar políticas</span><input type="search" data-policy-search placeholder="Buscar por título o descripción"></label>${admin?'<label>Estado<select data-policy-state><option value="">Todos</option><option value="1">Publicado</option><option value="0">Borrador</option></select></label>':''}</div><div class="policy-grid" data-policy-results></div>${paginationControls('políticas')}</div>`,mount(root){
   const results=root.querySelector('[data-policy-results]'),search=root.querySelector('[data-policy-search]'),filter=root.querySelector('[data-policy-state]');
-  const pager=mountPagination(root.querySelector('[data-list-pagination]'),{size:6,onChange:render});
+  rememberFilters(root,state,['[data-policy-search]','[data-policy-state]']);
+  const pager=mountPagination(root.querySelector('[data-list-pagination]'),{size:6,onChange:render,state});
   function render(){
    const term=searchText(search.value),rows=policies.filter(item=>searchText(`${item.title} ${item.description}`).includes(term)&&(!filter?.value||String(item.active)===filter.value));
    const visible=pager.slice(rows);

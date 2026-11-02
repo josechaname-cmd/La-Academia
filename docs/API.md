@@ -6,7 +6,7 @@ Ver [validaciones y autenticación](VALIDACIONES-Y-AUTENTICACION.md) para la ses
 
 ## Contrato
 
-Solicitud JSON con `Content-Type: application/json`. Cargas con `multipart/form-data` mediante POST, campo `file`. Los parámetros de consulta deben ser simples y no repetirse; `download` y `background` admiten `0` o `1`. Las peticiones con modificación requieren la cookie de sesión y `X-CSRF-Token`, incluso al comenzar una evaluación pública o iniciar sesión. Primero se obtiene `GET /session`.
+Solicitud JSON con `Content-Type: application/json`. Cargas con `multipart/form-data` mediante POST, campo `file`. Los parámetros de consulta deben ser simples y no repetirse; `download` y `background` admiten `0` o `1`. Las peticiones con modificación requieren la cookie de sesión y `X-CSRF-Token`, incluso al comenzar una evaluación pública o iniciar sesión. Primero se obtiene `GET /session`. Para una cuenta autenticada, `navigation_id` vincula la ruta guardada en la pestaña al inicio de sesión actual.
 
 Respuesta correcta:
 
@@ -204,6 +204,7 @@ El arreglo debe tener al menos una pregunta; la cantidad es flexible. `correct` 
 - `POST /admin/courses/{course_id}/exam/status`: administrador con CSRF; cuerpo `{"enabled":0}` o `{"enabled":1}`. Cambia disponibilidad de todas las versiones de la capacitación y registra actividad solo si cambia. Desactivar bloquea nuevos intentos y envíos pendientes; conserva notas y reenvíos de tokens completados. Reactivar respeta el horario y los minutos transcurridos, sin reiniciar relojes. Las versiones nuevas heredan el estado actual.
 - Apertura inclusiva y cierre exclusivo. Inicio y envío validan el periodo en servidor; el envío también valida los minutos desde el comienzo del intento. La respuesta de inicio incluye `expires_at` (Unix o null) y `server_time`.
 - Las fechas nulas heredadas conservan acceso sin plazo. Cambiar únicamente periodo/minutos actualiza la misma versión y aplica a intentos pendientes; cambiar preguntas, `max_attempts` o `passing_score` genera una nueva versión. Los resultados completados no cambian.
+- `GET /admin/reports/results?course_id=ID` consulta los últimos envíos por colaborador y versión de esa capacitación dentro de la sede autorizada. Los filtros `course_id` y `exam_id` son excluyentes. En el resumen, `people_count` cuenta DNI distintos por curso y `participant_count` los resultados usados para calcular la media.
 - `GET /admin/reports/exams` lista todas las versiones, incluidas las de cursos archivados. Estado temporal: `scheduled`, `open`, `closed`, `disabled`, `not_required`; `course_status` informa publicación/archivo por separado.
 - `GET /admin/reports/results?exam_id=ID` incluye participantes con y sin envío, hasta 1000 filas. Sin parámetro conserva resultados completados recientes.
 - `GET /admin/reports/exams/{id}/export`: descarga XLSX sin límite de 1000 filas. Requiere administrador; incluye última nota enviada, envíos completados y estado del intento pendiente. Disponible antes, durante y después del periodo. Identificadores como texto, notas y fechas tipadas, sin fórmulas provenientes de datos.
